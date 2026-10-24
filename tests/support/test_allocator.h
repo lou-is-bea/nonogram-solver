@@ -38,6 +38,7 @@ typedef struct ng_test_allocator {
     ng_counter misuse_count;  /**< Contract violations: zero size, bad align, wrong free size. */
     ng_counter fail_at;       /**< Index of the request that fails, or NG_TEST_NEVER_FAIL. */
     size_t cap_bytes;         /**< Limit on live_bytes, or NG_TEST_NO_CAP. */
+    size_t last_request_size; /**< Size of the latest alloc request, even a refused one. */
 } ng_test_allocator;
 
 /** @brief Initialise @p ta as a counting allocator that never fails and has no cap. */

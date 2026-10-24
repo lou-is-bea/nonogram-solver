@@ -6,7 +6,8 @@ set_target_properties(PkgConfig::CRITERION PROPERTIES SYSTEM ON)
 
 add_library(ng_test_support STATIC
     support/ng_test_fixture.c
-    support/test_allocator.c)
+    support/test_allocator.c
+    support/test_rng.c)
 target_include_directories(ng_test_support PUBLIC support)
 target_link_libraries(ng_test_support
     PUBLIC PkgConfig::CRITERION ng_core
@@ -31,10 +32,31 @@ function(ng_add_unit_test module)
         FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 endfunction()
 
+# ng_add_property_test(<name> LIBS <targets...>)
+# Builds tests/property/test_prop_<name>.c into a Criterion executable labelled "property".
+# Seeds come from NG_TEST_SEED when set (TESTING.md §4.4).
+function(ng_add_property_test name)
+    cmake_parse_arguments(PARSE_ARGV 1 ARG "" "" "LIBS")
+    set(target test_prop_${name})
+    add_executable(${target} property/${target}.c)
+    target_link_libraries(${target} PRIVATE ng_test_support ${ARG_LIBS} ng_project_options)
+    set_target_properties(${target} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/property)
+    add_test(NAME ${target} COMMAND ${target})
+    set_tests_properties(${target} PROPERTIES
+        LABELS property
+        FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+endfunction()
+
+ng_add_property_test(grid LIBS ng_core)
+
 ng_add_unit_test(allocator LIBS ng_core)
+ng_add_unit_test(grid LIBS ng_core)
+ng_add_unit_test(puzzle LIBS ng_core)
 ng_add_unit_test(status LIBS ng_core)
 ng_add_unit_test(stream LIBS ng_core)
 ng_add_unit_test(support_allocator LIBS ng_core)
+ng_add_unit_test(support_rng LIBS ng_core)
 ng_add_unit_test(types LIBS ng_core)
 ng_add_unit_test(version LIBS ng_core)
 

@@ -38,6 +38,7 @@ static void *test_alloc(void *ctx, size_t size, size_t align)
 {
     ng_test_allocator *ta = ctx;
     const ng_counter request = ta->request_count++;
+    ta->last_request_size = size;
     if (size == 0u || !is_power_of_two(align)) {
         ++ta->misuse_count;
         return nullptr;

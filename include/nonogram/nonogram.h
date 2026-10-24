@@ -6,6 +6,8 @@
 #define NG_NONOGRAM_NONOGRAM_H
 
 #include "nonogram/allocator.h"
+#include "nonogram/grid.h"
+#include "nonogram/puzzle.h"
 #include "nonogram/status.h"
 #include "nonogram/stream.h"
 #include "nonogram/types.h"

@@ -184,6 +184,18 @@ Test(support_allocator, cap_refuses_huge_requests_without_allocating)
     cr_assert_eq(ta.misuse_count, 0u);
 }
 
+Test(support_allocator, records_the_size_of_refused_requests)
+{
+    ng_test_allocator ta;
+    ng_test_allocator_init(&ta);
+    ng_test_allocator_cap(&ta, 16);
+
+    void *block = request(&ta, 12'345, 8);
+
+    cr_assert_null(block);
+    cr_assert_eq(ta.last_request_size, 12'345u);
+}
+
 Test(support_allocator, oversized_request_without_cap_returns_nullptr)
 {
     ng_test_allocator ta;

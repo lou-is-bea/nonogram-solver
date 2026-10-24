@@ -155,7 +155,7 @@ struct ng_puzzle {
 
 **Identifiants de ligne unifiés** : `0 .. height-1` désignent les rangées, `height .. height+width-1` les colonnes.
 
-**Invariants**, vérifiés à la construction :
+**Invariants**, vérifiés à la construction (l'ordre exact des vérifications et le statut renvoyé par chacune sont documentés dans `puzzle.h`) :
 
 - `1 ≤ width, height ≤ NG_DIM_MAX` ;
 - toute longueur de bloc est `≥ 1` (une ligne vide n'a aucun bloc) ;
@@ -173,11 +173,11 @@ L'implémentation initiale stocke un octet par case, rangée par rangée, en une
 **Accès par copie de ligne.** Les solvers ne manipulent jamais le stockage directement :
 
 ```c
-ng_status ng_grid_load_line (const ng_grid *g, const ng_puzzle *p, ng_line_id line, ng_cell *buffer);
-ng_status ng_grid_store_line(ng_grid *g, const ng_puzzle *p, ng_line_id line, const ng_cell *buffer);
+ng_status ng_grid_load_line (const ng_grid *g, ng_line_id line, ng_cell *buffer);
+ng_status ng_grid_store_line(ng_grid *g, ng_line_id line, const ng_cell *buffer);
 ```
 
-Le tampon (de longueur `ng_puzzle_line_length(p, line)`) appartient à l'espace de travail du solver. Ce choix :
+La grille connaît ses dimensions : ces fonctions ne prennent pas le puzzle en paramètre (forme de l'[ADR-0009](adr/0009-types-et-grilles-massives.md)). Le tampon (de longueur `ng_puzzle_line_length(p, line)`, identique pour la grille) appartient à l'espace de travail du solver. Ce choix :
 
 - rend les solvers indépendants de la représentation (octets, bits, partitionnement entre nœuds) ;
 - offre un accès contigu, favorable au cache, même pour les colonnes ;
@@ -235,6 +235,7 @@ ng_dim       ng_puzzle_width(const ng_puzzle *p);
 ng_dim       ng_puzzle_height(const ng_puzzle *p);
 ng_line_id   ng_puzzle_line_count(const ng_puzzle *p);
 ng_dim       ng_puzzle_line_length(const ng_puzzle *p, ng_line_id line);
+ng_run_index ng_puzzle_total_runs(const ng_puzzle *p);
 ng_run_count ng_puzzle_line_run_count(const ng_puzzle *p, ng_line_id line);
 ng_status    ng_puzzle_copy_line_runs(const ng_puzzle *p, ng_line_id line,
                                       ng_dim *buffer, ng_run_count capacity);
@@ -242,12 +243,14 @@ ng_status    ng_puzzle_copy_line_runs(const ng_puzzle *p, ng_line_id line,
 /* grid.h */
 ng_status ng_grid_create(const ng_allocator *a, ng_dim width, ng_dim height, ng_grid **out);
 void      ng_grid_destroy(ng_grid *g);
+ng_dim    ng_grid_width(const ng_grid *g);
+ng_dim    ng_grid_height(const ng_grid *g);
 ng_cell   ng_grid_get(const ng_grid *g, ng_dim row, ng_dim col);
 void      ng_grid_set(ng_grid *g, ng_dim row, ng_dim col, ng_cell c);
 void      ng_grid_fill(ng_grid *g, ng_cell c);
 ng_status ng_grid_copy(ng_grid *dst, const ng_grid *src);
-ng_status ng_grid_load_line(const ng_grid *g, const ng_puzzle *p, ng_line_id line, ng_cell *buffer);
-ng_status ng_grid_store_line(ng_grid *g, const ng_puzzle *p, ng_line_id line, const ng_cell *buffer);
+ng_status ng_grid_load_line(const ng_grid *g, ng_line_id line, ng_cell *buffer);
+ng_status ng_grid_store_line(ng_grid *g, ng_line_id line, const ng_cell *buffer);
 
 /* io.h : tous les lecteurs fonctionnent en flux (ADR-0010) */
 typedef struct ng_parse_error { uint64_t line; uint64_t column; char message[160]; } ng_parse_error;

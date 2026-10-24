@@ -214,9 +214,11 @@ gate_G2() {
 
 # --- G3..G5: test suites ------------------------------------------------------------------------
 gate_G3() {
-    say "G3 unit tests"
+    say "G3 unit tests (dev, then release for the NDEBUG fallbacks of contract violations)"
     preset dev
     ctest --preset dev -L unit -j "$JOBS"
+    preset release
+    ctest --preset release -L unit -j "$JOBS"
 }
 
 gate_G4() {
@@ -227,7 +229,8 @@ gate_G4() {
 
 gate_G5() {
     say "G5 property and differential tests"
-    skip "active from M3 (no property test yet)"
+    preset dev
+    ctest --preset dev -L property -j "$JOBS"
 }
 
 # --- G6: sanitizers ---------------------------------------------------------------------------------
@@ -252,7 +255,7 @@ gate_G7() {
     rm -rf "$logs"
     mkdir -p "$logs"
     local test_binary
-    for test_binary in build/dev/tests/unit/test_*; do
+    for test_binary in build/dev/tests/unit/test_* build/dev/tests/property/test_prop_*; do
         echo "-- $test_binary"
         valgrind "${VALGRIND_OPTIONS[@]}" --log-file="$logs/$(basename "$test_binary").%p.log" \
             "$test_binary" > /dev/null 2>&1 || true
