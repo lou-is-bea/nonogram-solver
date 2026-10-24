@@ -46,7 +46,7 @@ nonogram-solver/
 ├── tools/docker/Dockerfile # environnement de référence (Ubuntu 24.04, GCC 14, Clang 20), utilisé par la CI
 ├── include/nonogram/       # API PUBLIQUE uniquement
 │   ├── nonogram.h          # en-tête parapluie
-│   ├── version.h
+│   ├── version.h           # générée par CMake depuis version.h.in (version du project())
 │   ├── types.h             # ng_dim, ng_line_id, ng_cell_index, … (ADR-0009)
 │   ├── status.h            # ng_status, ng_status_str()
 │   ├── allocator.h         # ng_allocator
@@ -105,6 +105,7 @@ nonogram-solver/
 - Les en-têtes `src/core/internal/*.h` (préfixe `ngi_`) exposent les accès rapides internes. Ils ne sont **jamais** installés ni inclus depuis `include/`. Les solvers ne s'en servent **pas** pour accéder au stockage des cases (voir §4.4).
 - Un solver n'inclut pas les fichiers d'un autre solver. Le code partagé va dans `src/solvers/common/`.
 - La bibliothèque installée `libnonogram` regroupe `core`, `io`, `render`, `verify` et `solvers`.
+- Tant qu'un module ne contient aucun fichier source, sa cible est une bibliothèque `INTERFACE` qui ne fait que propager `ng_core`. Elle devient une bibliothèque `STATIC` avec son premier fichier source.
 
 ## 4. Modèle de données
 

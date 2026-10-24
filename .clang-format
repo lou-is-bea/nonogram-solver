@@ -1,0 +1,21 @@
+# Reference configuration: docs/CODING_STANDARDS.md §9.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 100
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortFunctionsOnASingleLine: None
+PointerAlignment: Right
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+# Include groups (CODING_STANDARDS.md §3): matching header, standard library, public API,
+# internal headers. The matching header is detected by clang-format (priority 0).
+IncludeCategories:
+  - Regex: '^<'
+    Priority: 1
+  - Regex: '^"nonogram/'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3

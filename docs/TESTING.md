@@ -44,7 +44,7 @@ Une porte **bloquante** qui échoue empêche la fusion.
 | G11 | Fuzzing long | 1 h par cible | non (nocturne) | M1 |
 | G12 | Tests massifs | `ctest --preset release -L massive` | non (nocturne, machine dédiée) | M1 |
 
-`./scripts/check.sh` exécute G0 à G9 en local, dans cet ordre, et s'arrête à la première porte qui échoue. `./scripts/check.sh --quick` n'exécute que G0 à G3, pour itérer plus vite. Avant une PR, c'est la version complète qui fait foi.
+`./scripts/check.sh` exécute G0 à G9 en local, dans cet ordre, et s'arrête à la première porte qui échoue. `./scripts/check.sh --quick` n'exécute que G0 à G3, pour itérer plus vite, et `./scripts/check.sh --only G0,G2` n'exécute que les portes demandées (c'est ce qu'utilise la CI). Avant une PR, c'est la version complète qui fait foi. Une porte qui n'est pas encore active à l'étape en cours est signalée `SKIP` et rappelée en fin d'exécution : elle n'est jamais présentée comme réussie.
 
 ## 4. Détail par niveau
 
@@ -158,7 +158,7 @@ Volume : 1 000 cas par propriété sur chaque PR, 100 000 en nocturne.
 ### 4.9 Particularités de Criterion avec les outils mémoire
 
 - **Valgrind** : Criterion exécute les tests dans des processus fils, donc Valgrind est lancé avec `--trace-children=yes --leak-check=full --error-exitcode=1` (configuration dans `CTestCustom.cmake`). Le seul fichier de suppressions autorisé est `tests/valgrind/criterion.supp`, qui ne vise que les fonctions internes de Criterion. Toute suppression qui porterait sur du code du projet est interdite.
-- **ASan et LSan** : ils fonctionnent dans les processus fils. Une fuite fait échouer le test concerné.
+- **ASan et LSan** : ils fonctionnent dans les processus fils. LSan signale une fuite à la sortie du processus fils, après que Criterion a enregistré le résultat : l'exécutable de test renvoie donc 0 malgré le rapport. Chaque test CTest déclare `FAIL_REGULAR_EXPRESSION` sur les rapports de sanitizers (`ERROR: AddressSanitizer`, `ERROR: LeakSanitizer`, `runtime error:`) : c'est ce mécanisme qui fait échouer le test concerné. Un résultat sous sanitizers se juge donc toujours via `ctest`.
 - **Couverture** : les processus fils écrivent leurs données gcov à leur sortie. Un test qui se termine par un signal (`.signal`) ne contribue pas à la couverture, ce qui est sans conséquence.
 
 ## 5. Intégration continue
