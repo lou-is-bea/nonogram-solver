@@ -6,7 +6,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 
 | Étape | Thème | Version visée | Statut |
 |---|---|---|---|
-| M0 | Fondations : build, CI, outillage | — | en cours |
+| M0 | Fondations : build, CI, outillage | — | terminé (validation locale) |
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | à faire |
 | M2 | Affichage | — | à faire |
 | M3 | Vérificateur | 0.1.0 | à faire |
@@ -36,9 +36,12 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 
 **Critères de sortie**
 
-- La CI est verte sur toute la matrice (GCC 14, Clang 20, Clang 19).
-- `check.sh` tourne de bout en bout dans WSL et dans le conteneur.
-- Une PR de test qui introduit volontairement un warning, une erreur de format et une fuite est **bloquée** par la CI, à chacune des trois portes concernées.
+> **Décision du 2026-10-25** : la CI GitHub Actions n'est pas utilisée pour l'instant. La validation se fait uniquement en local, avec `./scripts/check.sh` dans WSL. Le fichier `.github/workflows/ci.yml` et l'image `tools/docker/Dockerfile` restent dans le dépôt mais n'ont pas encore été exécutés. Les critères qui en dépendent sont différés jusqu'à l'activation de la CI.
+
+- ✅ Le build et les tests passent avec GCC 14, Clang 20 et Clang 19 (en local).
+- ✅ `check.sh` tourne de bout en bout dans WSL. *(différé : exécution dans le conteneur)*
+- ✅ Un warning, une erreur de format et une fuite introduits volontairement sont **bloqués** par `check.sh`, à chacune des portes concernées (vérifié en local, ainsi qu'un test en échec, `NULL`, un débordement signé et un accès hors limites). *(différé : la même vérification par la CI sur une PR)*
+- *(différé)* La CI est verte sur toute la matrice, et la branche `main` est protégée.
 
 ## M1 — Modèle de données
 
