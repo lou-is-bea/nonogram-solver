@@ -33,6 +33,7 @@ endfunction()
 
 ng_add_unit_test(allocator LIBS ng_core)
 ng_add_unit_test(status LIBS ng_core)
+ng_add_unit_test(stream LIBS ng_core)
 ng_add_unit_test(support_allocator LIBS ng_core)
 ng_add_unit_test(types LIBS ng_core)
 ng_add_unit_test(version LIBS ng_core)

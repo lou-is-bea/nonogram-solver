@@ -7,7 +7,9 @@ configure_file(
 
 add_library(ng_core STATIC
     allocator.c
+    buffer.c
     status.c
+    stream.c
     version.c)
 target_include_directories(ng_core PUBLIC
     ${PROJECT_SOURCE_DIR}/include

@@ -7,6 +7,7 @@
 
 #include "nonogram/allocator.h"
 #include "nonogram/status.h"
+#include "nonogram/stream.h"
 #include "nonogram/types.h"
 #include "nonogram/version.h"
 

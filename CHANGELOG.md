@@ -22,6 +22,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - M1 : `types.h` (types sémantiques, `NG_DIM_MAX`, `NG_RUN_COUNT_MAX`, macros `NG_PRI_*`), `status.h` (`ng_status`, `ng_status_str()`), `allocator.h` (`ng_allocator`, `ng_allocator_default()`) et l'en-tête parapluie `nonogram.h`.
 - M1 : allocateur de test `ng_test_allocator` (compteur, défaillant, plafonné) et fixture commune qui détecte les fuites et les violations du contrat de l'allocateur.
 - M1 : portes G7 (Valgrind, analyse des journaux par processus) et G8 (couverture par module avec `gcovr` et `gcov-14`) actives dans `check.sh`.
+- M1 : `stream.h` : `ng_reader` et `ng_writer` (fichier `FILE *`, bloc mémoire avec état `ng_memory_source` fourni par l'appelant), tampon extensible opaque `ng_buffer` (`create`, `destroy`, `data`, `size`) et `ng_writer_from_buffer` (écritures tout ou rien).
 
 ### Modifié
 - M0 : la CI GitHub Actions, d'abord différée (validation locale avec `scripts/check.sh`), tourne sur chaque PR ; les tâches de test ont reçu la permission `packages: read` pour télécharger l'image de référence ; une tâche `full-check` exécute `check.sh` en entier dans le conteneur. Le dépôt est public et `main` est protégée.

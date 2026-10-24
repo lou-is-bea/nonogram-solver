@@ -216,10 +216,15 @@ const ng_allocator *ng_allocator_default(void);   /* enveloppe malloc/free */
 /* stream.h */
 typedef struct ng_reader { ng_status (*read)(void *ctx, char *buf, size_t cap, size_t *got); void *ctx; } ng_reader;
 typedef struct ng_writer { ng_status (*write)(void *ctx, const char *buf, size_t len); void *ctx; } ng_writer;
+typedef struct ng_memory_source { const char *data; size_t size; size_t position; } ng_memory_source;
 ng_reader ng_reader_from_file(FILE *f);
-ng_reader ng_reader_from_memory(const char *data, size_t len);
+ng_reader ng_reader_from_memory(ng_memory_source *state, const char *data, size_t len); /* état fourni par l'appelant */
 ng_writer ng_writer_from_file(FILE *f);
 ng_writer ng_writer_from_buffer(ng_buffer *b);    /* tampon extensible, alloué via ng_allocator */
+ng_status ng_buffer_create(const ng_allocator *a, ng_buffer **out);  /* ng_buffer est opaque */
+void        ng_buffer_destroy(ng_buffer *b);
+const char *ng_buffer_data(const ng_buffer *b);   /* toujours suivi d'un octet nul */
+size_t      ng_buffer_size(const ng_buffer *b);
 
 /* puzzle.h */
 ng_status    ng_puzzle_create(const ng_allocator *a, ng_dim width, ng_dim height,
