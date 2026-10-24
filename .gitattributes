@@ -1,0 +1,5 @@
+# Normalize line endings: the repository is developed on Linux (WSL2).
+* text=auto eol=lf
+*.sh text eol=lf
+*.ngp binary
+*.ngg binary

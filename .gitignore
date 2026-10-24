@@ -1,0 +1,37 @@
+# Build trees (CMake presets write to build/<preset>)
+/build/
+/out/
+CMakeUserPresets.json
+compile_commands.json
+
+# Compiled objects and binaries
+*.o
+*.a
+*.so
+*.d
+
+# Coverage, profiling, fuzzing
+*.gcda
+*.gcno
+*.gcov
+*.profraw
+*.profdata
+coverage/
+crash-*
+leak-*
+timeout-*
+
+# Benchmark outputs (baselines in bench/baselines/ ARE versioned)
+/bench/results/
+
+# Generated massive grids (only their parameters are versioned)
+*.ngp
+*.ngg
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
