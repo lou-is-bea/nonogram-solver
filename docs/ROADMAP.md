@@ -7,7 +7,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 | Étape | Thème | Version visée | Statut |
 |---|---|---|---|
 | M0 | Fondations : build, CI, outillage | — | terminé |
-| M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | à faire |
+| M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | en cours |
 | M2 | Affichage | — | à faire |
 | M3 | Vérificateur | 0.1.0 | à faire |
 | M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |

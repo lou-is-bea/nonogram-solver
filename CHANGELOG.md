@@ -19,6 +19,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - `scripts/setup-wsl.sh` : installation de l'environnement Ubuntu (WSL2), clonage et import initial.
 - `.gitignore` et `.gitattributes` (fins de ligne LF).
 
+- M1 : `types.h` (types sémantiques, `NG_DIM_MAX`, `NG_RUN_COUNT_MAX`, macros `NG_PRI_*`), `status.h` (`ng_status`, `ng_status_str()`), `allocator.h` (`ng_allocator`, `ng_allocator_default()`) et l'en-tête parapluie `nonogram.h`.
+- M1 : allocateur de test `ng_test_allocator` (compteur, défaillant, plafonné) et fixture commune qui détecte les fuites et les violations du contrat de l'allocateur.
+- M1 : portes G7 (Valgrind, analyse des journaux par processus) et G8 (couverture par module avec `gcovr` et `gcov-14`) actives dans `check.sh`.
+
 ### Modifié
 - M0 : la CI GitHub Actions, d'abord différée (validation locale avec `scripts/check.sh`), tourne sur chaque PR ; les tâches de test ont reçu la permission `packages: read` pour télécharger l'image de référence ; une tâche `full-check` exécute `check.sh` en entier dans le conteneur. Le dépôt est public et `main` est protégée.
 - Revue indépendante de M0 : test d'usage de la CLI qui vérifie exactement le code 2 ; recherche des constructions interdites qui retire les commentaires (au lieu d'ignorer toute ligne commençant par `*`), avec un auto-test (littéraux de chaîne et de caractère neutralisés, y compris prolongés par `\`, séparateurs de chiffres C23 reconnus), et qui interdit aussi `strdup`/`strndup` ; `noTestsAction` à `error` ; compilation en `-std=c23`.

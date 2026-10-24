@@ -332,7 +332,8 @@ Le détail est dans l'[ADR-0004](adr/0004-gestion-memoire.md). En résumé :
 
 - Une **allocation par objet** (le puzzle, la grille, l'espace de travail d'un solver), découpée en interne. La mémoire est ainsi prévisible, il y a peu d'appels à l'allocateur et la libération est simple.
 - Les calculs de taille utilisent `ckd_add` et `ckd_mul` (`<stdckdint.h>`). Le produit de deux `ng_dim` se calcule toujours en `ng_cell_index`, via `ngi_cell_index()`.
-- En test, trois allocateurs remplacent l'allocateur par défaut : un **allocateur défaillant** (échec à la n-ième allocation), un **allocateur compteur** (pic mémoire, nombre d'allocations, fuites) et un **allocateur plafonné** (refus au-delà de N octets), qui permet de tester les grilles massives sans les allouer.
+- En test, trois allocateurs remplacent l'allocateur par défaut : un **allocateur défaillant** (échec à la n-ième allocation), un **allocateur compteur** (pic mémoire, nombre d'allocations, fuites) et un **allocateur plafonné** (refus au-delà de N octets), qui permet de tester les grilles massives sans les allouer. Les trois sont réunis dans un même objet, `ng_test_allocator` (`tests/support/test_allocator.h`).
+- L'allocateur par défaut refuse (renvoie `nullptr`) une taille nulle, une taille supérieure à `PTRDIFF_MAX` ou un alignement qui n'est pas une puissance de deux.
 
 ## 8. Gestion des erreurs
 

@@ -37,7 +37,7 @@ Une porte **bloquante** qui échoue empêche la fusion.
 | G4 | Tests d'intégration | `ctest --preset dev -L integration` | oui | M2 |
 | G5 | Propriétés et différentiel | `ctest --preset dev -L property` | oui | M3 |
 | G6 | Sanitizers | `ctest --preset asan` (ASan et LSan), `--preset ubsan` (UBSan, avec `-fsanitize=integer` sous Clang) | oui | M0 |
-| G7 | Valgrind memcheck | `ctest -T memcheck` (preset `dev`), avec `--trace-children=yes` | oui | M1 |
+| G7 | Valgrind memcheck | chaque exécutable de test (preset `dev`) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9) | oui | M1 |
 | G8 | Couverture | preset `coverage` et `gcovr`, avec les seuils du §6 | oui | M1 |
 | G9 | Fuzzing rapide | 60 s par cible | oui | M1 |
 | G10 | Benchmarks | `bench_compare.py` comparé à la référence de `main` | oui si plus de 10 %, sinon simple rapport | M4 |
@@ -54,7 +54,7 @@ Une porte **bloquante** qui échoue empêche la fusion.
 - Les tests se nomment `Test(<module>_<unité>, <scénario>_<attendu>)`, par exemple `Test(grid_create, zero_width_returns_limit)`.
 - Chaque test suit la structure **Préparer, Agir, Vérifier**, et ne vérifie qu'un comportement.
 - Les tests sont indépendants. Criterion exécute chaque test dans un processus séparé, mais un test ne doit pas pour autant dépendre de cette isolation.
-- Chaque suite déclare la fixture commune `ng_test_fixture` (`.init` et `.fini`, définie dans `tests/support/`). Elle installe un allocateur compteur et **fait échouer le test s'il laisse une fuite**.
+- Chaque suite déclare la fixture commune `ng_test_fixture` (`.init` et `.fini`, définie dans `tests/support/`). Elle installe un allocateur compteur (`ng_test_heap()`) et **fait échouer le test s'il laisse une fuite** ou s'il viole le contrat de l'allocateur (taille nulle, alignement invalide, `free` avec une taille différente de celle de l'allocation). Criterion 2.4 ignorant les assertions levées dans `.fini`, la fixture écrit un marqueur `NG_FIXTURE_FAILURE` que CTest transforme en échec (§4.9).
 - On utilise les attributs Criterion à bon escient :
   - `.timeout` sur tout test de solver (par défaut 10 s), pour qu'une boucle infinie apparaisse comme un échec ;
   - `.signal = SIGABRT` pour vérifier qu'une assertion interne se déclenche en Debug ;
@@ -75,23 +75,24 @@ Toute fonction qui traite des lignes ou des grilles est testée au minimum sur c
 
 ### 4.3 Échecs d'allocation
 
-`tests/support/failing_allocator` fait échouer la n-ième allocation. Pour chaque constructeur et chaque fonction qui alloue :
+L'allocateur instrumenté `ng_test_allocator` (`tests/support/test_allocator.h`) réunit l'allocateur compteur, l'allocateur défaillant (`ng_test_allocator_fail_at`, échec de la seule n-ième demande, comptée à partir de 0) et l'allocateur plafonné (`ng_test_allocator_cap`). Pour chaque constructeur et chaque fonction qui alloue :
 
 ```c
 Test(grid_create, every_allocation_failure_is_clean, .init = ng_test_setup, .fini = ng_test_teardown)
 {
     for (size_t n = 0; ; ++n) {
-        failing_allocator_arm(&fa, n);                     /* échoue à la n-ième allocation */
+        ng_test_allocator *ta = ng_test_heap();
+        ng_test_allocator_fail_at(ta, n);                  /* échoue à la n-ième allocation */
         ng_grid *g = nullptr;
-        ng_status s = ng_grid_create(&fa.base, 7, 5, &g);
+        ng_status s = ng_grid_create(&ta->base, 7, 5, &g);
         if (s == NG_OK) {                                  /* toutes les allocations ont réussi : fin */
             ng_grid_destroy(g);
-            cr_assert_eq(fa.live_bytes, 0);
+            cr_assert_eq(ta->live_bytes, 0);
             break;
         }
         cr_assert_eq(s, NG_ERR_OUT_OF_MEMORY);
         cr_assert_null(g);
-        cr_assert_eq(fa.live_bytes, 0);                    /* aucune fuite sur le chemin d'erreur */
+        cr_assert_eq(ta->live_bytes, 0);                   /* aucune fuite sur le chemin d'erreur */
     }
 }
 ```
@@ -157,9 +158,9 @@ Volume : 1 000 cas par propriété sur chaque PR, 100 000 en nocturne.
 
 ### 4.9 Particularités de Criterion avec les outils mémoire
 
-- **Valgrind** : Criterion exécute les tests dans des processus fils, donc Valgrind est lancé avec `--trace-children=yes --leak-check=full --error-exitcode=1` (configuration dans `CTestCustom.cmake`). Le seul fichier de suppressions autorisé est `tests/valgrind/criterion.supp`, qui ne vise que les fonctions internes de Criterion. Toute suppression qui porterait sur du code du projet est interdite.
+- **Valgrind** : Criterion exécute les tests dans des processus fils et ignore leur code de sortie. `check.sh` (G7) lance donc chaque exécutable de test et la CLI sous Valgrind avec `--trace-children=yes --leak-check=full --errors-for-leak-kinds=definite,indirect`, un journal par processus (`build/dev/valgrind/`), et échoue si un journal compte au moins une erreur (`ERROR SUMMARY` non nul). `ctest -T memcheck` n'est pas utilisé : il exige la configuration Dart de CTest et se fie aux codes de sortie. Le seul fichier de suppressions autorisé est `tests/valgrind/criterion.supp`, qui ne vise que les fonctions internes de Criterion. Toute suppression qui porterait sur du code du projet est interdite.
 - **ASan et LSan** : ils fonctionnent dans les processus fils. LSan signale une fuite à la sortie du processus fils, après que Criterion a enregistré le résultat : l'exécutable de test renvoie donc 0 malgré le rapport. Chaque test CTest déclare `FAIL_REGULAR_EXPRESSION` sur les rapports de sanitizers (`ERROR: AddressSanitizer`, `ERROR: LeakSanitizer`, `runtime error:`) : c'est ce mécanisme qui fait échouer le test concerné. Un résultat sous sanitizers se juge donc toujours via `ctest`.
-- **Couverture** : les processus fils écrivent leurs données gcov à leur sortie. Un test qui se termine par un signal (`.signal`) ne contribue pas à la couverture, ce qui est sans conséquence.
+- **Couverture** : les processus fils écrivent leurs données gcov à leur sortie. `check.sh` (G8) appelle `gcovr` avec `gcov-14`, l'outil assorti au compilateur (le `gcov` par défaut d'Ubuntu 24.04 est celui de GCC 13, incompatible), module par module, avec les seuils du §6 ; un module sans fichier source est ignoré. Un test qui se termine par un signal (`.signal`) ne contribue pas à la couverture, ce qui est sans conséquence.
 
 ## 5. Intégration continue
 

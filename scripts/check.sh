@@ -15,6 +15,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 CLANG_FORMAT="${CLANG_FORMAT:-clang-format-20}"
 CLANG_TIDY="${CLANG_TIDY:-clang-tidy-20}"
 CPPCHECK="${CPPCHECK:-cppcheck}"
+GCOV="${GCOV:-gcov-14}"
 JOBS="${JOBS:-$(nproc)}"
 
 ALL_GATES=(G0 G1 G2 G3 G4 G5 G6 G7 G8 G9)
@@ -238,15 +239,74 @@ gate_G6() {
     ctest --preset ubsan -j "$JOBS"
 }
 
-# --- G7..G9: active from M1 -------------------------------------------------------------------------
+# --- G7: Valgrind memcheck ---------------------------------------------------------------------------
+# Criterion runs each test in a child process and ignores the child's exit code, so the gate
+# reads the per-process Valgrind logs instead of relying on exit codes.
+VALGRIND_OPTIONS=(--trace-children=yes --leak-check=full --errors-for-leak-kinds=definite,indirect
+    --error-exitcode=1 --suppressions=tests/valgrind/criterion.supp)
+
 gate_G7() {
-    say "G7 Valgrind memcheck"
-    skip "active from M1"
+    say "G7 Valgrind memcheck (unit tests and CLI, preset dev)"
+    preset dev
+    local logs=build/dev/valgrind
+    rm -rf "$logs"
+    mkdir -p "$logs"
+    local test_binary
+    for test_binary in build/dev/tests/unit/test_*; do
+        echo "-- $test_binary"
+        valgrind "${VALGRIND_OPTIONS[@]}" --log-file="$logs/$(basename "$test_binary").%p.log" \
+            "$test_binary" > /dev/null 2>&1 || true
+    done
+    echo "-- nonogram --version"
+    valgrind "${VALGRIND_OPTIONS[@]}" --log-file="$logs/nonogram.%p.log" \
+        build/dev/src/cli/nonogram --version > /dev/null 2>&1 || true
+
+    local bad
+    bad=$(grep -lE 'ERROR SUMMARY: [1-9]' "$logs"/*.log || true)
+    if [[ -n "$bad" ]]; then
+        printf '%s\n' "$bad" | xargs cat >&2
+        fail "Valgrind reported errors (logs in $logs)"
+    fi
+    echo "$(find "$logs" -name '*.log' | wc -l) processes checked, no error"
 }
 
+# --- G8: coverage -------------------------------------------------------------------------------------
+# Thresholds of docs/TESTING.md §6, per module: <module> <min line %> <min branch %>
+COVERAGE_THRESHOLDS=(
+    "verify 95 90"
+    "core 90 80"
+    "io 90 80"
+    "render 85 75"
+    "solvers 85 75"
+    "cli 75 0"
+)
+
 gate_G8() {
-    say "G8 coverage"
-    skip "active from M1"
+    say "G8 coverage (preset coverage, gcovr)"
+    preset coverage
+    find build/coverage -name '*.gcda' -delete
+    ctest --preset coverage -j "$JOBS" > /dev/null
+    local entry module line_min branch_min
+    for entry in "${COVERAGE_THRESHOLDS[@]}"; do
+        read -r module line_min branch_min <<< "$entry"
+        if ! compgen -G "src/$module/*.c" > /dev/null \
+            && ! compgen -G "src/$module/**/*.c" > /dev/null; then
+            echo "-- $module: no source yet"
+            continue
+        fi
+        echo "-- $module (lines >= $line_min %, branches >= $branch_min %)"
+        # Only the project objects are searched: CMake's compiler probes are instrumented too.
+        local gcovr_args=(--root . --gcov-executable "$GCOV" build/coverage/src
+            --filter "src/$module/" --exclude-unreachable-branches)
+        local report rc=0
+        report=$(gcovr "${gcovr_args[@]}" --print-summary \
+            --fail-under-line "$line_min" --fail-under-branch "$branch_min") || rc=$?
+        if ((rc != 0)); then
+            printf '%s\n' "$report" >&2
+            fail "coverage of $module below threshold"
+        fi
+        printf '%s\n' "$report" | grep -E '^(lines|branches):'
+    done
 }
 
 gate_G9() {

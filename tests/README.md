@@ -23,7 +23,7 @@ Sous sanitizers : `cmake --preset asan && cmake --build --preset asan && ctest -
 
 Criterion exécute chaque test dans un processus fils. LeakSanitizer signale les fuites à la sortie de ce processus, **après** que Criterion a enregistré le résultat du test : lancé seul, l'exécutable de test affiche le rapport mais renvoie 0. C'est CTest qui fait échouer le test, car tout test dont la sortie contient un rapport de sanitizer (`ERROR: AddressSanitizer`, `ERROR: LeakSanitizer`, `runtime error:`) est en échec (`FAIL_REGULAR_EXPRESSION`). Passe donc toujours par `ctest` pour juger un résultat sous sanitizers.
 
-À partir de M1, la fixture commune s'appuie aussi sur l'allocateur compteur et fait échouer le test qui laisse de la mémoire allouée par la bibliothèque.
+La fixture commune installe aussi un allocateur compteur, `ng_test_heap()`, à passer au code testé (`&ng_test_heap()->base`). À la fin du test, s'il reste de la mémoire allouée ou si le contrat de l'allocateur a été violé, elle écrit un message `NG_FIXTURE_FAILURE` : Criterion 2.4 ignore les assertions levées dans `.fini`, et c'est encore CTest qui fait échouer le test.
 
 ## Déboguer un test pas à pas
 
