@@ -90,6 +90,7 @@ BANNED=(
     '\bgoto\s+(?!cleanup\b) @@ . @@ code @@ goto is only allowed as "goto cleanup;"'
     '\b(TODO|FIXME)(?!\(#\d+\)) @@ . @@ text @@ TODO/FIXME must reference a ticket: TODO(#42)'
     '\b(printf|puts|exit|_Exit|quick_exit|abort)\s*\(|\bstdout\b|\bstderr\b @@ ^src/(?!cli/) @@ code @@ no printf/exit/abort/stdout/stderr in the library'
+    '\bng_allocator_default\b|->alloc\s*\( @@ ^src/render/ @@ code @@ the renderer allocates nothing (render.h)'
 )
 
 # Prints "file:line:text" for every line of the files listed on stdin that matches the Perl
@@ -267,8 +268,12 @@ gate_G7() {
     # its log only and exits with 99 on an error, a code the CLI never uses, so a case also
     # fails on its exit code.
     echo "-- CLI integration cases"
-    NG_CLI_WRAPPER="valgrind --leak-check=full --errors-for-leak-kinds=definite,indirect \
---error-exitcode=99 --log-file=$PWD/$logs/cli.%p.log" ctest --preset dev -L integration -j "$JOBS" > /dev/null
+    if ! NG_CLI_WRAPPER="valgrind --leak-check=full --errors-for-leak-kinds=definite,indirect \
+--error-exitcode=99 --log-file=$PWD/$logs/cli.%p.log" ctest --preset dev -L integration -j "$JOBS" \
+        > "$logs/ctest.txt" 2>&1; then
+        cat "$logs/ctest.txt" >&2
+        fail "CLI integration cases failed under Valgrind (exit code 99 = Valgrind error; logs in $logs)"
+    fi
 
     local bad
     bad=$(grep -lE 'ERROR SUMMARY: [1-9]' "$logs"/*.log || true)

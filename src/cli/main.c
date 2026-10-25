@@ -17,10 +17,9 @@ static const char usage_text[] =
     "  --help       print this help\n"
     "  --version    print the version\n";
 
-void cli_print_usage(FILE *out)
+bool cli_print_usage(FILE *out)
 {
-    /* A failure to print the help is not worth a different exit code. */
-    (void)fputs(usage_text, out);
+    return fputs(usage_text, out) != EOF && fflush(out) != EOF;
 }
 
 void cli_report_usage_error(FILE *err, const char *message, const char *argument)
@@ -30,7 +29,7 @@ void cli_report_usage_error(FILE *err, const char *message, const char *argument
     } else {
         (void)fprintf(err, "nonogram: %s\n\n", message);
     }
-    cli_print_usage(err);
+    (void)cli_print_usage(err); /* already reporting an error: nothing more to say */
 }
 
 /* The C standard fixes main's signature: argv cannot be made const. */
@@ -43,11 +42,15 @@ int main(int argc, char *argv[])
     }
     const char *command = argv[1];
     if (strcmp(command, "--version") == 0 && argc == 2) {
-        return printf("nonogram %s\n", ng_version_string()) < 0 ? CLI_EXIT_INPUT : CLI_EXIT_SUCCESS;
+        /* stdout is buffered: a write error may only show when it is flushed. */
+        if (printf("nonogram %s\n", ng_version_string()) < 0 || fflush(stdout) == EOF) {
+            return CLI_EXIT_INPUT;
+        }
+        return CLI_EXIT_SUCCESS;
     }
     if ((strcmp(command, "--help") == 0 || strcmp(command, "-h") == 0) && argc == 2) {
-        cli_print_usage(stdout);
-        return CLI_EXIT_SUCCESS;
+        /* stdout is buffered: a write error may only show when it is flushed. */
+        return cli_print_usage(stdout) ? CLI_EXIT_SUCCESS : CLI_EXIT_INPUT;
     }
     if (strcmp(command, "show") == 0) {
         return cli_show(argc - 2, argv + 2, stdout, stderr);

@@ -17,6 +17,7 @@ Aucun puzzle n'est importé d'une source externe.
 |---|---|---|
 | `puzzles/tiny/` | au plus 25 cases | solution unique, dans `solutions/<nom>.sol` |
 | `puzzles/small/` | au plus 15 × 15 | solution unique, dans `solutions/<nom>.sol` |
+| `puzzles/large/` | jusqu'à 100 × 100, générés (motif décrit dans le fichier) ; sans garantie d'unicité, ils servent aux tests de la CLI sur de grandes sorties | bien formés |
 | `puzzles/multi/` | plusieurs solutions ; leur nombre exact est dans le nom (`*_n9.non`) | nombre de solutions |
 | `puzzles/unsolvable/` | indices cohérents (chaque ligne tient, totaux égaux) mais aucune grille ne les satisfait | aucune solution |
 | `puzzles/invalid/` | fichiers mal formés ou incohérents, chacun avec un `<nom>.expected` | erreur attendue |

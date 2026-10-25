@@ -16,8 +16,8 @@ enum cli_exit_code : int {
     CLI_EXIT_INTERNAL = 4, /* library bug or resource exhaustion */
 };
 
-/** @brief Print the help text to @p out. */
-void cli_print_usage(FILE *out);
+/** @brief Print the help text to @p out and flush it; false on a write failure. */
+bool cli_print_usage(FILE *out);
 
 /**
  * @brief Report a usage error on @p err: "nonogram: <message> '<argument>'" (argument may be

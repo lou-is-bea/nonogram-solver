@@ -72,6 +72,8 @@ ng_cli_case(show_max_render_twenty_digits EXIT 2
     ARGS show ${P}/tiny/dot.non --max-render=99999999999999999999)
 ng_cli_case(show_option_with_suffix EXIT 2 ARGS show ${P}/tiny/dot.non --solutionfoo)
 ng_cli_case(show_repeated_option EXIT 2 ARGS show ${P}/tiny/dot.non --unicode --unicode)
+ng_cli_case(show_repeated_max_render EXIT 2
+    ARGS show ${P}/tiny/dot.non --max-render 3 --max-render=4)
 ng_cli_case(show_repeated_solution EXIT 2
     ARGS show ${P}/tiny/dot.non --solution ${S}/dot.sol --solution=${S}/dot.sol)
 ng_cli_case(show_option_instead_of_value EXIT 2

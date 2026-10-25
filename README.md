@@ -22,7 +22,7 @@ Le projet vise trois objectifs :
 | Étape | Fonctionnalité | Statut |
 |---|---|---|
 | M1 | Modèle de données (puzzle, grille, indices) et lecture du format `.non` | terminé |
-| M2 | Affichage texte du problème et de la solution | terminé |
+| M2 | Affichage texte du problème et de la solution | en cours (sorties de référence à approuver) |
 | M3 | Vérification de la validité d'une solution | à faire |
 | M4 | Solver S0 : force brute (référence pour les petites grilles) | à faire |
 | M5 | Solver S1 : backtracking par placements de lignes | à faire |
@@ -60,6 +60,8 @@ nonogram verify tests/data/puzzles/small/duck.non duck.sol
 # Lister les solvers disponibles
 nonogram list-solvers
 ```
+
+Les options à valeur s'écrivent `--option valeur` ou `--option=valeur` ; une valeur qui commence par `--` doit utiliser la seconde forme.
 
 Codes de sortie de `nonogram` (exigence F-41) : `0` succès, `1` puzzle insoluble ou solution invalide ou incomplète, `2` usage incorrect, `3` erreur d'entrée-sortie (fichier illisible ou mal formé, grille de mauvaise taille, sortie impossible à écrire), `4` erreur interne (y compris le manque de mémoire).
 

@@ -8,7 +8,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 |---|---|---|---|
 | M0 | Fondations : build, CI, outillage | — | terminé |
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
-| M2 | Affichage | — | terminé (validation locale) |
+| M2 | Affichage | — | en cours (critères atteints, sorties de référence à approuver) |
 | M3 | Vérificateur | 0.1.0 | à faire |
 | M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |
 | M5 | S1 : backtracking par placements de lignes | 0.3.0 | à faire |
@@ -96,7 +96,7 @@ Exemple de rendu attendu (ASCII) :
 
 **Critères de sortie** : les sorties de référence sont relues et approuvées par un humain. L'affichage d'une grille 100×100 tient en moins de 2 ms.
 
-*Bilan du 2026-10-25* : ✅ 23 cas d'intégration et leurs sorties de référence (`tests/data/expected/`), **relues et approuvées par un humain** le 2026-10-25. ✅ Affichage d'une grille 100 × 100 aléatoire avec indices (environ 5 000 blocs, 48 Ko de texte) : médiane 0,23 ms, maximum 0,84 ms sur 201 exécutions (Release, WSL2, 16 cœurs). Choix validés : largeur de colonne uniforme pour les indices à plusieurs chiffres, `?` pour les cases inconnues, blocs et cadre Unicode, `0` pour un indice vide.
+*Bilan du 2026-10-25* : 23 premiers cas d'intégration approuvés par le responsable du projet dans la session de travail (approbation à confirmer dans la PR pour la traçabilité) ; les cas ajoutés après la revue indépendante (35 cas `ng_cli_case` au total, plus les tests d'échec d'écriture) sont **à relire et approuver**. Affichage d'une grille 100 × 100 aléatoire avec indices (environ 5 000 blocs, 48 Ko de texte) : médiane 0,23 ms, maximum 0,84 ms sur 201 exécutions (Release, WSL2, 16 cœurs). Choix validés : largeur de colonne uniforme pour les indices à plusieurs chiffres, `?` pour les cases inconnues, blocs et cadre Unicode, `0` pour un indice vide. M2 sera close après l'approbation, comme M3.
 
 ## M3 — Vérificateur
 
