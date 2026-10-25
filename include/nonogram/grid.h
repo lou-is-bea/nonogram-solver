@@ -67,13 +67,13 @@ ng_dim ng_grid_height(const ng_grid *grid);
 /**
  * @brief Read one cell.
  *
- * Calling it with a nullptr grid or a position outside the grid is a contract violation:
- * it triggers an assertion in Debug builds and returns NG_CELL_UNKNOWN in Release builds.
+ * This accessor cannot report an error: a nullptr grid or a position outside the grid yields
+ * NG_CELL_UNKNOWN, in every build.
  *
- * @param grid Grid. Must not be nullptr.
+ * @param grid Grid.
  * @param row  Row, below ng_grid_height().
  * @param col  Column, below ng_grid_width().
- * @return The state of the cell.
+ * @return The state of the cell, or NG_CELL_UNKNOWN for invalid arguments.
  * @complexity O(1).
  */
 ng_cell ng_grid_get(const ng_grid *grid, ng_dim row, ng_dim col);
@@ -81,9 +81,8 @@ ng_cell ng_grid_get(const ng_grid *grid, ng_dim row, ng_dim col);
 /**
  * @brief Write one cell.
  *
- * A nullptr grid, a position outside the grid or a value that is not an ng_cell enumerator is
- * a contract violation: it triggers an assertion in Debug builds and is ignored in Release
- * builds.
+ * This function cannot report an error: a call with a nullptr grid, a position outside the grid
+ * or a value that is not an ng_cell enumerator changes nothing, in every build.
  *
  * @param grid Grid. Must not be nullptr.
  * @param row  Row, below ng_grid_height().
@@ -96,7 +95,7 @@ void ng_grid_set(ng_grid *grid, ng_dim row, ng_dim col, ng_cell cell);
 /**
  * @brief Set every cell to @p cell.
  *
- * Same contract violations as ng_grid_set().
+ * Same invalid arguments as ng_grid_set(): the call then changes nothing.
  *
  * @param grid Grid. Must not be nullptr.
  * @param cell New state of every cell.

@@ -32,12 +32,6 @@ static ng_cell pattern(ng_dim row, ng_dim col)
 static ng_cell line_buffer[side];
 static ng_cell expected_line[side];
 
-static ng_dim line_length(ng_line_id line)
-{
-    (void)line;
-    return side; /* square grids */
-}
-
 static void fill_expected(ng_line_id line)
 {
     for (ng_dim i = 0; i < side; ++i) {
@@ -68,7 +62,7 @@ static void assert_every_line_matches(const ng_grid *grid)
     for (ng_line_id line = 0; line < 2u * side; ++line) {
         fill_expected(line);
         cr_assert_eq(ng_grid_load_line(grid, line, line_buffer), NG_OK);
-        if (memcmp(line_buffer, expected_line, line_length(line)) != 0) {
+        if (memcmp(line_buffer, expected_line, side) != 0) { /* square grids */
             cr_assert_fail("line %u differs", line);
         }
     }
@@ -166,9 +160,17 @@ Test(massive, non_round_trip_of_two_million_runs)
 
     cr_assert_eq(status, NG_OK, "%s", error.message);
     cr_assert_eq(ng_puzzle_total_runs(back), ng_puzzle_total_runs(puzzle));
+    /* A line of side cells holds at most side / 2 + 1 runs. */
+    static ng_dim runs_expected[(side / 2u) + 1u];
+    static ng_dim runs_back[(side / 2u) + 1u];
+    constexpr ng_run_count capacity = (side / 2u) + 1u;
     for (ng_line_id line = 0; line < ng_puzzle_line_count(puzzle); ++line) {
-        if (ng_puzzle_line_run_count(back, line) != ng_puzzle_line_run_count(puzzle, line)) {
-            cr_assert_fail("line %u: run counts differ", line);
+        const ng_run_count count = ng_puzzle_line_run_count(puzzle, line);
+        if (ng_puzzle_line_run_count(back, line) != count ||
+            ng_puzzle_copy_line_runs(puzzle, line, runs_expected, capacity) != NG_OK ||
+            ng_puzzle_copy_line_runs(back, line, runs_back, capacity) != NG_OK ||
+            memcmp(runs_expected, runs_back, count * sizeof(ng_dim)) != 0) {
+            cr_assert_fail("line %u: runs differ", line);
         }
     }
     ng_puzzle_destroy(back);

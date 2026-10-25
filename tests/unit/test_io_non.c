@@ -463,6 +463,26 @@ Test(io_read_non_errors, text_value_above_255_bytes)
     assert_fails(text, NG_ERR_PARSE, 1, 9, "'author' longer than 255 bytes");
 }
 
+Test(io_read_non_errors, control_character_in_a_value_is_rejected)
+{
+    assert_fails("title \"a\x01b\"\n", NG_ERR_PARSE, 1, 9,
+                 "control character in the value of 'title'");
+}
+
+Test(io_read_non_errors, tab_in_a_value_is_kept)
+{
+    read_result result = read_text("title \"a\tb\"\nwidth 1\nheight 1\nrows\n0\ncolumns\n0\n");
+
+    cr_assert_eq(result.status, NG_OK, "%s", result.error.message);
+    cr_assert_str_eq(ng_non_metadata_get(result.metadata, NG_NON_TITLE), "a\tb");
+    release(&result);
+}
+
+Test(io_read_non_errors, lone_carriage_return_in_a_comment_is_rejected)
+{
+    assert_fails("# a\rb\nwidth 1\n", NG_ERR_PARSE, 1, 4, "carriage return");
+}
+
 Test(io_read_non_errors, byte_order_mark_is_rejected)
 {
     assert_fails("\xEF\xBB\xBFwidth 1\n", NG_ERR_PARSE, 1, 1, "byte order mark");

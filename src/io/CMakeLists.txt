@@ -1,6 +1,8 @@
 add_library(ng_io STATIC
     char_source.c
     non_metadata.c
+    non_directives.c
+    non_lexer.c
     non_parser.c
     non_writer.c
     sol_format.c

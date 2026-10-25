@@ -31,22 +31,23 @@ void ngi_char_source_release(ngi_char_source *source, const ng_allocator *alloca
     source->block = nullptr;
 }
 
-/* Refills the block when it is exhausted. Short reads are retried until data, the end or an
- * error comes. */
+/* Refills the block once it is exhausted. A read of zero bytes means the end of the input
+ * (ng_reader contract), so a single read is enough: data, end or error. */
 static void refill(ngi_char_source *source)
 {
-    while (source->next == source->size && !source->at_end && source->status == NG_OK) {
-        size_t got = 0;
-        const ng_status status =
-            source->reader->read(source->reader->ctx, source->block, source->capacity, &got);
-        if (status != NG_OK) {
-            source->status = status;
-        } else if (got == 0u) {
-            source->at_end = true;
-        } else {
-            source->size = got;
-            source->next = 0;
-        }
+    if (source->next != source->size || source->at_end || source->status != NG_OK) {
+        return;
+    }
+    size_t got = 0;
+    const ng_status status =
+        source->reader->read(source->reader->ctx, source->block, source->capacity, &got);
+    if (status != NG_OK) {
+        source->status = status;
+    } else if (got == 0u) {
+        source->at_end = true;
+    } else {
+        source->size = got;
+        source->next = 0;
     }
 }
 

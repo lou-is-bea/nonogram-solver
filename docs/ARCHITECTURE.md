@@ -60,7 +60,7 @@ nonogram-solver/
 ├── src/
 │   ├── core/               # status.c allocator.c stream.c puzzle.c grid.c
 │   │   └── internal/       # en-têtes ngi_* partagés avec les autres couches
-│   ├── io/                 # non_parser.c non_writer.c non_metadata.c sol_format.c (puis ngp_format.c ngg_format.c)
+│   ├── io/                 # non_lexer.c non_directives.c non_parser.c non_writer.c non_metadata.c sol_format.c (puis ngp_format.c ngg_format.c)
 │   │   └── internal/       # source de caractères par blocs, aides texte (ngi_*)
 │   ├── render/             # render_text.c
 │   ├── verify/             # verify.c

@@ -97,8 +97,10 @@ void ng_non_metadata_destroy(ng_non_metadata *metadata);
  *         NG_ERR_OUT_OF_MEMORY when the allocator fails.
  * @ownership The caller owns *out (ng_puzzle_destroy) and *metadata
  *            (ng_non_metadata_destroy).
- * @complexity O(file size) time; O(lines + runs) memory for the puzzle, transiently twice
- *             the clue storage while the puzzle is built.
+ * @complexity O(file size) time. Memory: the final puzzle (8 bytes per line and 4 per run),
+ *             plus, while it is built, the runs read so far in a buffer that doubles when full
+ *             (up to twice the clue storage). Peak: about 3 times the clue storage, plus the
+ *             64 KiB read block.
  */
 [[nodiscard]] ng_status ng_io_read_non(const ng_allocator *allocator, const ng_reader *reader,
                                        ng_puzzle **out, ng_non_metadata **metadata,
@@ -125,8 +127,9 @@ void ng_non_metadata_destroy(ng_non_metadata *metadata);
  * @brief Read a grid in .sol format.
  *
  * The dimensions come from the content: the width from the first line, the height from the
- * number of lines. The cells are accumulated before the grid is created, so the peak memory
- * is about twice the grid.
+ * number of lines. The cells are accumulated in a buffer that doubles when full, then copied
+ * into the grid, so the peak memory reaches about 3 times the grid (buffer of up to twice the
+ * cells, plus the grid), plus the 64 KiB read block.
  *
  * @param allocator Allocator for the grid and the reading state. Borrowed: must outlive the
  *                  grid. Must not be nullptr.
@@ -138,7 +141,7 @@ void ng_non_metadata_destroy(ng_non_metadata *metadata);
  *         NG_ERR_LIMIT for a dimension above NG_DIM_MAX; NG_ERR_IO when @p reader fails;
  *         NG_ERR_OUT_OF_MEMORY when the allocator fails.
  * @ownership The caller owns *out (ng_grid_destroy).
- * @complexity O(file size) time; about 2 x width x height bytes at peak.
+ * @complexity O(file size) time; up to about 3 x width x height bytes at peak.
  */
 [[nodiscard]] ng_status ng_io_read_sol(const ng_allocator *allocator, const ng_reader *reader,
                                        ng_grid **out, ng_parse_error *error);

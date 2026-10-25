@@ -214,7 +214,7 @@ gate_G2() {
 
 # --- G3..G5: test suites ------------------------------------------------------------------------
 gate_G3() {
-    say "G3 unit tests (dev, then release for the NDEBUG fallbacks of contract violations)"
+    say "G3 unit tests (dev, then release: internal assertions compiled out)"
     preset dev
     ctest --preset dev -L unit -j "$JOBS"
     preset release
@@ -286,7 +286,13 @@ COVERAGE_THRESHOLDS=(
 
 gate_G8() {
     say "G8 coverage (preset coverage, gcovr)"
-    preset coverage
+    # Rebuilt from scratch: coverage notes (.gcno) of objects that no longer exist, for instance
+    # after switching branches, would break gcov or skew the figures.
+    cmake --preset coverage > /dev/null
+    if [[ -d build/coverage ]]; then
+        find build/coverage \( -name '*.gcno' -o -name '*.gcda' \) -delete
+    fi
+    cmake --build --preset coverage --clean-first -- -j "$JOBS"
     find build/coverage -name '*.gcda' -delete
     ctest --preset coverage -j "$JOBS" > /dev/null
     local entry module line_min branch_min

@@ -213,7 +213,6 @@ ng_run_index ng_puzzle_total_runs(const ng_puzzle *puzzle)
 
 ng_dim ng_puzzle_line_length(const ng_puzzle *puzzle, ng_line_id line)
 {
-    NG_ASSERT(is_line(puzzle, line));
     if (!is_line(puzzle, line)) {
         return 0;
     }
@@ -222,7 +221,6 @@ ng_dim ng_puzzle_line_length(const ng_puzzle *puzzle, ng_line_id line)
 
 ng_run_count ng_puzzle_line_run_count(const ng_puzzle *puzzle, ng_line_id line)
 {
-    NG_ASSERT(is_line(puzzle, line));
     if (!is_line(puzzle, line)) {
         return 0;
     }

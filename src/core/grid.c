@@ -9,8 +9,6 @@
 #include "nonogram/status.h"
 #include "nonogram/types.h"
 
-#include "core/internal/assert.h"
-
 /* One byte per cell, row after row, in the same allocation as the header (ARCHITECTURE.md
  * §4.4). This layout is private: a 2-bit representation can replace it without touching the
  * API. */
@@ -98,7 +96,6 @@ ng_dim ng_grid_height(const ng_grid *grid)
 
 ng_cell ng_grid_get(const ng_grid *grid, ng_dim row, ng_dim col)
 {
-    NG_ASSERT(is_inside(grid, row, col));
     if (!is_inside(grid, row, col)) {
         return NG_CELL_UNKNOWN;
     }
@@ -107,7 +104,6 @@ ng_cell ng_grid_get(const ng_grid *grid, ng_dim row, ng_dim col)
 
 void ng_grid_set(ng_grid *grid, ng_dim row, ng_dim col, ng_cell cell)
 {
-    NG_ASSERT(is_inside(grid, row, col) && is_cell(cell));
     if (!is_inside(grid, row, col) || !is_cell(cell)) {
         return;
     }
@@ -116,7 +112,6 @@ void ng_grid_set(ng_grid *grid, ng_dim row, ng_dim col, ng_cell cell)
 
 void ng_grid_fill(ng_grid *grid, ng_cell cell)
 {
-    NG_ASSERT(grid != nullptr && is_cell(cell));
     if (grid == nullptr || !is_cell(cell)) {
         return;
     }

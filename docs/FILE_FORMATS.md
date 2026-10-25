@@ -105,7 +105,7 @@ Les métadonnées (`title`, `author`, …) ne font pas partie du puzzle : `ng_io
 - `#` désigne une case pleine, `.` une case vide et `?` une case inconnue. `?` est autorisé pour les grilles partielles (sortie de S2, entrée partiellement remplie).
 - Aucun autre caractère n'est accepté, à l'exception des fins de ligne (`\n` ou `\r\n`, comme pour `.non`). La fin de ligne de la dernière rangée est facultative ; une ligne vide est refusée, y compris en fin de fichier. Il n'y a ni commentaire ni en-tête : les dimensions se déduisent du contenu, et le contrôle de cohérence avec le puzzle se fait au moment de la vérification.
 - Un fichier écrit par `ng_io_write_sol` se termine toujours par `\n`.
-- Les dimensions ne sont connues qu'en fin de lecture : les cases sont accumulées avant la création de la grille, soit environ deux fois la taille de la grille au pic.
+- Les dimensions ne sont connues qu'en fin de lecture : les cases sont accumulées avant la création de la grille, soit jusqu'à environ trois fois la taille de la grille au pic (un tampon qui double quand il est plein, puis la grille).
 - Ce format coûte un octet par case. Pour les grilles massives, on utilise le format binaire `.ngg` (§3).
 
 ## 3. Formats binaires `.ngp` et `.ngg` (M9)

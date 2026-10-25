@@ -63,14 +63,39 @@ static bool same_text(const char *a, const char *b)
     return (a == nullptr) == (b == nullptr) && (a == nullptr || strcmp(a, b) == 0);
 }
 
-static bool same_puzzle(const ng_puzzle *a, const ng_puzzle *b)
+/* True when line @p line has the same runs in both puzzles. The clues are copied into buffers
+ * taken from the capped heap; the target never allocates outside it. */
+static bool same_line(const ng_allocator *heap, const ng_puzzle *a, const ng_puzzle *b,
+                      ng_line_id line)
+{
+    const ng_run_count count = ng_puzzle_line_run_count(a, line);
+    if (ng_puzzle_line_run_count(b, line) != count) {
+        return false;
+    }
+    if (count == 0u) {
+        return true;
+    }
+    const size_t bytes = (size_t)count * sizeof(ng_dim);
+    ng_dim *runs_a = heap->alloc(heap->ctx, bytes, alignof(ng_dim));
+    ng_dim *runs_b = heap->alloc(heap->ctx, bytes, alignof(ng_dim));
+    /* Both puzzles already fit in the budget, so one line of each does too. */
+    check(runs_a != nullptr && runs_b != nullptr);
+    check(ng_puzzle_copy_line_runs(a, line, runs_a, count) == NG_OK);
+    check(ng_puzzle_copy_line_runs(b, line, runs_b, count) == NG_OK);
+    const bool same = memcmp(runs_a, runs_b, bytes) == 0;
+    heap->free(heap->ctx, runs_a, bytes);
+    heap->free(heap->ctx, runs_b, bytes);
+    return same;
+}
+
+static bool same_puzzle(const ng_allocator *heap, const ng_puzzle *a, const ng_puzzle *b)
 {
     if (ng_puzzle_width(a) != ng_puzzle_width(b) || ng_puzzle_height(a) != ng_puzzle_height(b) ||
         ng_puzzle_total_runs(a) != ng_puzzle_total_runs(b)) {
         return false;
     }
     for (ng_line_id line = 0; line < ng_puzzle_line_count(a); ++line) {
-        if (ng_puzzle_line_run_count(a, line) != ng_puzzle_line_run_count(b, line)) {
+        if (!same_line(heap, a, b, line)) {
             return false;
         }
     }
@@ -94,7 +119,7 @@ static void check_round_trip(const ng_allocator *a, const ng_puzzle *puzzle,
         const ng_status status = ng_io_read_non(a, &r, &back, &back_metadata, nullptr);
         check(status == NG_OK || status == NG_ERR_OUT_OF_MEMORY);
         if (status == NG_OK) {
-            check(same_puzzle(puzzle, back));
+            check(same_puzzle(a, puzzle, back));
             for (size_t f = 0; f < NG_NON_FIELD_COUNT; ++f) {
                 check(same_text(ng_non_metadata_get(metadata, (ng_non_field)f),
                                 ng_non_metadata_get(back_metadata, (ng_non_field)f)));

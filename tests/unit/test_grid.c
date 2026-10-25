@@ -1,5 +1,4 @@
 #include <criterion/criterion.h>
-#include <signal.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -208,39 +207,9 @@ Test(grid_access, dimension_accessors_treat_nullptr_as_empty)
     cr_assert_eq(ng_grid_height(nullptr), 0u);
 }
 
-#ifndef NDEBUG
-/* Contract violations are internal assertions in Debug builds. */
-Test(grid_access, get_outside_the_grid_asserts, .signal = SIGABRT)
-{
-    ng_grid *grid = make_grid(4, 3);
-
-    ng_grid_get(grid, 3, 0);
-}
-
-Test(grid_access, set_outside_the_grid_asserts, .signal = SIGABRT)
-{
-    ng_grid *grid = make_grid(4, 3);
-
-    ng_grid_set(grid, 0, 4, NG_CELL_FILLED);
-}
-
-Test(grid_access, set_of_a_non_enumerator_asserts, .signal = SIGABRT)
-{
-    ng_grid *grid = make_grid(4, 3);
-    /* NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange) */
-    const ng_cell bogus = (ng_cell)3;
-
-    ng_grid_set(grid, 0, 0, bogus);
-}
-
-Test(grid_access, get_on_nullptr_asserts, .signal = SIGABRT)
-{
-    ng_grid_get(nullptr, 0, 0);
-}
-#else
-/* Release builds: the documented fallbacks of contract violations (run with the release
- * preset). */
-Test(grid_access, release_get_outside_the_grid_returns_unknown)
+/* The accessors cannot return a status: invalid arguments get the documented fallback, in
+ * every build (no assertion: CODING_STANDARDS.md §6). */
+Test(grid_access, get_outside_the_grid_returns_unknown)
 {
     ng_grid *grid = make_patterned_grid(4, 3);
 
@@ -249,7 +218,7 @@ Test(grid_access, release_get_outside_the_grid_returns_unknown)
     ng_grid_destroy(grid);
 }
 
-Test(grid_access, release_invalid_set_and_fill_are_ignored)
+Test(grid_access, invalid_set_and_fill_are_ignored)
 {
     ng_grid *grid = make_grid(2, 2);
     /* NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange) */
@@ -268,7 +237,6 @@ Test(grid_access, release_invalid_set_and_fill_are_ignored)
     }
     ng_grid_destroy(grid);
 }
-#endif
 
 /* --- grid_copy ---------------------------------------------------------------------------- */
 

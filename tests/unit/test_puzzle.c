@@ -1,5 +1,4 @@
 #include <criterion/criterion.h>
-#include <signal.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -162,6 +161,21 @@ Test(puzzle_create, too_many_runs_is_inconsistent_without_reading_them)
     cr_assert_eq(create(1, 1, runs, offsets), NG_ERR_INCONSISTENT);
 }
 
+Test(puzzle_create, one_run_too_many_is_inconsistent_from_the_offsets)
+{
+    /* 1 x 1: a line of one cell holds at most one run; the row announces two. The first run
+     * has length 0, which step 5 would reject as NG_ERR_INVALID_ARGUMENT: only the run count
+     * check of step 4, on the offsets alone, returns NG_ERR_INCONSISTENT. */
+    const ng_dim runs[] = {0, 1, 1};
+    const ng_run_index two_runs_in_one_cell[] = {0, 2, 3};
+    /* 3 x 1, row "#.#": two runs fill the row exactly and are accepted. */
+    const ng_dim fit_runs[] = {1, 1, 1, 1};
+    const ng_run_index exactly_two[] = {0, 2, 3, 3, 4};
+
+    cr_assert_eq(create(1, 1, runs, two_runs_in_one_cell), NG_ERR_INCONSISTENT);
+    cr_assert_eq(create(3, 1, fit_runs, exactly_two), NG_OK, "two runs fill 3 cells exactly");
+}
+
 Test(puzzle_create, zero_length_run_is_invalid)
 {
     const ng_dim runs[] = {0, 1};
@@ -290,22 +304,8 @@ Test(puzzle_lines, accessors_treat_nullptr_as_empty)
     cr_assert_eq(ng_puzzle_total_runs(nullptr), 0u);
 }
 
-#ifndef NDEBUG
-Test(puzzle_lines, line_length_out_of_range_asserts, .signal = SIGABRT)
-{
-    ng_puzzle *puzzle = make_p();
-
-    ng_puzzle_line_length(puzzle, 10);
-}
-
-Test(puzzle_lines, run_count_on_nullptr_asserts, .signal = SIGABRT)
-{
-    ng_puzzle_line_run_count(nullptr, 0);
-}
-#else
-/* Release builds: the documented fallbacks of contract violations (run with the release
- * preset). */
-Test(puzzle_lines, release_invalid_line_queries_return_zero)
+/* The accessors cannot return a status: invalid arguments yield 0, in every build. */
+Test(puzzle_lines, invalid_line_queries_return_zero)
 {
     ng_puzzle *puzzle = make_p();
 
@@ -315,4 +315,3 @@ Test(puzzle_lines, release_invalid_line_queries_return_zero)
     cr_assert_eq(ng_puzzle_line_run_count(nullptr, 0), 0u);
     ng_puzzle_destroy(puzzle);
 }
-#endif

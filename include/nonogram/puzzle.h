@@ -26,12 +26,13 @@ typedef struct ng_puzzle ng_puzzle;
  * the call returns.
  *
  * Validation, in this order (the first failure is reported):
- * 1. nullptr arguments: NG_ERR_INVALID_ARGUMENT;
+ * 1. nullptr allocator, line_offsets or out: NG_ERR_INVALID_ARGUMENT;
  * 2. width or height outside [1, NG_DIM_MAX]: NG_ERR_LIMIT;
  * 3. line_offsets[0] != 0 or decreasing offsets: NG_ERR_INVALID_ARGUMENT;
  * 4. a line with more runs than its length allows: NG_ERR_INCONSISTENT (checked on the
  *    offsets alone, before any run is read);
- * 5. a run of length 0: NG_ERR_INVALID_ARGUMENT;
+ * 5. runs nullptr while the offsets announce runs, or a run of length 0:
+ *    NG_ERR_INVALID_ARGUMENT;
  * 6. a line whose runs plus one gap between consecutive runs exceed its length, or row clues
  *    and column clues with different totals: NG_ERR_INCONSISTENT;
  * 7. a size that is not representable: NG_ERR_LIMIT; allocator failure: NG_ERR_OUT_OF_MEMORY.
@@ -79,8 +80,8 @@ ng_run_index ng_puzzle_total_runs(const ng_puzzle *puzzle);
 /**
  * @brief Length of a line: the width for a row, the height for a column.
  *
- * A nullptr puzzle or a line out of range is a contract violation: it triggers an assertion
- * in Debug builds and returns 0 in Release builds.
+ * This accessor cannot report an error: a nullptr puzzle or a line out of range yields 0, in
+ * every build.
  *
  * @complexity O(1).
  */
@@ -89,7 +90,7 @@ ng_dim ng_puzzle_line_length(const ng_puzzle *puzzle, ng_line_id line);
 /**
  * @brief Number of runs in the clue of a line (0 for an empty line).
  *
- * Same contract violations as ng_puzzle_line_length(), returning 0 in Release builds.
+ * Same invalid arguments as ng_puzzle_line_length(), yielding 0.
  *
  * @complexity O(1).
  */
