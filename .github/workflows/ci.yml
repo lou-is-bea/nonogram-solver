@@ -115,5 +115,3 @@ jobs:
       - uses: actions/checkout@v4
       - name: check.sh (G0 to G9)
         run: ./scripts/check.sh
-        env:
-          FUZZ_SECONDS: "60"

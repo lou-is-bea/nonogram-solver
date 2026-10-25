@@ -66,3 +66,10 @@ add_test(NAME cli_without_arguments_is_usage_error
 set_tests_properties(cli_without_arguments_is_usage_error PROPERTIES
     LABELS integration
     FAIL_REGULAR_EXPRESSION "${NG_SANITIZER_FAILURE_REGEX}")
+
+# Output failure: stdout on /dev/full (Linux) gives exit code 3.
+add_test(NAME cli_version_output_failure
+    COMMAND sh -c [=["$1" --version >/dev/full; [ "$?" -eq 3 ]]=] _ $<TARGET_FILE:nonogram>)
+set_tests_properties(cli_version_output_failure PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_SANITIZER_FAILURE_REGEX}")

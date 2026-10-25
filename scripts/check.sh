@@ -92,20 +92,35 @@ BANNED=(
 )
 
 # Prints "file:line:text" for every line of the files listed on stdin that matches the Perl
-# regex $1. In mode "code", comments are removed first: block comments (including those that
-# span several lines) and line comments. A line that merely starts with '*' is code, e.g.
-# "*out = NULL;".
+# regex $1. In mode "code", the line is scanned from left to right: string and character
+# literals are blanked (so that "/*" or "//" inside a string is not taken for a comment, and
+# their text is not taken for code), then block comments (including those that span several
+# lines) and line comments are removed. A line that merely starts with '*' is code, e.g.
+# "*out = NULL;". #include lines keep their path, which some rules check.
 scan_lines() {
     NG_RE="$1" NG_MODE="$2" xargs -r perl -ne '
         BEGIN { $re = qr/$ENV{NG_RE}/; $code_mode = $ENV{NG_MODE} eq "code"; }
-        my $code = $_;
-        if ($code_mode) {
-            if ($in_comment) {
-                if ($code =~ s{^.*?\*/}{}) { $in_comment = 0; } else { $code = ""; }
+        my $rest = $_;
+        my $code = "";
+        if (!$code_mode) {
+            $code = $rest;
+        } elsif (!$in_comment && $rest =~ m{^\s*#\s*include\b}) {
+            ($code = $rest) =~ s{(/\*|//).*}{};
+        } else {
+            while (length $rest) {
+                if ($in_comment) {
+                    if ($rest =~ s{^.*?\*/}{}s) { $in_comment = 0; } else { $rest = ""; }
+                } elsif ($rest =~ s{^("(?:\\.|[^"\\\n])*"|\x27(?:\\.|[^\x27\\\n])*\x27)}{}) {
+                    $code .= "\"\"";
+                } elsif ($rest =~ s{^/\*}{}) {
+                    $in_comment = 1;
+                } elsif ($rest =~ s{^//.*}{}s) {
+                    $rest = "";
+                } else {
+                    $rest =~ s{^(.)}{}s;
+                    $code .= $1;
+                }
             }
-            $code =~ s{/\*.*?\*/}{}g;
-            $in_comment = 1 if $code =~ s{/\*.*}{};
-            $code =~ s{//.*}{};
         }
         print "$ARGV:$.:$_" if $code =~ $re;
         if (eof) { close ARGV; $in_comment = 0; }'

@@ -7,6 +7,7 @@
 enum cli_exit_code : int {
     CLI_EXIT_SUCCESS = 0,
     CLI_EXIT_USAGE = 2,
+    CLI_EXIT_INPUT = 3, /* input or output failure */
     CLI_EXIT_INTERNAL = 4,
 };
 
@@ -24,8 +25,9 @@ static int print_usage(FILE *out)
 int main(int argc, char *argv[])
 {
     if (argc == 2 && strcmp(argv[1], "--version") == 0) {
-        if (printf("nonogram %s\n", ng_version_string()) < 0) {
-            return CLI_EXIT_INTERNAL;
+        /* stdout is buffered: a write error may only show when it is flushed. */
+        if (printf("nonogram %s\n", ng_version_string()) < 0 || fflush(stdout) == EOF) {
+            return CLI_EXIT_INPUT;
         }
         return CLI_EXIT_SUCCESS;
     }

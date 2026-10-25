@@ -10,3 +10,5 @@
     goto cleanup;
 /* TODO(#42): referenced ticket */
     return value; // NULL in a trailing comment
+    message = "NULL // malloc( and free( inside a string are text";
+    c = '"'; d = '/'; e = '*'; f = NULL_CHECKS_DISABLED;

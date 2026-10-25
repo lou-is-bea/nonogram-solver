@@ -18,3 +18,6 @@
     printf("debug\n");
     abort();
     fputs("x", stderr);
+    path = "puzzles/*.non"; q = NULL;
+    r = malloc(8); /* code after a string holding a comment marker is still code */
+    url = "https://example.org"; free(url);

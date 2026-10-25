@@ -163,7 +163,7 @@ Volume : 1 000 cas par propriété sur chaque PR, 100 000 en nocturne.
 
 ## 5. Intégration continue
 
-> **État actuel** : la CI tourne sur chaque PR depuis le 2026-10-25 (voir [ROADMAP.md, M0](ROADMAP.md#m0--fondations)) avec les tâches `image`, `lint`, `build-test` et `sanitizers`. Les tâches `valgrind`, `coverage`, `fuzz-smoke`, `bench`, `nightly` et `massive` décrites ci-dessous ne sont pas encore en place : G7, G8 et G9 ne tournent qu'en local, avec `./scripts/check.sh`.
+> **État actuel** : la CI tourne sur chaque PR depuis le 2026-10-25 (voir [ROADMAP.md, M0](ROADMAP.md#m0--fondations)) avec les tâches `image`, `lint`, `build-test`, `sanitizers` et `full-check`. `full-check` exécute `./scripts/check.sh` en entier dans le conteneur : c'est là que G7, G8 et G9 tournent en CI, en attendant les tâches dédiées `valgrind`, `coverage` et `fuzz-smoke` décrites ci-dessous ; `bench`, `nightly` et `massive` ne sont pas encore en place.
 
 GitHub Actions, fichier `.github/workflows/ci.yml`. Toutes les tâches s'exécutent dans le **conteneur de référence** construit depuis `tools/docker/Dockerfile` (Ubuntu 24.04 LTS : GCC 14, Clang 20, Criterion, CMake, Ninja, Valgrind, outils d'analyse aux versions figées). C'est le même environnement que celui de WSL.
 
