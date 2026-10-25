@@ -24,6 +24,7 @@ typedef struct show_args {
     const char *puzzle_path;
     const char *solution_path;
     bool unicode;
+    bool has_max_render;
     ng_dim max_render;
 } show_args;
 
@@ -73,7 +74,9 @@ static option_match match_option(int argc, char **argv, int *index, const char *
         *value = arg + length + 1;
         return OPTION_PRESENT;
     }
-    if (*index + 1 >= argc || argv[*index + 1] == nullptr) {
+    /* "--solution --unicode": an option where a value is expected means the value is missing. */
+    if (*index + 1 >= argc || argv[*index + 1] == nullptr ||
+        strncmp(argv[*index + 1], "--", 2) == 0) {
         return OPTION_MISSING;
     }
     *value = argv[++*index];
@@ -86,17 +89,27 @@ static int parse_arg(int argc, char **argv, int *index, show_args *args, FILE *e
     const char *arg = argv[*index];
     const char *value = nullptr;
     if (strcmp(arg, "--unicode") == 0) {
+        if (args->unicode) {
+            return usage_error(err, "repeated option", arg);
+        }
         args->unicode = true;
         return CLI_EXIT_SUCCESS;
     }
     option_match match = match_option(argc, argv, index, "--solution", &value);
     if (match == OPTION_PRESENT) {
+        if (args->solution_path != nullptr) {
+            return usage_error(err, "repeated option", "--solution");
+        }
         args->solution_path = value;
         return CLI_EXIT_SUCCESS;
     }
     if (match == OPTION_ABSENT) {
         match = match_option(argc, argv, index, "--max-render", &value);
         if (match == OPTION_PRESENT) {
+            if (args->has_max_render) {
+                return usage_error(err, "repeated option", "--max-render");
+            }
+            args->has_max_render = true;
             if (parse_dim(value, &args->max_render)) {
                 return CLI_EXIT_SUCCESS;
             }
@@ -199,7 +212,7 @@ static int print(FILE *out, FILE *err, const show_args *args, const ng_puzzle *p
     const ng_writer w = ng_writer_from_file(out);
     const bool too_large =
         ng_puzzle_width(puzzle) > args->max_render || ng_puzzle_height(puzzle) > args->max_render;
-    const ng_render_options options = {.show_clues = true, .unicode = args->unicode};
+    const ng_render_options options = {.unicode = args->unicode};
     const ng_status status = too_large ? ng_render_summary(puzzle, grid, &w)
                                        : ng_render_text(puzzle, grid, &options, &w);
     if (status != NG_OK || fflush(out) != 0) {

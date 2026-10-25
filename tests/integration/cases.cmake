@@ -37,6 +37,10 @@ ng_cli_case(show_summary_above_max_render EXIT 0
     ARGS show ${P}/small/duck.non --solution ${S}/duck.sol --max-render 9)
 ng_cli_case(show_at_max_render EXIT 0 ARGS show ${P}/tiny/plus.non --max-render=5)
 
+ng_cli_case(show_summary_only_too_wide EXIT 0 ARGS show ${P}/tiny/wide.non --max-render 5)
+ng_cli_case(show_summary_only_too_tall EXIT 0 ARGS show ${P}/tiny/column.non --max-render 4)
+ng_cli_case(show_largest_max_render EXIT 0 ARGS show ${P}/tiny/dot.non --max-render 2147483647)
+
 # --- input errors (exit 3)
 ng_cli_case(show_missing_file EXIT 3 ARGS show ${P}/tiny/no_such_puzzle.non)
 ng_cli_case(show_parse_error EXIT 3 ARGS show ${P}/invalid/zero_width.non)
@@ -45,6 +49,11 @@ ng_cli_case(show_solution_parse_error EXIT 3
     ARGS show ${P}/tiny/letter_p.non --solution ${P}/tiny/letter_p.non)
 ng_cli_case(show_solution_wrong_size EXIT 3
     ARGS show ${P}/tiny/letter_p.non --solution ${S}/duck.sol)
+set(G tests/data/grids)
+ng_cli_case(show_solution_wrong_height EXIT 3
+    ARGS show ${P}/tiny/letter_p.non --solution ${G}/letter_p_three_rows.sol)
+ng_cli_case(show_solution_wrong_width EXIT 3
+    ARGS show ${P}/tiny/letter_p.non --solution ${G}/letter_p_three_columns.sol)
 ng_cli_case(show_missing_solution_file EXIT 3
     ARGS show ${P}/tiny/letter_p.non --solution ${S}/no_such_grid.sol)
 
@@ -57,4 +66,14 @@ ng_cli_case(show_unknown_option EXIT 2 ARGS show ${P}/tiny/dot.non --colour)
 ng_cli_case(show_two_puzzles EXIT 2 ARGS show ${P}/tiny/dot.non ${P}/tiny/dot.non)
 ng_cli_case(show_missing_option_value EXIT 2 ARGS show ${P}/tiny/dot.non --solution)
 ng_cli_case(show_invalid_max_render EXIT 2 ARGS show ${P}/tiny/dot.non --max-render 0)
+ng_cli_case(show_max_render_above_dim_max EXIT 2
+    ARGS show ${P}/tiny/dot.non --max-render 2147483648)
+ng_cli_case(show_max_render_twenty_digits EXIT 2
+    ARGS show ${P}/tiny/dot.non --max-render=99999999999999999999)
+ng_cli_case(show_option_with_suffix EXIT 2 ARGS show ${P}/tiny/dot.non --solutionfoo)
+ng_cli_case(show_repeated_option EXIT 2 ARGS show ${P}/tiny/dot.non --unicode --unicode)
+ng_cli_case(show_repeated_solution EXIT 2
+    ARGS show ${P}/tiny/dot.non --solution ${S}/dot.sol --solution=${S}/dot.sol)
+ng_cli_case(show_option_instead_of_value EXIT 2
+    ARGS show ${P}/tiny/dot.non --solution --unicode)
 ng_cli_case(show_non_numeric_max_render EXIT 2 ARGS show ${P}/tiny/dot.non --max-render=big)

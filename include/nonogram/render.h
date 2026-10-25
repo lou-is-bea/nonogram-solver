@@ -5,7 +5,7 @@
  * Layout (ASCII, clues shown):
  *
  *         1
- *       3 1 3 1 1
+ *       5 1 3 0 0
  *     +-----------+
  *   3 | # # # . . |
  * 1 1 | # . # . . |
@@ -33,9 +33,12 @@
 #include "nonogram/status.h"
 #include "nonogram/stream.h"
 
-/** @brief Rendering options. A zero-initialised value means: no clues, ASCII. */
+/**
+ * @brief Rendering options. A zero-initialised value, like a nullptr options pointer, means the
+ *        default rendering: clues shown, ASCII.
+ */
 typedef struct ng_render_options {
-    bool show_clues; /**< Draw the row and column clues around the grid. */
+    bool hide_clues; /**< Omit the row and column clues around the grid. */
     bool unicode;    /**< Unicode glyphs and frame instead of ASCII. */
 } ng_render_options;
 
@@ -45,7 +48,8 @@ typedef struct ng_render_options {
  * @param puzzle  Puzzle: dimensions and clues. Must not be nullptr.
  * @param grid    Cells to draw, same dimensions as @p puzzle; nullptr draws every cell as
  *                unknown.
- * @param options Options; nullptr means clues shown, ASCII.
+ * @param options Options; nullptr means the same as a zero-initialised value (clues shown,
+ *                ASCII).
  * @param writer  Destination. Must not be nullptr.
  * @return NG_OK; NG_ERR_INVALID_ARGUMENT for a nullptr puzzle or writer, or a grid whose
  *         dimensions differ from the puzzle's (nothing is written then); otherwise the first

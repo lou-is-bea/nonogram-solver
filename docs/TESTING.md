@@ -37,7 +37,7 @@ Une porte **bloquante** qui échoue empêche la fusion.
 | G4 | Tests d'intégration | `ctest --preset dev -L integration` | oui | M2 |
 | G5 | Propriétés et différentiel | `ctest --preset dev -L property` | oui | M1 (P-M1) |
 | G6 | Sanitizers | `ctest --preset asan` (ASan et LSan), `--preset ubsan` (UBSan, avec `-fsanitize=integer` sous Clang) | oui | M0 |
-| G7 | Valgrind memcheck | chaque exécutable de test (preset `dev`) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9) | oui | M1 |
+| G7 | Valgrind memcheck | chaque exécutable de test (preset `dev`) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9), et chaque cas d'intégration de la CLI via `NG_CLI_WRAPPER` | oui | M1 |
 | G8 | Couverture | preset `coverage` et `gcovr`, avec les seuils du §6 | oui | M1 |
 | G9 | Fuzzing rapide | 60 s par cible (preset `fuzz`, durée réglable par `FUZZ_SECONDS`) | oui | M1 |
 | G10 | Benchmarks | `bench_compare.py` comparé à la référence de `main` | oui si plus de 10 %, sinon simple rapport | M4 |

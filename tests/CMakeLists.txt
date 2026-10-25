@@ -155,3 +155,11 @@ add_test(NAME cli_version_output_failure
 set_tests_properties(cli_version_output_failure PROPERTIES
     LABELS integration
     FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+
+# Output failure: stdout on /dev/full (Linux) must give exit code 3 and a message.
+add_test(NAME cli_show_output_failure
+    COMMAND sh -c [=[err=$("$1" show tests/data/puzzles/tiny/dot.non 2>&1 >/dev/full); code=$?; printf '%s\n' "$err"; [ "$code" -eq 3 ] && printf '%s\n' "$err" | grep -q 'cannot write the output']=] _ $<TARGET_FILE:nonogram>
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_tests_properties(cli_show_output_failure PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")

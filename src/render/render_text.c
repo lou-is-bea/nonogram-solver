@@ -222,10 +222,10 @@ static bool matches(const ng_puzzle *puzzle, const ng_grid *grid)
     if (puzzle == nullptr || writer == nullptr || !matches(puzzle, grid)) {
         return NG_ERR_INVALID_ARGUMENT;
     }
-    const ng_render_options defaults = {.show_clues = true, .unicode = false};
+    const ng_render_options defaults = {};
     const ng_render_options *o = options == nullptr ? &defaults : options;
     const glyphs *g = o->unicode ? &unicode_glyphs : &ascii_glyphs;
-    const layout l = compute_layout(puzzle, o->show_clues);
+    const layout l = compute_layout(puzzle, !o->hide_clues);
     line_output out = {};
     ngi_output_init(&out.out, writer);
     if (l.clues) {

@@ -249,7 +249,7 @@ VALGRIND_OPTIONS=(--trace-children=yes --leak-check=full --errors-for-leak-kinds
     --error-exitcode=1 --suppressions=tests/valgrind/criterion.supp)
 
 gate_G7() {
-    say "G7 Valgrind memcheck (unit tests and CLI, preset dev)"
+    say "G7 Valgrind memcheck (unit, property and CLI integration tests, preset dev)"
     preset dev
     local logs=build/dev/valgrind
     rm -rf "$logs"
@@ -263,6 +263,12 @@ gate_G7() {
     echo "-- nonogram --version"
     valgrind "${VALGRIND_OPTIONS[@]}" --log-file="$logs/nonogram.%p.log" \
         build/dev/src/cli/nonogram --version > /dev/null 2>&1 || true
+    # Every CLI integration case runs under Valgrind through run_case.cmake. Valgrind writes to
+    # its log only and exits with 99 on an error, a code the CLI never uses, so a case also
+    # fails on its exit code.
+    echo "-- CLI integration cases"
+    NG_CLI_WRAPPER="valgrind --leak-check=full --errors-for-leak-kinds=definite,indirect \
+--error-exitcode=99 --log-file=$PWD/$logs/cli.%p.log" ctest --preset dev -L integration -j "$JOBS" > /dev/null
 
     local bad
     bad=$(grep -lE 'ERROR SUMMARY: [1-9]' "$logs"/*.log || true)

@@ -4,8 +4,14 @@
 # With NG_UPDATE_GOLDEN=1 in the environment, the reference files are rewritten instead
 # (scripts/update_golden.sh); every change must then be reviewed in the diff.
 string(REPLACE "|" ";" args "${ARGS}")
+# NG_CLI_WRAPPER (for example a Valgrind command line, see scripts/check.sh G7) runs the CLI
+# under a tool; the tool must not write to stdout or stderr, which are compared below.
+set(wrapper "")
+if(DEFINED ENV{NG_CLI_WRAPPER})
+    separate_arguments(wrapper UNIX_COMMAND "$ENV{NG_CLI_WRAPPER}")
+endif()
 execute_process(
-    COMMAND ${NONOGRAM} ${args}
+    COMMAND ${wrapper} ${NONOGRAM} ${args}
     RESULT_VARIABLE exit_code
     OUTPUT_VARIABLE actual_stdout
     ERROR_VARIABLE actual_stderr)

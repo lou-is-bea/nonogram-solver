@@ -91,10 +91,10 @@ static void release_p(p_fixture *p)
 
 /* --- render_text -------------------------------------------------------------------------- */
 
-Test(render_text, ascii_with_clues_matches_the_roadmap_layout)
+Test(render_text, ascii_with_clues_matches_the_documented_layout)
 {
     p_fixture p = make_p();
-    const ng_render_options options = {.show_clues = true};
+    const ng_render_options options = {};
 
     assert_renders(p.puzzle, p.grid, &options,
                    "        1\n"
@@ -109,10 +109,10 @@ Test(render_text, ascii_with_clues_matches_the_roadmap_layout)
     release_p(&p);
 }
 
-Test(render_text, default_options_show_the_clues_in_ascii)
+Test(render_text, nullptr_options_equal_zero_initialised_options)
 {
     p_fixture p = make_p();
-    const ng_render_options options = {.show_clues = true};
+    const ng_render_options options = {};
     rendered explicit_options = render(p.puzzle, p.grid, &options);
 
     rendered defaults = render(p.puzzle, p.grid, nullptr);
@@ -127,7 +127,7 @@ Test(render_text, default_options_show_the_clues_in_ascii)
 Test(render_text, without_clues_only_the_framed_grid_remains)
 {
     p_fixture p = make_p();
-    const ng_render_options options = {};
+    const ng_render_options options = {.hide_clues = true};
 
     assert_renders(p.puzzle, p.grid, &options,
                    "+-----------+\n"
@@ -143,7 +143,7 @@ Test(render_text, without_clues_only_the_framed_grid_remains)
 Test(render_text, without_grid_every_cell_is_unknown)
 {
     p_fixture p = make_p();
-    const ng_render_options options = {.show_clues = true};
+    const ng_render_options options = {};
 
     assert_renders(p.puzzle, nullptr, &options,
                    "        1\n"
@@ -164,7 +164,7 @@ Test(render_text, partial_grid_shows_unknown_cells)
     ng_grid *grid = grid_of(partial, 2);
     ng_grid *full = grid_of((const char *const[]){"#..", "..#"}, 2);
     ng_puzzle *puzzle = ng_test_puzzle_from_grid(full);
-    const ng_render_options options = {};
+    const ng_render_options options = {.hide_clues = true};
 
     assert_renders(puzzle, grid, &options,
                    "+-------+\n"
@@ -179,7 +179,7 @@ Test(render_text, partial_grid_shows_unknown_cells)
 Test(render_text, unicode_uses_blocks_dots_and_box_drawing)
 {
     p_fixture p = make_p();
-    const ng_render_options options = {.show_clues = true, .unicode = true};
+    const ng_render_options options = {.unicode = true};
 
     assert_renders(p.puzzle, p.grid, &options,
                    "        1\n"
@@ -200,7 +200,7 @@ Test(render_text, multi_digit_column_clues_widen_every_column)
     static const char *const rows[] = {"##", "#.", "#.", "#.", "#.", "#.", "#.", "#.", "#.", "#."};
     ng_grid *grid = grid_of(rows, 10);
     ng_puzzle *puzzle = ng_test_puzzle_from_grid(grid);
-    const ng_render_options options = {.show_clues = true};
+    const ng_render_options options = {};
 
     assert_renders(puzzle, grid, &options,
                    "    10  1\n"
@@ -226,7 +226,7 @@ Test(render_text, multi_digit_row_clues_widen_the_left_margin)
     static const char *const rows[] = {"############", "#.#.#......."};
     ng_grid *grid = grid_of(rows, 2);
     ng_puzzle *puzzle = ng_test_puzzle_from_grid(grid);
-    const ng_render_options options = {.show_clues = true};
+    const ng_render_options options = {};
 
     assert_renders(puzzle, grid, &options,
                    "        2 1 2 1 2 1 1 1 1 1 1 1\n"
@@ -244,7 +244,7 @@ Test(render_text, one_by_one_puzzles)
     ng_grid *blank = grid_of((const char *const[]){"."}, 1);
     ng_puzzle *filled_puzzle = ng_test_puzzle_from_grid(filled);
     ng_puzzle *blank_puzzle = ng_test_puzzle_from_grid(blank);
-    const ng_render_options options = {.show_clues = true};
+    const ng_render_options options = {};
 
     assert_renders(filled_puzzle, filled, &options, "    1\n  +---+\n1 | # |\n  +---+\n");
     assert_renders(blank_puzzle, blank, &options, "    0\n  +---+\n0 | . |\n  +---+\n");
@@ -283,7 +283,7 @@ Test(render_text, nullptr_arguments_are_invalid)
 Test(render_text, writer_failure_is_reported_at_every_point)
 {
     p_fixture p = make_p();
-    const ng_render_options options = {.show_clues = true, .unicode = true};
+    const ng_render_options options = {.unicode = true};
     rendered reference = render(p.puzzle, p.grid, &options);
     const size_t total = ng_buffer_size(reference.buffer);
 
@@ -367,4 +367,74 @@ Test(render_summary, writer_failure_is_reported)
 
     cr_assert_eq(ng_render_summary(p.puzzle, p.grid, &w), NG_ERR_IO);
     release_p(&p);
+}
+
+/* --- review follow-up: one dimension at a time, allocations, elongated grids ---------------- */
+
+Test(render_text, grid_differing_in_one_dimension_is_invalid_and_writes_nothing)
+{
+    p_fixture p = make_p();                                                    /* 5 x 5 */
+    static const char *const shorter[] = {"#####", "#####", "#####"};          /* 5 x 3 */
+    static const char *const narrower[] = {"###", "###", "###", "###", "###"}; /* 3 x 5 */
+    ng_grid *grids[] = {grid_of(shorter, 3), grid_of(narrower, 5)};
+
+    for (size_t i = 0; i < 2; ++i) {
+        ng_test_sink sink;
+        const ng_writer w = ng_test_failing_writer(&sink, SIZE_MAX);
+
+        cr_assert_eq(ng_render_text(p.puzzle, grids[i], nullptr, &w), NG_ERR_INVALID_ARGUMENT,
+                     "grid %zu", i);
+        cr_assert_eq(ng_render_summary(p.puzzle, grids[i], &w), NG_ERR_INVALID_ARGUMENT, "grid %zu",
+                     i);
+        cr_assert_eq(sink.written, 0u, "grid %zu", i);
+        ng_grid_destroy(grids[i]);
+    }
+    release_p(&p);
+}
+
+Test(render_text, rendering_allocates_nothing)
+{
+    p_fixture p = make_p();
+    ng_test_sink sink;
+    const ng_writer w = ng_test_failing_writer(&sink, SIZE_MAX);
+    const ng_render_options options = {.unicode = true};
+    const ng_counter before = ng_test_heap()->alloc_count;
+
+    cr_assert_eq(ng_render_text(p.puzzle, p.grid, &options, &w), NG_OK);
+    cr_assert_eq(ng_render_summary(p.puzzle, p.grid, &w), NG_OK);
+
+    cr_assert_eq(ng_test_heap()->alloc_count, before);
+    release_p(&p);
+}
+
+Test(render_text, very_elongated_grids)
+{
+    constexpr ng_dim length = 1'000;
+    ng_grid *wide = nullptr;
+    ng_grid *tall = nullptr;
+    cr_assert_eq(ng_grid_create(&ng_test_heap()->base, length, 1, &wide), NG_OK);
+    cr_assert_eq(ng_grid_create(&ng_test_heap()->base, 1, length, &tall), NG_OK);
+    ng_grid_fill(wide, NG_CELL_FILLED);
+    ng_grid_fill(tall, NG_CELL_EMPTY);
+    ng_puzzle *wide_puzzle = ng_test_puzzle_from_grid(wide);
+    ng_puzzle *tall_puzzle = ng_test_puzzle_from_grid(tall);
+    const ng_render_options options = {.hide_clues = true};
+
+    rendered w = render(wide_puzzle, wide, &options);
+    rendered t = render(tall_puzzle, tall, nullptr);
+
+    cr_assert_eq(w.status, NG_OK);
+    cr_assert_eq(t.status, NG_OK);
+    /* frame + one row of 1000 cells (2 characters each, plus " |") + frame */
+    const size_t frame = 1u + (2u * length) + 1u + 1u + 1u; /* "+" dashes "+" "\n" */
+    cr_assert_eq(ng_buffer_size(w.buffer), 3u * frame);
+    /* 1000 rows "0 | . |" under the clue line "    0" and two frame lines */
+    cr_assert_eq(ng_buffer_size(t.buffer), 6u + (2u * 8u) + (length * 8u));
+    assert_no_trailing_space(ng_buffer_data(t.buffer));
+    ng_buffer_destroy(w.buffer);
+    ng_buffer_destroy(t.buffer);
+    ng_puzzle_destroy(wide_puzzle);
+    ng_puzzle_destroy(tall_puzzle);
+    ng_grid_destroy(wide);
+    ng_grid_destroy(tall);
 }

@@ -266,7 +266,7 @@ ng_status ng_io_write_sol(const ng_grid *g, const ng_writer *w);
 /* M9 : ng_io_read_ngp / ng_io_write_ngp / ng_io_read_ngg / ng_io_write_ngg */
 
 /* render.h : mise en page détaillée dans l'en-tête */
-typedef struct ng_render_options { bool show_clues; bool unicode; } ng_render_options;
+typedef struct ng_render_options { bool hide_clues; bool unicode; } ng_render_options;  /* {} : indices, ASCII */
 ng_status ng_render_text(const ng_puzzle *p, const ng_grid *g /* nullptr : cases inconnues */,
                          const ng_render_options *opt /* nullptr : indices, ASCII */, const ng_writer *w);
 ng_status ng_render_summary(const ng_puzzle *p, const ng_grid *g, const ng_writer *w);  /* au-delà de --max-render */

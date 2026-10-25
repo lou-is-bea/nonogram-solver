@@ -78,7 +78,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 
 - `render` : `ng_render_text`, en ASCII et en Unicode, avec ou sans indices.
 - CLI : la sous-commande `nonogram show <puzzle> [--solution <sol>] [--unicode]`. Au-delà de `--max-render` (200 × 200 par défaut), elle affiche un résumé au lieu de la grille.
-- Des tests d'intégration comparés à des sorties de référence (`tests/data/expected/*.txt`).
+- Des tests d'intégration comparés à des sorties de référence (`tests/data/expected/<cas>.out` et `<cas>.err`).
 
 Exemple de rendu attendu (ASCII) :
 
