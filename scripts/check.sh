@@ -45,6 +45,8 @@ skip() {
 fail() { printf '\033[1;31mFAIL\033[0m %s\n' "$*" >&2; exit 1; }
 
 # Project C sources and headers, tracked or new (ignored files such as build/ excluded).
+# include/nonogram/version.h.in is not listed: its @VAR@ placeholders are not C; the generated
+# header is compiled alone by the ng_header_check target.
 c_files() {
     git ls-files --cached --others --exclude-standard -- '*.c' '*.h' | while read -r f; do
         if [[ -f "$f" ]]; then
@@ -74,37 +76,89 @@ gate_G1() {
 
 # --- G2: static analysis -----------------------------------------------------------------------
 # Forbidden constructs that the compiler and clang-tidy do not catch.
-# Each entry: <grep -P regex> @@ <grep -P filter on file paths> @@ <message>
+# Each entry: <grep -P regex> @@ <grep -P filter on file paths> @@ <mode> @@ <message>
+# Mode "code" matches the code with its comments removed; mode "text" matches the raw line (for
+# rules about comments themselves).
 BANNED=(
-    '\bNULL\b @@ . @@ use nullptr (C23)'
-    '(^|[^.>\w])(malloc|calloc|realloc|free)\s*\( @@ ^(?!src/core/allocator\.c$) @@ allocate through ng_allocator (ADR-0004)'
-    '\b(strcpy|strcat|sprintf|vsprintf|gets|atoi|atol|atoll|sscanf|strtok|rand|srand|alloca)\s*\( @@ . @@ forbidden function (CODING_STANDARDS.md §8)'
-    '#\s*pragma\s+once @@ . @@ use an NG_<PATH>_H include guard'
-    '#\s*include\s*<stdbool\.h> @@ . @@ bool is a C23 keyword'
-    '#\s*embed\b|\b_BitInt\b @@ . @@ forbidden C23 feature without an ADR'
-    '\bgoto\s+(?!cleanup\b) @@ . @@ goto is only allowed as "goto cleanup;"'
-    '\b(TODO|FIXME)(?!\(#\d+\)) @@ . @@ TODO/FIXME must reference a ticket: TODO(#42)'
-    '\b(printf|puts|exit|_Exit|quick_exit|abort)\s*\(|\bstdout\b|\bstderr\b @@ ^src/(?!cli/) @@ no printf/exit/abort/stdout/stderr in the library'
+    '\bNULL\b @@ . @@ code @@ use nullptr (C23)'
+    '(^|[^.>\w])(malloc|calloc|realloc|free)\s*\( @@ ^(?!src/core/allocator\.c$) @@ code @@ allocate through ng_allocator (ADR-0004)'
+    '\b(strcpy|strcat|sprintf|vsprintf|gets|atoi|atol|atoll|sscanf|strtok|rand|srand|alloca)\s*\( @@ . @@ code @@ forbidden function (CODING_STANDARDS.md §8)'
+    '#\s*pragma\s+once @@ . @@ code @@ use an NG_<PATH>_H include guard'
+    '#\s*include\s*<stdbool\.h> @@ . @@ code @@ bool is a C23 keyword'
+    '#\s*embed\b|\b_BitInt\b @@ . @@ code @@ forbidden C23 feature without an ADR'
+    '\bgoto\s+(?!cleanup\b) @@ . @@ code @@ goto is only allowed as "goto cleanup;"'
+    '\b(TODO|FIXME)(?!\(#\d+\)) @@ . @@ text @@ TODO/FIXME must reference a ticket: TODO(#42)'
+    '\b(printf|puts|exit|_Exit|quick_exit|abort)\s*\(|\bstdout\b|\bstderr\b @@ ^src/(?!cli/) @@ code @@ no printf/exit/abort/stdout/stderr in the library'
 )
 
+# Prints "file:line:text" for every line of the files listed on stdin that matches the Perl
+# regex $1. In mode "code", comments are removed first: block comments (including those that
+# span several lines) and line comments. A line that merely starts with '*' is code, e.g.
+# "*out = NULL;".
+scan_lines() {
+    NG_RE="$1" NG_MODE="$2" xargs -r perl -ne '
+        BEGIN { $re = qr/$ENV{NG_RE}/; $code_mode = $ENV{NG_MODE} eq "code"; }
+        my $code = $_;
+        if ($code_mode) {
+            if ($in_comment) {
+                if ($code =~ s{^.*?\*/}{}) { $in_comment = 0; } else { $code = ""; }
+            }
+            $code =~ s{/\*.*?\*/}{}g;
+            $in_comment = 1 if $code =~ s{/\*.*}{};
+            $code =~ s{//.*}{};
+        }
+        print "$ARGV:$.:$_" if $code =~ $re;
+        if (eof) { close ARGV; $in_comment = 0; }'
+}
+
+split_entry() {
+    local entry="$1"
+    regex="${entry%% @@ *}"
+    entry="${entry#* @@ }"
+    filter="${entry%% @@ *}"
+    entry="${entry#* @@ }"
+    mode="${entry%% @@ *}"
+    message="${entry#* @@ }"
+}
+
 check_banned() {
-    local found=0 entry regex filter message files hits
+    local found=0 entry regex filter mode message files hits
     for entry in "${BANNED[@]}"; do
-        regex="${entry%% @@ *}"
-        message="${entry##* @@ }"
-        filter="${entry#* @@ }"
-        filter="${filter%% @@ *}"
+        split_entry "$entry"
         files=$(c_files | grep -P -- "$filter" || true)
         [[ -n "$files" ]] || continue
-        # Matches on comment-only lines are ignored.
-        hits=$(printf '%s\n' "$files" | xargs -r grep -nHP -- "$regex" \
-            | grep -vP '^[^:]+:\d+:\s*(\*|/\*|//)' || true)
+        hits=$(printf '%s\n' "$files" | scan_lines "$regex" "$mode" || true)
         if [[ -n "$hits" ]]; then
             printf '%s\n' "$hits" | sed "s|\$|    <- $message|" >&2
             found=1
         fi
     done
     return "$found"
+}
+
+# The forbidden-construct search is itself checked before use: every line of
+# scripts/selftest/banned_hits.txt must be reported by at least one rule, and no line of
+# banned_clean.txt (comments, member calls, allowed forms) may be.
+selftest_banned() {
+    local entry regex filter mode message all_hits=""
+    for entry in "${BANNED[@]}"; do
+        split_entry "$entry"
+        all_hits+=$(printf '%s\n' scripts/selftest/banned_hits.txt scripts/selftest/banned_clean.txt \
+            | scan_lines "$regex" "$mode" || true)
+        all_hits+=$'\n'
+    done
+    local expected missed clean_hits
+    expected=$(grep -cvE '^\s*$' scripts/selftest/banned_hits.txt)
+    missed=$(grep -nvE '^\s*$' scripts/selftest/banned_hits.txt | cut -d: -f1 | while read -r n; do
+        grep -q "^scripts/selftest/banned_hits.txt:$n:" <<< "$all_hits" || echo "$n"
+    done)
+    clean_hits=$(grep '^scripts/selftest/banned_clean.txt:' <<< "$all_hits" || true)
+    if [[ -n "$missed" || -n "$clean_hits" ]]; then
+        [[ -z "$missed" ]] || printf 'self-test: banned_hits.txt lines not reported: %s\n' $missed >&2
+        [[ -z "$clean_hits" ]] || printf 'self-test: false positives:\n%s\n' "$clean_hits" >&2
+        return 1
+    fi
+    echo "self-test: $expected forbidden constructs reported, no false positive"
 }
 
 gate_G2() {
@@ -121,6 +175,7 @@ gate_G2() {
         --error-exitcode=1 --quiet -I include -I build/dev-clang/include src tests/support
 
     echo "-- forbidden constructs"
+    selftest_banned || fail "the forbidden-construct search failed its self-test"
     check_banned || fail "forbidden constructs found (see above)"
 }
 

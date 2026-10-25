@@ -85,8 +85,6 @@ jobs:
         run: ctest --preset ${{ matrix.preset }} -L unit
       - name: G4 integration tests
         run: ctest --preset ${{ matrix.preset }} -L integration
-      - name: G5 property tests
-        run: ctest --preset ${{ matrix.preset }} -L property
 
   sanitizers:
     needs: image
@@ -100,3 +98,22 @@ jobs:
       - uses: actions/checkout@v4
       - name: G6 ASan + LSan, UBSan + integer
         run: ./scripts/check.sh --only G6
+
+  # The whole of scripts/check.sh (G0 to G9) in the reference container, as a developer runs it
+  # before a review: this is where the gates without a dedicated job (Valgrind, coverage, quick
+  # fuzzing) run in CI.
+  full-check:
+    needs: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container:
+      image: ${{ needs.image.outputs.name }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: check.sh (G0 to G9)
+        run: ./scripts/check.sh
+        env:
+          FUZZ_SECONDS: "60"

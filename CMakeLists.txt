@@ -10,6 +10,10 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+# CMake 3.28 spells C23 "-std=c2x" for GCC; the standard flag of ADR-0001 is "-std=c23",
+# accepted by every supported compiler (GCC >= 14, Clang >= 19).
+set(CMAKE_C23_STANDARD_COMPILE_OPTION "-std=c23")
+set(CMAKE_C23_EXTENSION_COMPILE_OPTION "-std=gnu23")
 
 # CMAKE_C_STANDARD 23 may silently map to an incomplete -std=c2x on older compilers, so the
 # C23 features the project relies on are probed explicitly.

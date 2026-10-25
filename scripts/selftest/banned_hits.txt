@@ -1,0 +1,19 @@
+    *out = NULL;
+    *out = malloc(sizeof(int));
+    return NULL; /* a trailing comment does not hide the code */
+    /* closed comment */ void *p = calloc(1, 4);
+    free(p);
+    q = realloc(q, 8);
+    strcpy(dst, src);
+    sprintf(buffer, "%d", n);
+    n = atoi(text);
+    srand(42);
+#pragma once
+#include <stdbool.h>
+    goto fail;
+    _BitInt(7) small;
+/* TODO: no ticket */
+    // FIXME later
+    printf("debug\n");
+    abort();
+    fputs("x", stderr);

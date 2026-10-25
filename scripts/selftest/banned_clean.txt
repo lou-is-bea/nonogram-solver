@@ -1,0 +1,12 @@
+/* Comments may mention NULL, malloc(), free(), strcpy() and goto fail;
+ * malloc(size) on a continuation line is still a comment,
+ *     *out = NULL; as well, inside the comment body.
+ */
+// free(p) in a line comment
+    allocator->free(allocator->ctx, block, size);
+    heap.free(nullptr, block, 8);
+    *out = nullptr;
+    snprintf(buffer, sizeof buffer, "%d", n);
+    goto cleanup;
+/* TODO(#42): referenced ticket */
+    return value; // NULL in a trailing comment

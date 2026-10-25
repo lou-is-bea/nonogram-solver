@@ -59,8 +59,10 @@ set_tests_properties(cli_version PROPERTIES
     LABELS integration
     FAIL_REGULAR_EXPRESSION "${NG_SANITIZER_FAILURE_REGEX}"
     PASS_REGULAR_EXPRESSION "^nonogram ${PROJECT_VERSION}\n$")
-add_test(NAME cli_without_arguments_is_usage_error COMMAND nonogram)
+# Exactly exit code 2 (F-41) and the help text. The output is echoed so that a sanitizer report
+# still fails the test (WILL_FAIL would invert that failure too).
+add_test(NAME cli_without_arguments_is_usage_error
+    COMMAND sh -c [=[out=$("$1" 2>&1); code=$?; printf '%s\n' "$out"; [ "$code" -eq 2 ] && printf '%s\n' "$out" | grep -q '^usage: nonogram']=] _ $<TARGET_FILE:nonogram>)
 set_tests_properties(cli_without_arguments_is_usage_error PROPERTIES
     LABELS integration
-    FAIL_REGULAR_EXPRESSION "${NG_SANITIZER_FAILURE_REGEX}"
-    WILL_FAIL ON)
+    FAIL_REGULAR_EXPRESSION "${NG_SANITIZER_FAILURE_REGEX}")
