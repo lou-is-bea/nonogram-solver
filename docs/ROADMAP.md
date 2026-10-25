@@ -6,7 +6,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 
 | Étape | Thème | Version visée | Statut |
 |---|---|---|---|
-| M0 | Fondations : build, CI, outillage | — | à faire |
+| M0 | Fondations : build, CI, outillage | — | terminé |
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | à faire |
 | M2 | Affichage | — | à faire |
 | M3 | Vérificateur | 0.1.0 | à faire |
@@ -39,6 +39,13 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 - La CI est verte sur toute la matrice (GCC 14, Clang 20, Clang 19).
 - `check.sh` tourne de bout en bout dans WSL et dans le conteneur.
 - Une PR de test qui introduit volontairement un warning, une erreur de format et une fuite est **bloquée** par la CI, à chacune des trois portes concernées.
+
+*Bilan du 2026-10-25* (la CI, d'abord différée, a été activée le même jour ; le dépôt a été rendu public par décision du responsable du projet pour permettre la protection de `main`) :
+
+- ✅ CI verte sur toute la matrice : image, `lint`, `build-test` GCC 14 / Clang 20 / Clang 19, `sanitizers`, et `full-check` (exécution 40213165037 sur la PR #1).
+- ✅ `check.sh` tourne de bout en bout dans WSL et dans le conteneur : tâche `full-check` de la CI (G0 à G9, les portes inactives en M0 étant signalées `SKIP`).
+- ✅ Trois PR de test, une par défaut, ont été bloquées par la CI puis fermées sans fusion : warning (#6 : `build-test` échoue sur les trois compilateurs), erreur de format (#7 : seuls `lint` et `full-check` échouent), fuite (#8 : `sanitizers` échoue, « LeakSanitizer: detected memory leaks » ; `lint` aussi, `malloc` étant interdit hors de `allocator.c`).
+- ✅ Livrable « protection de `main` » : tâches de CI obligatoires, branche à jour, une approbation, historique linéaire, ni force-push ni suppression. Les administrateurs ne sont pas soumis à la règle, car GitHub interdit d'approuver sa propre PR : la fusion reste décidée par le responsable humain après la revue indépendante (docs/agents/REVIEW.md).
 
 ## M1 — Modèle de données
 

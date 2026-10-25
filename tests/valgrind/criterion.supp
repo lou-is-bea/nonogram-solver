@@ -1,0 +1,6 @@
+# Valgrind suppressions for Criterion internals ONLY (TESTING.md §4.9, ADR-0003).
+#
+# Any suppression matching project code (ng_*, ngi_*, src/, tests/) is forbidden.
+# Every entry added here must be approved by a human reviewer in the PR that adds it.
+#
+# Intentionally empty: no Criterion false positive has been observed yet.

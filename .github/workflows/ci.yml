@@ -1,0 +1,117 @@
+# Quality gates of docs/TESTING.md §3, run in the reference container (tools/docker/Dockerfile).
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# The test jobs run inside the image published to GHCR by the "image" job: pulling it needs
+# packages: read.
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Builds the reference image once per Dockerfile revision and publishes it to GHCR, tagged with
+  # the hash of the Dockerfile; later runs reuse it.
+  image:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      name: ${{ steps.tag.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: tag
+        run: |
+          owner="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "name=ghcr.io/${owner}/nonogram-dev:${{ hashFiles('tools/docker/Dockerfile') }}" >> "$GITHUB_OUTPUT"
+      - name: Build and push if missing
+        env:
+          IMAGE: ${{ steps.tag.outputs.name }}
+        run: |
+          echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+          if docker manifest inspect "$IMAGE" > /dev/null 2>&1; then
+            echo "Reusing $IMAGE"
+          else
+            docker build -t "$IMAGE" tools/docker
+            docker push "$IMAGE"
+          fi
+
+  lint:
+    needs: image
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.image.outputs.name }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: G0 formatting, G2 static analysis
+        run: ./scripts/check.sh --only G0,G2
+
+  build-test:
+    needs: image
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.image.outputs.name }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { preset: dev, compiler: gcc-14 }
+          - { preset: dev-clang, compiler: clang-20 }
+          # Minimum supported Clang (ADR-0001).
+          - { preset: dev-clang, compiler: clang-19 }
+    name: build-test (${{ matrix.compiler }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: G1 build without warnings
+        run: |
+          cmake --preset ${{ matrix.preset }} -D CMAKE_C_COMPILER=${{ matrix.compiler }}
+          cmake --build --preset ${{ matrix.preset }}
+      - name: G3 unit tests
+        run: ctest --preset ${{ matrix.preset }} -L unit
+      - name: G4 integration tests
+        run: ctest --preset ${{ matrix.preset }} -L integration
+
+  sanitizers:
+    needs: image
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.image.outputs.name }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: G6 ASan + LSan, UBSan + integer
+        run: ./scripts/check.sh --only G6
+
+  # The whole of scripts/check.sh (G0 to G9) in the reference container, as a developer runs it
+  # before a review: this is where the gates without a dedicated job (Valgrind, coverage, quick
+  # fuzzing) run in CI.
+  full-check:
+    needs: image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container:
+      image: ${{ needs.image.outputs.name }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: check.sh (G0 to G9)
+        run: ./scripts/check.sh

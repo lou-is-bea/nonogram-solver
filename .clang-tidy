@@ -1,0 +1,38 @@
+# Static analysis configuration: docs/CODING_STANDARDS.md (rules marked 🔧).
+# Every disabled check is listed with its reason.
+#  - bugprone-easily-swappable-parameters: (width, height) pairs are inherent to the domain.
+#  - cert-dcl03-c / misc-static-assert: duplicates of static_assert usage rules, noisy in C23.
+#  - misc-include-cleaner: does not understand Criterion's macro-generated includes.
+#  - clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling: flags every
+#    memcpy/snprintf, which the standards explicitly allow with a known size.
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  cert-*,
+  -cert-dcl03-c,
+  clang-analyzer-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  misc-*,
+  -misc-include-cleaner,
+  -misc-static-assert,
+  modernize-use-nullptr,
+  performance-*,
+  portability-*,
+  readability-braces-around-statements,
+  readability-function-cognitive-complexity,
+  readability-function-size,
+  readability-implicit-bool-conversion,
+  readability-inconsistent-declaration-parameter-name,
+  readability-isolate-declaration,
+  readability-magic-numbers,
+  readability-misleading-indentation,
+  readability-non-const-parameter,
+  readability-redundant-declaration
+WarningsAsErrors: '*'
+HeaderFilterRegex: '(include/nonogram|src|tests)/'
+CheckOptions:
+  readability-function-cognitive-complexity.Threshold: 25
+  readability-function-size.ParameterThreshold: 6
+  readability-implicit-bool-conversion.AllowPointerConditions: false
+  readability-magic-numbers.IgnoredIntegerValues: '0;1;2'

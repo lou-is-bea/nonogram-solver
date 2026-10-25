@@ -2,7 +2,7 @@
 
 Moteur de résolution de nonogrammes (picross, hanjie) écrit en **C23** pour Linux. L'empreinte mémoire est maîtrisée et l'architecture est modulaire, pour pouvoir comparer plusieurs stratégies de résolution, des plus naïves aux plus optimisées, puis les paralléliser massivement sur des grilles de très grande taille.
 
-> **Statut : phase de conception.** Le dépôt ne contient pour l'instant que la documentation. L'avancement est suivi dans [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Statut : fondations (M0).** Le squelette de build, de test et d'outillage est en place ; aucune logique métier n'est encore écrite. L'avancement est suivi dans [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -35,7 +35,7 @@ Le détail et les critères de sortie de chaque étape sont dans [docs/ROADMAP.m
 
 ## Démarrage rapide (cible)
 
-> Ces commandes deviendront disponibles à la fin de l'étape M0.
+> Les commandes de build, de test et `check.sh` sont disponibles. Les sous-commandes de `nonogram` arrivent à partir de M2.
 
 ```sh
 # Configurer, compiler et tester (profil développement)

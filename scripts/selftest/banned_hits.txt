@@ -1,0 +1,27 @@
+    *out = NULL;
+    *out = malloc(sizeof(int));
+    return NULL; /* a trailing comment does not hide the code */
+    /* closed comment */ void *p = calloc(1, 4);
+    free(p);
+    q = realloc(q, 8);
+    copy = strdup(text);
+    strcpy(dst, src);
+    sprintf(buffer, "%d", n);
+    n = atoi(text);
+    srand(42);
+#pragma once
+#include <stdbool.h>
+    goto fail;
+    _BitInt(7) small;
+/* TODO: no ticket */
+    // FIXME later
+    printf("debug\n");
+    abort();
+    fputs("x", stderr);
+    path = "puzzles/*.non"; q = NULL;
+    r = malloc(8); /* code after a string holding a comment marker is still code */
+    url = "https://example.org"; free(url);
+    x = 1'000; free(p); c = 'a';
+    q = NULL; s = "a string continued \
+on the next line /* is still a string"; r = malloc(8);
+    #define NG_COPY(n) ((n) < 1'000 ? malloc(n) : nullptr) /* 'x' */
