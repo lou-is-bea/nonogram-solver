@@ -12,3 +12,8 @@
     return value; // NULL in a trailing comment
     message = "NULL // malloc( and free( inside a string are text";
     c = '"'; d = '/'; e = '*'; f = NULL_CHECKS_DISABLED;
+    n = 1'000'000; c = 'x'; d = u8'y'; e = 0xFF'FF; g = 1.5e+3; h = '\''; // it's fine
+#include "dir/name.h" /* a comment opened on an include line
+ that mentions NULL and malloc( is still a comment */
+    s = "a string continued \
+NULL // malloc( on the next line"; t = nullptr;

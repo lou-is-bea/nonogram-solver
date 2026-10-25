@@ -98,32 +98,49 @@ BANNED=(
 # lines) and line comments are removed. A line that merely starts with '*' is code, e.g.
 # "*out = NULL;". #include lines keep their path, which some rules check.
 scan_lines() {
+    # Left-to-right scan of each line, with the comment and literal state carried over to the
+    # next line: identifiers and preprocessing numbers (C23 digit separators, 1'000) are copied
+    # as code, so their apostrophes never open a character literal; literals are blanked, also
+    # across a backslash-newline; comments are dropped. The header name of an #include line is
+    # kept for the rules that check include paths.
     NG_RE="$1" NG_MODE="$2" xargs -r perl -ne '
         BEGIN { $re = qr/$ENV{NG_RE}/; $code_mode = $ENV{NG_MODE} eq "code"; }
         my $rest = $_;
         my $code = "";
         if (!$code_mode) {
             $code = $rest;
-        } elsif (!$in_comment && $rest =~ m{^\s*#\s*include\b}) {
-            ($code = $rest) =~ s{(/\*|//).*}{};
-        } else {
-            while (length $rest) {
-                if ($in_comment) {
-                    if ($rest =~ s{^.*?\*/}{}s) { $in_comment = 0; } else { $rest = ""; }
-                } elsif ($rest =~ s{^("(?:\\.|[^"\\\n])*"|\x27(?:\\.|[^\x27\\\n])*\x27)}{}) {
-                    $code .= "\"\"";
-                } elsif ($rest =~ s{^/\*}{}) {
-                    $in_comment = 1;
-                } elsif ($rest =~ s{^//.*}{}s) {
-                    $rest = "";
+            $rest = "";
+        } elsif (!$in_comment && !$in_literal
+                 && $rest =~ s{^(\s*#\s*include\s*(?:"[^"\n]*"|<[^>\n]*>))}{}) {
+            $code = $1;
+        }
+        while (length $rest) {
+            if ($in_comment) {
+                if ($rest =~ s{^.*?\*/}{}s) { $in_comment = 0; } else { $rest = ""; }
+            } elsif ($in_literal) {
+                my $q = $in_literal;
+                if ($rest =~ s{^(?:\\.|[^\Q$q\E\\\n])*\Q$q\E}{}) {
+                    $in_literal = "";
                 } else {
-                    $rest =~ s{^(.)}{}s;
-                    $code .= $1;
+                    $in_literal = "" unless $rest =~ m{\\\n\z};
+                    $rest = "";
                 }
+            } elsif ($rest =~ s{^([A-Za-z_]\w*|\.?\d(?:\x27?[\w.]|[eEpP][+-])*)}{}) {
+                $code .= $1;
+            } elsif ($rest =~ s{^(["\x27])}{}) {
+                $in_literal = $1;
+                $code .= "\"\"";
+            } elsif ($rest =~ s{^/\*}{}) {
+                $in_comment = 1;
+            } elsif ($rest =~ s{^//.*}{}s) {
+                $rest = "";
+            } else {
+                $rest =~ s{^(.)}{}s;
+                $code .= $1;
             }
         }
         print "$ARGV:$.:$_" if $code =~ $re;
-        if (eof) { close ARGV; $in_comment = 0; }'
+        if (eof) { close ARGV; $in_comment = 0; $in_literal = ""; }'
 }
 
 split_entry() {
