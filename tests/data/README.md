@@ -7,7 +7,7 @@ Ce dossier contient le corpus de puzzles utilisé par les tests ([TESTING.md §7
 | Fichiers | Provenance | Licence |
 |---|---|---|
 | `puzzles/tiny/*`, `puzzles/small/*`, `puzzles/multi/*`, `puzzles/unsolvable/*`, `solutions/*` | Dessinés à la main pour ce projet (2026-10-25). Les indices sont dérivés du dessin, qui est la solution. | celle du projet (à définir, question Q1 de la [feuille de route](../../docs/ROADMAP.md#questions-ouvertes)) |
-| `puzzles/invalid/*` | Écrits à la main pour ce projet (2026-10-25), un cas d'erreur par fichier. | idem |
+| `puzzles/invalid/*`, `grids/*` | Écrits à la main pour ce projet (2026-10-25), un cas d'erreur par fichier. | idem |
 
 Aucun puzzle n'est importé d'une source externe.
 
@@ -21,7 +21,7 @@ Aucun puzzle n'est importé d'une source externe.
 | `puzzles/multi/` | plusieurs solutions ; leur nombre exact est dans le nom (`*_n9.non`) | nombre de solutions |
 | `puzzles/unsolvable/` | indices cohérents (chaque ligne tient, totaux égaux) mais aucune grille ne les satisfait | aucune solution |
 | `puzzles/invalid/` | fichiers mal formés ou incohérents, chacun avec un `<nom>.expected` | erreur attendue |
-| `grids/` | grilles de dimensions ou de contenu volontairement faux pour la CLI (`<puzzle>_<défaut>.sol`) | défaut décrit par le nom |
+| `grids/` | grilles volontairement fausses (dimensions ou contenu) ou partielles, pour la CLI (`<puzzle>_<défaut>.sol`) | défaut décrit par le nom |
 | `expected/` | sorties de référence de la CLI (`<cas>.out`, `<cas>.err`), cas décrits dans `tests/integration/cases.cmake` | relues par un humain ; mises à jour par `scripts/update_golden.sh` |
 
 Un fichier `.expected` contient trois lignes :

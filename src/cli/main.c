@@ -12,6 +12,8 @@ static const char usage_text[] =
     "  show <puzzle.non> [--solution <grid.sol>] [--unicode] [--max-render <n>]\n"
     "      Print the puzzle with its clues, and a solution or partial grid if given.\n"
     "      Grids wider or taller than <n> cells (default 200) are summarised.\n"
+    "  verify <puzzle.non> <grid.sol>\n"
+    "      Check the grid against the clues: valid (exit 0), incomplete or invalid (exit 1).\n"
     "\n"
     "options:\n"
     "  --help       print this help\n"
@@ -54,6 +56,9 @@ int main(int argc, char *argv[])
     }
     if (strcmp(command, "show") == 0) {
         return cli_show(argc - 2, argv + 2, stdout, stderr);
+    }
+    if (strcmp(command, "verify") == 0) {
+        return cli_verify(argc - 2, argv + 2, stdout, stderr);
     }
     cli_report_usage_error(stderr, "unknown command", command);
     return CLI_EXIT_USAGE;

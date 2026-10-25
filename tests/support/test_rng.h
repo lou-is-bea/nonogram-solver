@@ -25,6 +25,12 @@ constexpr uint64_t NG_TEST_DEFAULT_SEED = 0x6E6F6E6F6772616Du; /* "nonogram" */
  */
 uint64_t ng_test_seed(void);
 
+/**
+ * @brief Number of cases a property test runs: NG_PROPERTY_CASES when set (for example
+ *        100000 in the nightly run), @p default_count otherwise. Logged like the seed.
+ */
+uint64_t ng_test_case_count(uint64_t default_count);
+
 /** @brief Initialise @p rng from @p seed. Any seed, including 0, is valid. */
 void ng_test_rng_seed(ng_test_rng *rng, uint64_t seed);
 

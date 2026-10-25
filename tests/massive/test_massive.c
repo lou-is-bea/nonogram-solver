@@ -9,6 +9,7 @@
 #include "nonogram/status.h"
 #include "nonogram/stream.h"
 #include "nonogram/types.h"
+#include "nonogram/verify.h"
 
 #include "ng_test_fixture.h"
 #include "test_allocator.h"
@@ -197,4 +198,24 @@ Test(massive, sol_round_trip_of_10_power_8_cells)
     ng_buffer_destroy(text);
     assert_every_line_matches(back);
     ng_grid_destroy(back);
+}
+
+Test(massive, verifier_accepts_a_solution_of_10_power_8_cells_and_rejects_one_flip)
+{
+    ng_grid *grid = patterned_grid();
+    ng_puzzle *puzzle = patterned_puzzle(grid);
+    ng_verify_report report = {};
+
+    cr_assert_eq(ng_verify(puzzle, grid, &report), NG_OK);
+    cr_assert_eq(report.verdict, NG_VERDICT_VALID);
+
+    /* The last cell: every row before it must be checked before the mismatch is found. */
+    const ng_dim last = side - 1u;
+    ng_grid_set(grid, last, last,
+                ng_grid_get(grid, last, last) == NG_CELL_FILLED ? NG_CELL_EMPTY : NG_CELL_FILLED);
+    cr_assert_eq(ng_verify(puzzle, grid, &report), NG_OK);
+    cr_assert_eq(report.verdict, NG_VERDICT_INVALID);
+    cr_assert_eq(report.first_bad_line, last);
+    ng_puzzle_destroy(puzzle);
+    ng_grid_destroy(grid);
 }

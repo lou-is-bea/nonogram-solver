@@ -6,6 +6,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-25
+
+Première version : modèle de données pour grilles massives, lecture et écriture des formats `.non` et `.sol` en flux, affichage texte, vérificateur indépendant et commandes `nonogram show` et `nonogram verify`. Fin de l'étape M3.
+
 ### Ajouté
 - M0 : build CMake (C23 strict, vérification des fonctionnalités C23 à la configuration), cibles `ng_core`, `ng_io`, `ng_render`, `ng_verify`, `ng_solvers` et `nonogram`, presets `dev`, `dev-clang`, `release`, `asan`, `ubsan`, `coverage` et `fuzz`.
 - M0 : API publique `version.h` (`NG_VERSION_MAJOR`, `NG_VERSION_MINOR`, `NG_VERSION_PATCH`, `ng_version_string()`) et `nonogram --version`.
@@ -37,6 +41,9 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - M2 : `render.h` : `ng_render_text` (ASCII ou Unicode, avec ou sans indices, grille complète, partielle ou absente) et `ng_render_summary` ; module `ng_render`.
 - M2 : sous-commande `nonogram show <puzzle> [--solution <sol>] [--unicode] [--max-render <n>]`, aide `--help`, codes de sortie stables (F-41).
 - M2 : tests d'intégration de la CLI comparés à des sorties de référence (`tests/integration/`, `tests/data/expected/`), script `scripts/update_golden.sh`.
+- M3 : `verify.h` : vérificateur indépendant `ng_verify` (verdicts `VALID`, `INCOMPLETE`, `INVALID`, première ligne et premier bloc fautifs, nombre de cases inconnues) et `ng_verify_line_runs` (blocs observés d'une ligne) ; module `ng_verify`.
+- M3 : sous-commande `nonogram verify <puzzle> <grille>` (sortie `valid`, `incomplete: …` ou `invalid: row 2 has runs 1 2, expected 1 1`, codes de sortie 0, 1, 2, 3).
+- M3 : propriétés P-V1 à P-V4 (et cohérence des blocs observés), nombre de cas réglable par `NG_PROPERTY_CASES` ; test massif du vérificateur sur 10⁸ cases ; grilles fausses de test (`tests/data/grids/`).
 
 ### Modifié
 - M2 close : les 35 sorties de référence de la CLI sont approuvées par le responsable du projet (PR #3).

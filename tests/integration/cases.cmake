@@ -57,6 +57,22 @@ ng_cli_case(show_solution_wrong_width EXIT 3
 ng_cli_case(show_missing_solution_file EXIT 3
     ARGS show ${P}/tiny/letter_p.non --solution ${S}/no_such_grid.sol)
 
+# --- verify (exit 0 valid, 1 incomplete or invalid, 3 input error, 2 usage)
+set(G tests/data/grids)
+ng_cli_case(verify_valid EXIT 0 ARGS verify ${P}/small/duck.non ${S}/duck.sol)
+ng_cli_case(verify_valid_other_solution EXIT 0
+    ARGS verify ${P}/multi/diagonal_n2.non ${G}/diagonal_other_solution.sol)
+ng_cli_case(verify_bad_row EXIT 1 ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_bad_row.sol)
+ng_cli_case(verify_bad_column EXIT 1
+    ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_bad_column.sol)
+ng_cli_case(verify_incomplete EXIT 1
+    ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_incomplete.sol)
+ng_cli_case(verify_wrong_size EXIT 3 ARGS verify ${P}/tiny/letter_p.non ${S}/duck.sol)
+ng_cli_case(verify_missing_grid EXIT 3 ARGS verify ${P}/tiny/letter_p.non ${G}/no_such.sol)
+ng_cli_case(verify_invalid_puzzle EXIT 3 ARGS verify ${P}/invalid/bad_clue.non ${S}/dot.sol)
+ng_cli_case(verify_one_argument EXIT 2 ARGS verify ${P}/tiny/letter_p.non)
+ng_cli_case(verify_option EXIT 2 ARGS verify --fast ${P}/tiny/letter_p.non)
+
 # --- usage errors (exit 2) and help
 ng_cli_case(no_command EXIT 2 ARGS)
 ng_cli_case(unknown_command EXIT 2 ARGS frobnicate)

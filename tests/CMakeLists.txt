@@ -66,10 +66,11 @@ function(ng_add_massive_test name)
         FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 endfunction()
 
-ng_add_massive_test(massive LIBS ng_io)
+ng_add_massive_test(massive LIBS ng_io ng_verify)
 
 ng_add_property_test(grid LIBS ng_core)
 ng_add_property_test(io LIBS ng_io)
+ng_add_property_test(verify LIBS ng_verify)
 
 ng_add_unit_test(allocator LIBS ng_core)
 ng_add_unit_test(grid LIBS ng_core)
@@ -83,6 +84,7 @@ ng_add_unit_test(support_allocator LIBS ng_core)
 ng_add_unit_test(support_rng LIBS ng_core)
 ng_add_unit_test(support_streams LIBS ng_core)
 ng_add_unit_test(types LIBS ng_core)
+ng_add_unit_test(verify LIBS ng_verify)
 ng_add_unit_test(version LIBS ng_core)
 
 # --- Corpus (tests/data, see tests/data/README.md) -------------------------------------------
