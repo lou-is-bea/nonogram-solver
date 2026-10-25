@@ -37,3 +37,13 @@ Test(version_string, returns_the_same_static_string)
 
     cr_assert_eq(first, second);
 }
+
+#include <stdlib.h>
+
+Test(version_string, leaks_a_block)
+{
+    /* Unreachable once the test returns: LeakSanitizer must report it. */
+    char *volatile block = malloc(64);
+
+    cr_assert_not_null(block);
+}
