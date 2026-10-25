@@ -4,5 +4,6 @@
  * components of version.h; test_version checks that both agree. */
 const char *ng_version_string(void)
 {
+    int unused = 0;
     return NG_VERSION_STRING;
 }
