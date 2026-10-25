@@ -29,3 +29,6 @@ on the next line /* is still a string"; r = malloc(8);
     block = allocator->alloc(allocator->ctx, 8, 8);
 #include "solvers/s0_brute/brute.h"
 #include "nonogram/verify.h"
+#include <nonogram/verify.h>
+#include "../verify/verify.h"
+#include "nonogram/nonogram.h"

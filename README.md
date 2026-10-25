@@ -2,7 +2,7 @@
 
 Moteur de résolution de nonogrammes (picross, hanjie) écrit en **C23** pour Linux. L'empreinte mémoire est maîtrisée et l'architecture est modulaire, pour pouvoir comparer plusieurs stratégies de résolution, des plus naïves aux plus optimisées, puis les paralléliser massivement sur des grilles de très grande taille.
 
-> **Statut : version 0.1.0 (M3).** Lecture des puzzles, affichage et vérification des solutions sont disponibles ; les solvers arrivent à partir de M4. L'avancement est suivi dans [docs/ROADMAP.md](docs/ROADMAP.md).
+> **Statut : version 0.1.0 en préparation (M3).** Lecture des puzzles, affichage et vérification des solutions sont disponibles ; les solvers arrivent à partir de M4. L'avancement est suivi dans [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 

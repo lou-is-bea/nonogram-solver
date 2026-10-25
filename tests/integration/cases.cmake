@@ -71,6 +71,10 @@ ng_cli_case(verify_filled_cell_on_empty_clue EXIT 1
     ARGS verify ${P}/tiny/blank.non ${G}/blank_filled.sol)
 ng_cli_case(verify_wrong_height EXIT 3
     ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_three_rows.sol)
+ng_cli_case(verify_missing_runs EXIT 1
+    ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_empty_row.sol)
+ng_cli_case(verify_one_unknown_cell EXIT 1 ARGS verify ${P}/tiny/dot.non ${G}/dot_unknown.sol)
+ng_cli_case(verify_option_second EXIT 2 ARGS verify ${P}/tiny/letter_p.non --fast)
 ng_cli_case(verify_wrong_size EXIT 3 ARGS verify ${P}/tiny/letter_p.non ${S}/duck.sol)
 ng_cli_case(verify_missing_grid EXIT 3 ARGS verify ${P}/tiny/letter_p.non ${G}/no_such.sol)
 ng_cli_case(verify_invalid_puzzle EXIT 3 ARGS verify ${P}/invalid/bad_clue.non ${S}/dot.sol)

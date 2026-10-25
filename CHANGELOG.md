@@ -6,7 +6,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Unreleased]
 
-## [0.1.0] - 2026-10-25
+## [0.1.0] - à publier (fusion de la PR M3, après approbation des sorties de référence)
 
 Première version : modèle de données pour grilles massives, lecture et écriture des formats `.non` et `.sol` en flux, affichage texte, vérificateur indépendant et commandes `nonogram show` et `nonogram verify`. Fin de l'étape M3.
 
@@ -48,6 +48,7 @@ Première version : modèle de données pour grilles massives, lecture et écrit
 ### Modifié
 - M2 close : les 35 sorties de référence de la CLI sont approuvées par le responsable du projet (PR #3).
 - Troisième revue indépendante de M2 : test d'échec d'écriture de `--help` (code 3) ; `--version` testé sous `NG_CLI_WRAPPER` ; motif de `large/stripes_100.non` décrit dans le fichier ; grille inutilisée `grids/stripes_100_solution.sol` retirée.
+- Seconde revue indépendante de M3 : tailles des tampons de `nonogram verify` calculées avec `ckd_*` (règle d'or 6) ; cas d'un indice plus long que les blocs observés, d'une seule case inconnue (« 1 unknown cell »), d'une option en deuxième position et d'un échec d'écriture ; la règle ADR-0007 de G2 couvre aussi `nonogram/nonogram.h`, les `<…>` et les chemins relatifs.
 - Seconde revue indépendante de M2 : test d'échec d'écriture avec une sortie plus grande que les tampons (puzzle `large/stripes_100.non`), refus d'un `--max-render` répété testé, G2 interdit toute allocation dans `src/render/`, `--help` et `--version` vérifient leur écriture, G7 affiche le diagnostic d'un cas qui échoue sous Valgrind. M2 repasse « en cours » jusqu'à l'approbation des sorties de référence.
 - Revue indépendante de M3 : tests de `ng_verify` avec une seule dimension différente et sur une colonne de 10⁶ cases ; cas CLI `verify` d'un indice vide et d'une hauteur seule différente ; message d'erreur interne distinct du manque de mémoire ; G2 interdit à `verify` d'inclure un solver et inversement (ADR-0007).
 - Revue indépendante de M2 : `ng_render_options` devient `{ hide_clues, unicode }`, si bien qu'une valeur nulle et `nullptr` donnent le même rendu par défaut (indices, ASCII) ; l'exemple de `render.h` est corrigé. `nonogram show` refuse une option répétée et une option à la place d'une valeur. Nouveaux tests : une seule dimension différente (rendu, résumé, chargement), bornes de `--max-render`, `--solutionfoo`, échec d'écriture (code 3), absence d'allocation du rendu, grilles 1 × 1000 et 1000 × 1. G7 exécute aussi les cas d'intégration de la CLI sous Valgrind.

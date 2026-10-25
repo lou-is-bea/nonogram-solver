@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <stdckdint.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -32,13 +33,20 @@ static int print_invalid(FILE *out, FILE *err, const ng_puzzle *puzzle, const ng
     const ng_run_count expected_count = ng_puzzle_line_run_count(puzzle, line);
     ng_run_count observed_count = 0;
     if (ng_verify_line_runs(grid, line, nullptr, 0, &observed_count) != NG_OK) {
+        (void)fputs("nonogram: internal error: cannot read the runs of the bad line\n", err);
         return CLI_EXIT_INTERNAL;
     }
-    /* A line of n cells holds at most (n + 1) / 2 runs: these sizes cannot overflow. */
-    const size_t capacity =
-        (size_t)(expected_count > observed_count ? expected_count : observed_count) + 1u;
-    ng_dim *expected = a->alloc(a->ctx, capacity * sizeof(ng_dim), alignof(ng_dim));
-    ng_dim *observed = a->alloc(a->ctx, capacity * sizeof(ng_dim), alignof(ng_dim));
+    /* One more element than the larger count, so that an empty line still gets a buffer. */
+    const ng_run_count larger = expected_count > observed_count ? expected_count : observed_count;
+    size_t capacity = 0;
+    size_t bytes = 0;
+    if (ckd_add(&capacity, (size_t)larger, (size_t)1) ||
+        ckd_mul(&bytes, capacity, sizeof(ng_dim))) {
+        (void)fputs("nonogram: out of memory\n", err);
+        return CLI_EXIT_INTERNAL;
+    }
+    ng_dim *expected = a->alloc(a->ctx, bytes, alignof(ng_dim));
+    ng_dim *observed = a->alloc(a->ctx, bytes, alignof(ng_dim));
     int code = CLI_EXIT_FAILURE;
     if (expected == nullptr || observed == nullptr) {
         (void)fputs("nonogram: out of memory\n", err);
@@ -58,8 +66,8 @@ static int print_invalid(FILE *out, FILE *err, const ng_puzzle *puzzle, const ng
         print_runs(out, expected, expected_count);
         (void)fputc('\n', out);
     }
-    a->free(a->ctx, expected, capacity * sizeof(ng_dim));
-    a->free(a->ctx, observed, capacity * sizeof(ng_dim));
+    a->free(a->ctx, expected, bytes);
+    a->free(a->ctx, observed, bytes);
     return code;
 }
 
@@ -75,8 +83,8 @@ static int print_verdict(FILE *out, FILE *err, const ng_puzzle *puzzle, const ng
         (void)fputs("valid\n", out);
         return CLI_EXIT_SUCCESS;
     case NG_VERDICT_INCOMPLETE:
-        (void)fprintf(out, "incomplete: %" NG_PRI_CELL_INDEX " unknown cells\n",
-                      report.unknown_cells);
+        (void)fprintf(out, "incomplete: %" NG_PRI_CELL_INDEX " unknown cell%s\n",
+                      report.unknown_cells, report.unknown_cells == 1u ? "" : "s");
         return CLI_EXIT_FAILURE;
     case NG_VERDICT_INVALID:
         return print_invalid(out, err, puzzle, grid, report.first_bad_line);
