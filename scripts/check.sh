@@ -81,7 +81,7 @@ gate_G1() {
 # rules about comments themselves).
 BANNED=(
     '\bNULL\b @@ . @@ code @@ use nullptr (C23)'
-    '(^|[^.>\w])(malloc|calloc|realloc|free)\s*\( @@ ^(?!src/core/allocator\.c$) @@ code @@ allocate through ng_allocator (ADR-0004)'
+    '(^|[^.>\w])(malloc|calloc|realloc|free|strdup|strndup)\s*\( @@ ^(?!src/core/allocator\.c$) @@ code @@ allocate through ng_allocator (ADR-0004)'
     '\b(strcpy|strcat|sprintf|vsprintf|gets|atoi|atol|atoll|sscanf|strtok|rand|srand|alloca)\s*\( @@ . @@ code @@ forbidden function (CODING_STANDARDS.md §8)'
     '#\s*pragma\s+once @@ . @@ code @@ use an NG_<PATH>_H include guard'
     '#\s*include\s*<stdbool\.h> @@ . @@ code @@ bool is a C23 keyword'

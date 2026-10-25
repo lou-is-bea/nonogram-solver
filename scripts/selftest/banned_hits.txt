@@ -4,6 +4,7 @@
     /* closed comment */ void *p = calloc(1, 4);
     free(p);
     q = realloc(q, 8);
+    copy = strdup(text);
     strcpy(dst, src);
     sprintf(buffer, "%d", n);
     n = atoi(text);

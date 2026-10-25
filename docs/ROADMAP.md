@@ -36,13 +36,16 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 
 **Critères de sortie**
 
-> **Historique** : le 2026-10-25, la CI a d'abord été différée (validation uniquement locale). Elle a été activée le même jour à l'ouverture des PR M0 à M3 : l'image de référence se construit telle quelle, et après une correction de permissions (`packages: read`), les quatre PR sont vertes.
+- La CI est verte sur toute la matrice (GCC 14, Clang 20, Clang 19).
+- `check.sh` tourne de bout en bout dans WSL et dans le conteneur.
+- Une PR de test qui introduit volontairement un warning, une erreur de format et une fuite est **bloquée** par la CI, à chacune des trois portes concernées.
 
-- ✅ Le build et les tests passent avec GCC 14, Clang 20 et Clang 19, en local et dans la CI.
-- ✅ La CI est verte sur toute la matrice (image, lint, build-test GCC 14 / Clang 20 / Clang 19, sanitizers) sur les quatre PR M0 à M3 (2026-10-25).
-- ✅ `check.sh` tourne de bout en bout dans WSL. Dans le conteneur de la CI, il exécute G0, G2 et G6 (jobs `lint` et `sanitizers`), et les jobs `build-test` couvrent G1, G3, G4 et G5 avec CMake et CTest. *(reste à faire : G7, G8 et G9 dans la CI)*
-- ✅ Un warning, une erreur de format et une fuite introduits volontairement sont **bloqués** par `check.sh`, à chacune des portes concernées (vérifié en local, ainsi qu'un test en échec, `NULL`, un débordement signé et un accès hors limites). *(reste à faire : la même vérification par une PR de test dans la CI)*
-- *(reste à faire, par un humain)* La branche `main` est protégée (paramètres du dépôt).
+*Bilan du 2026-10-25* (la CI, d'abord différée, a été activée le même jour ; le dépôt a été rendu public par décision du responsable du projet pour permettre la protection de `main`) :
+
+- ✅ CI verte sur toute la matrice : image, `lint`, `build-test` GCC 14 / Clang 20 / Clang 19, `sanitizers`, et `full-check` (exécution 40213165037 sur la PR #1).
+- ✅ `check.sh` tourne de bout en bout dans WSL et dans le conteneur : tâche `full-check` de la CI (G0 à G9, les portes inactives en M0 étant signalées `SKIP`).
+- ✅ Trois PR de test, une par défaut, ont été bloquées par la CI puis fermées sans fusion : warning (#6 : `build-test` échoue sur les trois compilateurs), erreur de format (#7 : seuls `lint` et `full-check` échouent), fuite (#8 : `sanitizers` échoue, « LeakSanitizer: detected memory leaks » ; `lint` aussi, `malloc` étant interdit hors de `allocator.c`).
+- ✅ Livrable « protection de `main` » : tâches de CI obligatoires, branche à jour, une approbation, historique linéaire, ni force-push ni suppression. Les administrateurs ne sont pas soumis à la règle, car GitHub interdit d'approuver sa propre PR : la fusion reste décidée par le responsable humain après la revue indépendante (docs/agents/REVIEW.md).
 
 ## M1 — Modèle de données
 
