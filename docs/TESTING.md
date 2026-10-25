@@ -39,10 +39,10 @@ Une porte **bloquante** qui échoue empêche la fusion.
 | G6 | Sanitizers | `ctest --preset asan` (ASan et LSan), `--preset ubsan` (UBSan, avec `-fsanitize=integer` sous Clang) | oui | M0 |
 | G7 | Valgrind memcheck | chaque exécutable de test (preset `dev`) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9) | oui | M1 |
 | G8 | Couverture | preset `coverage` et `gcovr`, avec les seuils du §6 | oui | M1 |
-| G9 | Fuzzing rapide | 60 s par cible | oui | M1 |
+| G9 | Fuzzing rapide | 60 s par cible (preset `fuzz`, durée réglable par `FUZZ_SECONDS`) | oui | M1 |
 | G10 | Benchmarks | `bench_compare.py` comparé à la référence de `main` | oui si plus de 10 %, sinon simple rapport | M4 |
 | G11 | Fuzzing long | 1 h par cible | non (nocturne) | M1 |
-| G12 | Tests massifs | `ctest --preset release -L massive` | non (nocturne, machine dédiée) | M1 |
+| G12 | Tests massifs | `ctest --preset massive` (Release, label `massive`, exclu des autres presets) | non (nocturne, machine dédiée) | M1 |
 
 `./scripts/check.sh` exécute G0 à G9 en local, dans cet ordre, et s'arrête à la première porte qui échoue. `./scripts/check.sh --quick` n'exécute que G0 à G3, pour itérer plus vite, et `./scripts/check.sh --only G0,G2` n'exécute que les portes demandées (c'est ce qu'utilise la CI). Avant une PR, c'est la version complète qui fait foi. Une porte qui n'est pas encore active à l'étape en cours est signalée `SKIP` et rappelée en fin d'exécution : elle n'est jamais présentée comme réussie.
 
@@ -149,7 +149,9 @@ Le générateur `ng_test_rng` (`tests/support/test_rng.h`, xoshiro256** initiali
 ### 4.7 Fuzzing
 
 - Les cibles sont `fuzz_non_parser`, `fuzz_sol_parser`, puis, à partir de M6, `fuzz_line_solver` (indices et ligne partielle aléatoires, comparés à l'énumération naïve), et à M9 `fuzz_ngp_parser` et `fuzz_ngg_parser`.
-- Le corpus initial est `tests/data/puzzles/**`. Les plantages trouvés sont ajoutés comme tests de non-régression dans `tests/data/regressions/`.
+- Le corpus initial est `tests/data/puzzles/**`, avec le dictionnaire `tests/fuzz/non.dict`. Les entrées nouvelles s'accumulent dans `build/fuzz/corpus/<cible>/` et les plantages dans `build/fuzz/artifacts/<cible>/`. Les plantages trouvés sont ajoutés comme tests de non-régression dans `tests/data/regressions/`.
+- `fuzz_non_parser` vérifie plus que l'absence de plantage : sur un échec, aucun objet n'est renvoyé et le message est une chaîne terminée ; sur un succès, l'aller-retour écriture puis lecture redonne les mêmes indices et métadonnées (P-IO2 sur des entrées arbitraires) ; dans les deux cas, aucune mémoire ne reste allouée. Un allocateur plafonné à 64 Mio empêche une entrée d'épuiser la machine.
+- libFuzzer est lié à la bibliothèque C++ de GCC 14 (`libstdc++-14-dev`), que Clang choisit dès que `gcc-14` est installé.
 
 ### 4.8 Benchmarks
 
@@ -197,7 +199,7 @@ Le code ajouté par une PR ne doit pas faire baisser la couverture du module con
 
 ## 7. Données de test
 
-`tests/data/README.md` recense la **provenance** et la licence de chaque fichier.
+`tests/data/README.md` recense la **provenance** et la licence de chaque fichier, et le format des fichiers `.expected`. `tests/unit/test_corpus.c` parcourt tout le corpus (listes générées par CMake) : les solutions de `tiny` et `small` doivent redonner exactement les indices du puzzle, et chaque fichier de `invalid` doit échouer avec le statut, la position et le message attendus.
 
 ```
 tests/data/

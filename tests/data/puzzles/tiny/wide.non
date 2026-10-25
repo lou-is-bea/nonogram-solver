@@ -1,0 +1,19 @@
+title "Wide"
+author "nonogram-solver"
+license "same as the project"
+width 6
+height 4
+
+rows
+6
+1,1
+1,2,1
+6
+
+columns
+4
+1,1
+1,2
+1,2
+1,1
+4

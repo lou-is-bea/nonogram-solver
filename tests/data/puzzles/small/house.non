@@ -1,0 +1,25 @@
+title "House"
+author "nonogram-solver"
+license "same as the project"
+width 8
+height 8
+
+rows
+2
+4
+6
+8
+1,1
+1,2,1
+1,2,1
+6
+
+columns
+1
+6
+3,1
+4,3
+4,3
+3,1
+6
+1

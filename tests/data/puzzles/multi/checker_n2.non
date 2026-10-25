@@ -1,0 +1,17 @@
+title "Checker"
+author "nonogram-solver"
+license "same as the project"
+width 4
+height 4
+
+rows
+1,1
+1,1
+1,1
+1,1
+
+columns
+1,1
+1,1
+1,1
+1,1

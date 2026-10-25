@@ -312,9 +312,19 @@ gate_G8() {
     done
 }
 
+# Seeds: the whole puzzle corpus; new inputs found by libFuzzer accumulate in build/fuzz/corpus.
+FUZZ_SECONDS="${FUZZ_SECONDS:-60}"
+
 gate_G9() {
-    say "G9 quick fuzzing"
-    skip "active from M1 (first fuzz target: fuzz_non_parser)"
+    say "G9 quick fuzzing (${FUZZ_SECONDS} s per target, preset fuzz)"
+    preset fuzz
+    local target=non_parser
+    local work="build/fuzz/corpus/$target"
+    local artifacts="build/fuzz/artifacts/$target/"
+    mkdir -p "$work" "$artifacts"
+    "build/fuzz/tests/fuzz/fuzz_$target" "$work" tests/data/puzzles/* \
+        -dict=tests/fuzz/non.dict -max_total_time="$FUZZ_SECONDS" -timeout=10 \
+        -artifact_prefix="$artifacts" -print_final_stats=1 2>&1 | tail -n 20
 }
 
 for gate in "${selected[@]}"; do

@@ -14,6 +14,12 @@ ctest --preset dev -R version                        # par nom CTest
 
 Sous sanitizers : `cmake --preset asan && cmake --build --preset asan && ctest --preset asan` (même chose avec `ubsan`).
 
+## Corpus, fuzzing et grilles massives
+
+- Corpus de puzzles : [data/README.md](data/README.md), vérifié par `unit/test_corpus.c`.
+- Fuzzing : `cmake --preset fuzz && cmake --build --preset fuzz`, puis `./scripts/check.sh --only G9` (durée : `FUZZ_SECONDS`, 60 s par défaut).
+- Grilles massives : [massive/README.md](massive/README.md), `ctest --preset massive`.
+
 ## Ajouter un fichier de test
 
 1. Crée `tests/unit/test_<module>.c`, avec `TestSuite(<module>_<unité>, .init = ng_test_setup, .fini = ng_test_teardown);` pour chaque suite.

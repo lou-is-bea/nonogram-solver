@@ -29,7 +29,8 @@ case "${VERSION_ID}" in
 esac
 common=(build-essential cmake ninja-build pkg-config git gh rsync curl python3
         libcriterion-dev valgrind cppcheck gcovr)
-extra=(gcc-14 clang-20 clang-19 clang-format-20 clang-tidy-20 libclang-rt-20-dev llvm-20)
+# libstdc++-14-dev: the C++ runtime that libFuzzer links against when Clang uses GCC 14.
+extra=(gcc-14 libstdc++-14-dev clang-20 clang-19 clang-format-20 clang-tidy-20 libclang-rt-20-dev llvm-20)
 say "Installation des paquets (sudo demandera votre mot de passe Linux)"
 sudo apt-get update
 sudo apt-get install -y "${common[@]}" "${extra[@]}"

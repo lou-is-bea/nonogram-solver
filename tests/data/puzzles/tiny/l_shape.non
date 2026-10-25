@@ -1,0 +1,16 @@
+title "L shape"
+author "nonogram-solver"
+license "same as the project"
+width 3
+height 4
+
+rows
+1
+1
+1
+3
+
+columns
+4
+1
+1

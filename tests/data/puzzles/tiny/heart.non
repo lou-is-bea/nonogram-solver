@@ -1,0 +1,19 @@
+title "Heart"
+author "nonogram-solver"
+license "same as the project"
+width 5
+height 5
+
+rows
+1,1
+5
+5
+3
+1
+
+columns
+2
+4
+4
+4
+2

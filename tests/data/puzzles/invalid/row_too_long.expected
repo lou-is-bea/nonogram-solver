@@ -1,0 +1,3 @@
+status NG_ERR_INCONSISTENT
+position 4:1
+message row 1 clues need 7 cells, width is 5

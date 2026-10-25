@@ -1,0 +1,33 @@
+title "Tree"
+author "nonogram-solver"
+license "same as the project"
+width 12
+height 12
+
+rows
+2
+4
+6
+4
+8
+10
+6
+10
+12
+2
+2
+6
+
+columns
+1
+1,2
+2,2
+1,5,1
+8,1
+12
+12
+8,1
+1,5,1
+2,2
+1,2
+1

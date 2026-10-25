@@ -1,0 +1,15 @@
+title "Full row"
+author "nonogram-solver"
+license "same as the project"
+width 5
+height 1
+
+rows
+5
+
+columns
+1
+1
+1
+1
+1
