@@ -181,6 +181,53 @@ Test(verify, mismatched_dimensions_are_invalid_and_leave_the_report)
     ng_grid_destroy(solution);
 }
 
+Test(verify, grid_differing_in_one_dimension_is_invalid)
+{
+    /* A 5 x 5 puzzle whose last two rows are empty: a 5 x 3 grid of its first rows would pass
+     * the line checks if only the width were compared. */
+    static const char *const solution[] = {"###..", "#.#..", "###..", ".....", "....."};
+    static const char *const shorter[] = {"###..", "#.#..", "###.."};
+    static const char *const narrower[] = {"###", "#.#", "###", "...", "..."};
+    ng_grid *full = ng_test_grid_of(solution, 5);
+    ng_puzzle *puzzle = ng_test_puzzle_from_grid(full);
+    ng_grid *grids[] = {ng_test_grid_of(shorter, 3), ng_test_grid_of(narrower, 5)};
+
+    for (size_t i = 0; i < 2; ++i) {
+        ng_verify_report report = {.verdict = NG_VERDICT_INCOMPLETE, .unknown_cells = 9};
+
+        cr_assert_eq(ng_verify(puzzle, grids[i], &report), NG_ERR_INVALID_ARGUMENT, "grid %zu", i);
+        cr_assert_eq(report.unknown_cells, 9u, "grid %zu: report unchanged", i);
+        ng_grid_destroy(grids[i]);
+    }
+    ng_puzzle_destroy(puzzle);
+    ng_grid_destroy(full);
+}
+
+Test(verify, very_tall_column_is_checked)
+{
+    /* 1 x 10^6, alternating: the column has 500 000 runs; flipping the last cell breaks its row,
+     * which is reported first (rows come before columns). */
+    constexpr ng_dim height = 1'000'000;
+    ng_grid *grid = nullptr;
+    cr_assert_eq(ng_grid_create(&ng_test_heap()->base, 1, height, &grid), NG_OK);
+    for (ng_dim r = 0; r < height; ++r) {
+        ng_grid_set(grid, r, 0, r % 2u == 0u ? NG_CELL_FILLED : NG_CELL_EMPTY);
+    }
+    ng_puzzle *puzzle = ng_test_puzzle_from_grid(grid);
+    ng_verify_report report = {};
+
+    cr_assert_eq(ng_verify(puzzle, grid, &report), NG_OK);
+    cr_assert_eq(report.verdict, NG_VERDICT_VALID);
+    /* The last row has an odd index: empty in the solution, filled here. */
+    ng_grid_set(grid, height - 1u, 0, NG_CELL_FILLED);
+    cr_assert_eq(ng_verify(puzzle, grid, &report), NG_OK);
+    cr_assert_eq(report.verdict, NG_VERDICT_INVALID);
+    cr_assert_eq(report.first_bad_line, height - 1u);
+
+    ng_puzzle_destroy(puzzle);
+    ng_grid_destroy(grid);
+}
+
 Test(verify, nullptr_arguments_are_invalid)
 {
     ng_grid *grid = ng_test_grid_of(p_rows, 5);

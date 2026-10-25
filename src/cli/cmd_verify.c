@@ -40,10 +40,13 @@ static int print_invalid(FILE *out, FILE *err, const ng_puzzle *puzzle, const ng
     ng_dim *expected = a->alloc(a->ctx, capacity * sizeof(ng_dim), alignof(ng_dim));
     ng_dim *observed = a->alloc(a->ctx, capacity * sizeof(ng_dim), alignof(ng_dim));
     int code = CLI_EXIT_FAILURE;
-    if (expected == nullptr || observed == nullptr ||
-        ng_puzzle_copy_line_runs(puzzle, line, expected, expected_count) != NG_OK ||
-        ng_verify_line_runs(grid, line, observed, observed_count, &observed_count) != NG_OK) {
+    if (expected == nullptr || observed == nullptr) {
         (void)fputs("nonogram: out of memory\n", err);
+        code = CLI_EXIT_INTERNAL;
+    } else if (ng_puzzle_copy_line_runs(puzzle, line, expected, expected_count) != NG_OK ||
+               ng_verify_line_runs(grid, line, observed, observed_count, &observed_count) !=
+                   NG_OK) {
+        (void)fputs("nonogram: internal error: cannot read the runs of the bad line\n", err);
         code = CLI_EXIT_INTERNAL;
     } else {
         const ng_dim height = ng_puzzle_height(puzzle);

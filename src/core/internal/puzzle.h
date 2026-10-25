@@ -1,6 +1,7 @@
 /**
  * @file puzzle.h
- * @brief Read-only fast access to the clues of a puzzle (ngi), for the io and render layers.
+ * @brief Read-only fast access to the clues of a puzzle (ngi), for the io, render and verify
+ *        layers.
  *
  * Solvers use the public line copies instead (ARCHITECTURE.md §3).
  */
