@@ -34,11 +34,15 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - M1 : cible de fuzzing `fuzz_non_parser` (aller-retour et absence de fuite vérifiés sur chaque entrée), dictionnaire `.non`, porte G9 active.
 - M1 : premiers tests massifs (10⁴ × 10⁴ : formules mémoire à ± 5 %, accès par ligne, allers-retours `.non` et `.sol` ; limite 10⁵ × 10⁵ avec l'allocateur plafonné), label `massive` et preset `massive`.
 - Paquet `libstdc++-14-dev` ajouté à l'environnement de référence (requis par libFuzzer avec Clang et GCC 14).
+- M2 : `render.h` : `ng_render_text` (ASCII ou Unicode, avec ou sans indices, grille complète, partielle ou absente) et `ng_render_summary` ; module `ng_render`.
+- M2 : sous-commande `nonogram show <puzzle> [--solution <sol>] [--unicode] [--max-render <n>]`, aide `--help`, codes de sortie stables (F-41).
+- M2 : tests d'intégration de la CLI comparés à des sorties de référence (`tests/integration/`, `tests/data/expected/`), script `scripts/update_golden.sh`.
 
 ### Modifié
 - Revue indépendante de M1 : les accesseurs sans statut (`ng_grid_get`, `ng_grid_set`, `ng_grid_fill`, `ng_puzzle_line_length`, `ng_puzzle_line_run_count`) n'ont plus d'assertion sur les entrées de l'appelant ; leur valeur de repli documentée s'applique dans tous les builds (CODING_STANDARDS §6).
 - Revue indépendante de M1 : le fuzzer et le test massif d'aller-retour `.non` comparent les longueurs des blocs, plus seulement leur nombre ; le pic mémoire documenté des lecteurs est corrigé (jusqu'à environ 3 fois les indices ou la grille) ; un `\r` isolé est refusé aussi dans un commentaire ; l'analyseur `.non` est découpé en trois fichiers (`non_lexer.c`, `non_directives.c`, `non_parser.c`).
 - clang-tidy, avec l'accord du responsable du projet (2026-10-25) : `readability-implicit-bool-conversion` désactivé (inadapté au C) ; `readability-magic-numbers` et `readability-function-cognitive-complexity` désactivés pour `tests/` seulement (`tests/.clang-tidy`). CODING_STANDARDS documente ces exceptions et autorise les attributs de fabricant qui n'ajoutent que des diagnostics (`[[gnu::format]]`).
+- `ngi_output` (sortie texte tamponnée) déplacé de `src/io/internal` vers `src/core/internal`, pour être partagé par `io` et `render` sans dépendance entre ces couches.
 - FILE_FORMATS : règles strictes précisées là où la spécification était muette (directives répétées, valeurs entre guillemets, contenu entre les sections, fin de ligne finale facultative, `\r\n` accepté pour `.sol`).
 - `ng_grid_load_line` et `ng_grid_store_line` ne prennent pas le puzzle en paramètre, conformément à l'ADR-0009 (le croquis d'ARCHITECTURE §4.4 et §5 est corrigé).
 - M0 : la CI GitHub Actions, d'abord différée (validation locale avec `scripts/check.sh`), tourne sur chaque PR ; les tâches de test ont reçu la permission `packages: read` pour télécharger l'image de référence ; une tâche `full-check` exécute `check.sh` en entier dans le conteneur. Le dépôt est public et `main` est protégée.

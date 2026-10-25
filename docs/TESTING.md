@@ -137,6 +137,7 @@ Le générateur `ng_test_rng` (`tests/support/test_rng.h`, xoshiro256** initiali
 ### 4.5 Tests d'intégration (CLI)
 
 - Chaque cas est un triplet (commande, fichier d'entrée, sortie attendue avec le code de sortie) décrit dans `tests/integration/cases.cmake`.
+- Chaque cas est enregistré par `ng_cli_case(<cas> EXIT <code> ARGS ...)`. Le script `tests/integration/run_case.cmake` lance la commande depuis la racine du dépôt et compare octet par octet le code de sortie, la sortie standard (`<cas>.out`) et la sortie d'erreur (`<cas>.err`).
 - Les sorties de référence (`tests/data/expected/`) sont **relues par un humain** lors de leur création. Une mise à jour en masse (`scripts/update_golden.sh`) se justifie dans la PR, et chaque modification se relit au diff.
 
 ### 4.6 Grilles massives

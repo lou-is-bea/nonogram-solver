@@ -1,0 +1,31 @@
+# Runs one CLI case and compares its exit code, stdout and stderr with the reference files.
+# Invoked by CTest as: cmake -DNONOGRAM=... -DCASE=... -DARGS=a|b|c -DEXIT=n
+#                            -DEXPECTED_DIR=... -P run_case.cmake
+# With NG_UPDATE_GOLDEN=1 in the environment, the reference files are rewritten instead
+# (scripts/update_golden.sh); every change must then be reviewed in the diff.
+string(REPLACE "|" ";" args "${ARGS}")
+execute_process(
+    COMMAND ${NONOGRAM} ${args}
+    RESULT_VARIABLE exit_code
+    OUTPUT_VARIABLE actual_stdout
+    ERROR_VARIABLE actual_stderr)
+
+set(stdout_file ${EXPECTED_DIR}/${CASE}.out)
+set(stderr_file ${EXPECTED_DIR}/${CASE}.err)
+
+if(DEFINED ENV{NG_UPDATE_GOLDEN})
+    file(WRITE ${stdout_file} "${actual_stdout}")
+    file(WRITE ${stderr_file} "${actual_stderr}")
+endif()
+
+if(NOT exit_code STREQUAL EXIT)
+    message(FATAL_ERROR "${CASE}: exit code ${exit_code}, expected ${EXIT}\n"
+        "stdout:\n${actual_stdout}\nstderr:\n${actual_stderr}")
+endif()
+foreach(stream stdout stderr)
+    file(READ ${${stream}_file} expected)
+    if(NOT actual_${stream} STREQUAL expected)
+        message(FATAL_ERROR "${CASE}: ${stream} differs from ${${stream}_file}\n"
+            "--- expected\n${expected}--- actual\n${actual_${stream}}")
+    endif()
+endforeach()

@@ -76,6 +76,7 @@ ng_add_unit_test(grid LIBS ng_core)
 ng_add_unit_test(io_non LIBS ng_io)
 ng_add_unit_test(io_sol LIBS ng_io)
 ng_add_unit_test(puzzle LIBS ng_core)
+ng_add_unit_test(render LIBS ng_render)
 ng_add_unit_test(status LIBS ng_core)
 ng_add_unit_test(stream LIBS ng_core)
 ng_add_unit_test(support_allocator LIBS ng_core)
@@ -140,19 +141,13 @@ target_include_directories(ng_header_check PRIVATE
     ${PROJECT_BINARY_DIR}/include)
 target_link_libraries(ng_header_check PRIVATE ng_project_options)
 
-# --- CLI smoke tests ----------------------------------------------------------------------
+# --- CLI integration tests ------------------------------------------------------------------
 add_test(NAME cli_version COMMAND nonogram --version)
 set_tests_properties(cli_version PROPERTIES
     LABELS integration
     FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}"
     PASS_REGULAR_EXPRESSION "^nonogram ${PROJECT_VERSION}\n$")
-# Exactly exit code 2 (F-41) and the help text. The output is echoed so that a sanitizer report
-# still fails the test (WILL_FAIL would invert that failure too).
-add_test(NAME cli_without_arguments_is_usage_error
-    COMMAND sh -c [=[out=$("$1" 2>&1); code=$?; printf '%s\n' "$out"; [ "$code" -eq 2 ] && printf '%s\n' "$out" | grep -q '^usage: nonogram']=] _ $<TARGET_FILE:nonogram>)
-set_tests_properties(cli_without_arguments_is_usage_error PROPERTIES
-    LABELS integration
-    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+include(integration/cases.cmake)
 
 # Output failure: stdout on /dev/full (Linux) gives exit code 3.
 add_test(NAME cli_version_output_failure

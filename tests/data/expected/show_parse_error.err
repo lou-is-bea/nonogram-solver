@@ -1,0 +1,1 @@
+tests/data/puzzles/invalid/zero_width.non:1:7: error: width out of range [1, 2147483647]: 0

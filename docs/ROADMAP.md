@@ -8,7 +8,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 |---|---|---|---|
 | M0 | Fondations : build, CI, outillage | — | terminé |
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
-| M2 | Affichage | — | à faire |
+| M2 | Affichage | — | en cours (critères atteints, sorties de référence à approuver) |
 | M3 | Vérificateur | 0.1.0 | à faire |
 | M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |
 | M5 | S1 : backtracking par placements de lignes | 0.3.0 | à faire |
@@ -95,6 +95,8 @@ Exemple de rendu attendu (ASCII) :
 ```
 
 **Critères de sortie** : les sorties de référence sont relues et approuvées par un humain. L'affichage d'une grille 100×100 tient en moins de 2 ms.
+
+*Bilan du 2026-10-25* : 23 cas d'intégration et leurs sorties de référence (`tests/data/expected/`), **en attente d'approbation humaine**. Affichage d'une grille 100 × 100 aléatoire avec indices (environ 5 000 blocs, 48 Ko de texte) : médiane 0,23 ms, maximum 0,84 ms sur 201 exécutions (Release, WSL2, 16 cœurs). Choix validés : largeur de colonne uniforme pour les indices à plusieurs chiffres, `?` pour les cases inconnues, blocs et cadre Unicode, `0` pour un indice vide.
 
 ## M3 — Vérificateur
 

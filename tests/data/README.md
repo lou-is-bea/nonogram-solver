@@ -20,6 +20,7 @@ Aucun puzzle n'est importé d'une source externe.
 | `puzzles/multi/` | plusieurs solutions ; leur nombre exact est dans le nom (`*_n9.non`) | nombre de solutions |
 | `puzzles/unsolvable/` | indices cohérents (chaque ligne tient, totaux égaux) mais aucune grille ne les satisfait | aucune solution |
 | `puzzles/invalid/` | fichiers mal formés ou incohérents, chacun avec un `<nom>.expected` | erreur attendue |
+| `expected/` | sorties de référence de la CLI (`<cas>.out`, `<cas>.err`), cas décrits dans `tests/integration/cases.cmake` | relues par un humain ; mises à jour par `scripts/update_golden.sh` |
 
 Un fichier `.expected` contient trois lignes :
 
