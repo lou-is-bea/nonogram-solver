@@ -70,7 +70,7 @@ Les types sont fixés par l'[ADR-0009](adr/0009-types-et-grilles-massives.md).
 - Tout calcul de taille d'allocation, et toute somme ou tout produit qui peut déborder, passe par `ckd_add` ou `ckd_mul`. Le résultat est testé. 🔧 (revue et recherche dans `check.sh`)
 - Les conversions entre types signés et non signés ou entre largeurs différentes sont **explicites** et justifiées si elles peuvent perdre de l'information. 🔧
 - Pour afficher ces types, on utilise les macros de format `NG_PRI_DIM`, `NG_PRI_CELL_INDEX`, etc.
-- Le résultat d'une comparaison n'est jamais utilisé comme un entier.
+- Le résultat d'une comparaison n'est jamais utilisé comme un entier (vérifié en revue : `readability-implicit-bool-conversion` signale en C toute expression booléenne, une comparaison y étant de type `int`).
 
 ## 5. Fonctions
 
@@ -86,7 +86,6 @@ Les types sont fixés par l'[ADR-0009](adr/0009-types-et-grilles-massives.md).
 - Toute fonction publique qui peut échouer renvoie un `ng_status` marqué `[[nodiscard]]`. Les résultats passent par des pointeurs de sortie placés en dernier. 🔧
 - La bibliothèque n'utilise jamais `exit`, `abort` ni `printf` vers `stdout` ou `stderr`.
 - `NG_ASSERT` sert aux invariants internes, jamais à la validation des entrées. Toute entrée provenant de l'appelant est validée et une erreur est renvoyée. Un accesseur qui ne peut pas renvoyer de statut (`ng_grid_get`, `ng_puzzle_line_length`…) documente une valeur de repli pour les arguments invalides et l'applique dans tous les builds.
-- Le résultat d'une comparaison n'est pas utilisé comme un entier : ce point est vérifié en revue, car `readability-implicit-bool-conversion` signale en C toute expression booléenne (une comparaison y est de type `int`).
 - Le nettoyage se fait avec un **unique** `goto cleanup;` en fin de fonction. C'est le seul usage autorisé de `goto`.
 
 ```c

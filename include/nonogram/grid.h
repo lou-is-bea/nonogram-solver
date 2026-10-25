@@ -84,7 +84,7 @@ ng_cell ng_grid_get(const ng_grid *grid, ng_dim row, ng_dim col);
  * This function cannot report an error: a call with a nullptr grid, a position outside the grid
  * or a value that is not an ng_cell enumerator changes nothing, in every build.
  *
- * @param grid Grid. Must not be nullptr.
+ * @param grid Grid; a nullptr grid is ignored.
  * @param row  Row, below ng_grid_height().
  * @param col  Column, below ng_grid_width().
  * @param cell New state.
@@ -97,7 +97,7 @@ void ng_grid_set(ng_grid *grid, ng_dim row, ng_dim col, ng_cell cell);
  *
  * Same invalid arguments as ng_grid_set(): the call then changes nothing.
  *
- * @param grid Grid. Must not be nullptr.
+ * @param grid Grid; a nullptr grid is ignored.
  * @param cell New state of every cell.
  * @complexity O(width * height).
  */
