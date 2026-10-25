@@ -1,4 +1,13 @@
-# Interface target until the first source file lands; it then becomes a STATIC library that
-# links ng_core PUBLIC and ng_project_options PRIVATE (ARCHITECTURE.md §3).
-add_library(ng_io INTERFACE)
-target_link_libraries(ng_io INTERFACE ng_core)
+add_library(ng_io STATIC
+    char_source.c
+    non_metadata.c
+    non_parser.c
+    non_writer.c
+    sol_format.c
+    text.c)
+# Internal headers of core and io (prefix ngi) are reachable as "core/internal/..." and
+# "io/internal/...".
+target_include_directories(ng_io PRIVATE ${PROJECT_SOURCE_DIR}/src)
+target_link_libraries(ng_io
+    PUBLIC ng_core
+    PRIVATE ng_project_options)

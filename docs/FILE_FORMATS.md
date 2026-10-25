@@ -62,6 +62,12 @@ fin_ligne   = "\n" | "\r\n" ;
 - Le fichier est encodé en UTF-8, sans BOM. Les fins de ligne `\n` et `\r\n` sont acceptées toutes les deux.
 - Le fichier est lu **en flux**, par blocs de 64 Kio. Il n'y a aucune limite de taille de fichier ni de longueur de ligne : une ligne d'indices d'une grille massive peut contenir des millions de blocs.
 - Les valeurs numériques sont accumulées avec `ckd_*` : un indice qui dépasse `NG_DIM_MAX` produit une erreur, jamais un débordement silencieux.
+- Toutes les directives de texte (`title`, `author`, `copyright`, `license`, `catalogue`, `goal`) ont une valeur entre guillemets doubles, sans séquence d'échappement : la valeur s'arrête au premier `"`, et un caractère de contrôle autre que la tabulation y est refusé. La limite de 255 octets s'applique à toutes, sauf `goal` (dont la longueur suit le nombre de cases).
+- Une directive répétée est une erreur (`duplicate directive 'title'`), de même qu'une section répétée.
+- Entre les sections `rows` et `columns`, seuls les lignes vides et les commentaires sont acceptés ; les directives vont avant `rows` ou après les indices des colonnes.
+- Une ligne qui ne contient que des espaces compte comme une ligne vide. Les séparateurs d'indices sont la virgule et l'espace uniquement : une tabulation est refusée.
+- La dernière ligne peut ne pas se terminer par une fin de ligne.
+- Un `\r` qui n'est pas suivi de `\n` est refusé.
 
 ### 1.4 Erreurs signalées
 
@@ -77,7 +83,9 @@ Chaque erreur précise sa ligne et sa colonne (sur 64 bits) et un message (`ng_p
 | totaux des rangées et des colonnes différents | `row clues sum to 12, column clues to 11` |
 | directive inconnue (mode strict) | `unknown directive 'colour'` |
 
-Les deux dernières vérifications de cohérence sont faites à la construction du puzzle (`ng_puzzle_create`). L'analyseur les relaie avec la ligne du fichier concernée quand c'est possible.
+Les deux dernières vérifications (ligne trop longue, totaux différents) renvoient `NG_ERR_INCONSISTENT` ; les autres renvoient `NG_ERR_PARSE`. L'analyseur les fait lui-même pendant la lecture, pour indiquer la ligne du fichier concernée, avant que `ng_puzzle_create` ne les refasse. Les numéros de rangée et de colonne des messages commencent à 1.
+
+Les métadonnées (`title`, `author`, …) ne font pas partie du puzzle : `ng_io_read_non` les renvoie dans un objet séparé, `ng_non_metadata`, et `ng_io_write_non` les accepte en paramètre.
 
 ## 2. Grille : format `.sol`
 
@@ -95,8 +103,9 @@ Les deux dernières vérifications de cohérence sont faites à la construction 
 
 - Le fichier contient exactement `height` lignes de `width` caractères chacune.
 - `#` désigne une case pleine, `.` une case vide et `?` une case inconnue. `?` est autorisé pour les grilles partielles (sortie de S2, entrée partiellement remplie).
-- Aucun autre caractère n'est accepté, à l'exception de la fin de ligne finale. Il n'y a ni commentaire ni en-tête : les dimensions se déduisent du contenu, et le contrôle de cohérence avec le puzzle se fait au moment de la vérification.
+- Aucun autre caractère n'est accepté, à l'exception des fins de ligne (`\n` ou `\r\n`, comme pour `.non`). La fin de ligne de la dernière rangée est facultative ; une ligne vide est refusée, y compris en fin de fichier. Il n'y a ni commentaire ni en-tête : les dimensions se déduisent du contenu, et le contrôle de cohérence avec le puzzle se fait au moment de la vérification.
 - Un fichier écrit par `ng_io_write_sol` se termine toujours par `\n`.
+- Les dimensions ne sont connues qu'en fin de lecture : les cases sont accumulées avant la création de la grille, soit environ deux fois la taille de la grille au pic.
 - Ce format coûte un octet par case. Pour les grilles massives, on utilise le format binaire `.ngg` (§3).
 
 ## 3. Formats binaires `.ngp` et `.ngg` (M9)

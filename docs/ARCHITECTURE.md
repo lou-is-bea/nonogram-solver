@@ -60,7 +60,8 @@ nonogram-solver/
 ├── src/
 │   ├── core/               # status.c allocator.c stream.c puzzle.c grid.c
 │   │   └── internal/       # en-têtes ngi_* partagés avec les autres couches
-│   ├── io/                 # non_parser.c sol_format.c (puis ngp_format.c ngg_format.c)
+│   ├── io/                 # non_parser.c non_writer.c non_metadata.c sol_format.c (puis ngp_format.c ngg_format.c)
+│   │   └── internal/       # source de caractères par blocs, aides texte (ngi_*)
 │   ├── render/             # render_text.c
 │   ├── verify/             # verify.c
 │   ├── solvers/
@@ -254,10 +255,14 @@ ng_status ng_grid_store_line(ng_grid *g, ng_line_id line, const ng_cell *buffer)
 
 /* io.h : tous les lecteurs fonctionnent en flux (ADR-0010) */
 typedef struct ng_parse_error { uint64_t line; uint64_t column; char message[160]; } ng_parse_error;
-ng_status ng_io_read_non(const ng_allocator *a, ng_reader *r, ng_puzzle **out, ng_parse_error *err);
-ng_status ng_io_read_sol(const ng_allocator *a, ng_reader *r, ng_grid **out, ng_parse_error *err);
-ng_status ng_io_write_non(const ng_puzzle *p, ng_writer *w);   /* aller-retour testé (P-IO2) */
-ng_status ng_io_write_sol(const ng_grid *g, ng_writer *w);
+typedef struct ng_non_metadata ng_non_metadata;   /* title, author, ... (opaque, séparé du puzzle) */
+const char *ng_non_metadata_get(const ng_non_metadata *m, ng_non_field field);  /* nullptr si absent */
+void        ng_non_metadata_destroy(ng_non_metadata *m);
+ng_status ng_io_read_non(const ng_allocator *a, const ng_reader *r, ng_puzzle **out,
+                         ng_non_metadata **metadata /* nullptr : ignorées */, ng_parse_error *err);
+ng_status ng_io_read_sol(const ng_allocator *a, const ng_reader *r, ng_grid **out, ng_parse_error *err);
+ng_status ng_io_write_non(const ng_puzzle *p, const ng_non_metadata *metadata, const ng_writer *w);  /* P-IO2 */
+ng_status ng_io_write_sol(const ng_grid *g, const ng_writer *w);
 /* M9 : ng_io_read_ngp / ng_io_write_ngp / ng_io_read_ngg / ng_io_write_ngg */
 
 /* render.h */

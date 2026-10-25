@@ -10,6 +10,7 @@
 #include "nonogram/types.h"
 
 #include "core/internal/assert.h"
+#include "core/internal/puzzle.h"
 
 /* Clues in compressed sparse row form, in a single allocation (ARCHITECTURE.md §4.3):
  * [header][line_offsets: line_count + 1 x ng_run_index][runs: total_runs x ng_dim].
@@ -243,4 +244,13 @@ ng_run_count ng_puzzle_line_run_count(const ng_puzzle *puzzle, ng_line_id line)
         memcpy(buffer, puzzle->runs + puzzle->line_offsets[line], (size_t)count * sizeof(ng_dim));
     }
     return NG_OK;
+}
+
+const ng_dim *ngi_puzzle_line_runs(const ng_puzzle *puzzle, ng_line_id line)
+{
+    NG_ASSERT(is_line(puzzle, line));
+    if (ng_puzzle_line_run_count(puzzle, line) == 0u) {
+        return nullptr;
+    }
+    return puzzle->runs + puzzle->line_offsets[line];
 }

@@ -7,6 +7,7 @@
 
 #include "nonogram/allocator.h"
 #include "nonogram/grid.h"
+#include "nonogram/io.h"
 #include "nonogram/puzzle.h"
 #include "nonogram/status.h"
 #include "nonogram/stream.h"

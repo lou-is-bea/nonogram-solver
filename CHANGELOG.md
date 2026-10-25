@@ -27,8 +27,12 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - M1 : assertions internes `NG_ASSERT` et `NG_UNREACHABLE` (`src/core/internal/assert.h`).
 - M1 : générateur pseudo-aléatoire de test `ng_test_rng` (xoshiro256**, graine `NG_TEST_SEED`) et premier test de propriété (P-M1) ; la porte G5 est active.
 - M1 : G3 exécute aussi les tests unitaires avec le preset `release`.
+- M1 : `io.h` : lecture en flux des formats `.non` (`ng_io_read_non`, blocs de 64 Kio, erreurs avec ligne, colonne et message) et `.sol` (`ng_io_read_sol`), écriture canonique (`ng_io_write_non`, `ng_io_write_sol`), métadonnées `.non` dans un objet séparé (`ng_non_metadata`).
+- M1 : accès interne en lecture seule aux indices d'une ligne (`ngi_puzzle_line_runs`), pour les couches io et render.
+- M1 : propriétés P-IO1 (aller-retour `.sol`), P-IO2 (aller-retour `.non`, forme canonique stable) et P-IO3 (résultat indépendant de la taille des blocs lus) ; supports de test `test_streams` et `test_puzzles`.
 
 ### Modifié
+- FILE_FORMATS : règles strictes précisées là où la spécification était muette (directives répétées, valeurs entre guillemets, contenu entre les sections, fin de ligne finale facultative, `\r\n` accepté pour `.sol`).
 - `ng_grid_load_line` et `ng_grid_store_line` ne prennent pas le puzzle en paramètre, conformément à l'ADR-0009 (le croquis d'ARCHITECTURE §4.4 et §5 est corrigé).
 - M0 : la CI GitHub Actions, d'abord différée (validation locale avec `scripts/check.sh`), tourne sur chaque PR ; les tâches de test ont reçu la permission `packages: read` pour télécharger l'image de référence ; une tâche `full-check` exécute `check.sh` en entier dans le conteneur. Le dépôt est public et `main` est protégée.
 - Revue indépendante de M0 : test d'usage de la CLI qui vérifie exactement le code 2 ; recherche des constructions interdites qui retire les commentaires (au lieu d'ignorer toute ligne commençant par `*`), avec un auto-test (littéraux de chaîne et de caractère neutralisés, y compris prolongés par `\`, séparateurs de chiffres C23 reconnus), et qui interdit aussi `strdup`/`strndup` ; `noTestsAction` à `error` ; compilation en `-std=c23`.

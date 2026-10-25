@@ -7,7 +7,9 @@ set_target_properties(PkgConfig::CRITERION PROPERTIES SYSTEM ON)
 add_library(ng_test_support STATIC
     support/ng_test_fixture.c
     support/test_allocator.c
-    support/test_rng.c)
+    support/test_puzzles.c
+    support/test_rng.c
+    support/test_streams.c)
 target_include_directories(ng_test_support PUBLIC support)
 target_link_libraries(ng_test_support
     PUBLIC PkgConfig::CRITERION ng_core
@@ -49,14 +51,18 @@ function(ng_add_property_test name)
 endfunction()
 
 ng_add_property_test(grid LIBS ng_core)
+ng_add_property_test(io LIBS ng_io)
 
 ng_add_unit_test(allocator LIBS ng_core)
 ng_add_unit_test(grid LIBS ng_core)
+ng_add_unit_test(io_non LIBS ng_io)
+ng_add_unit_test(io_sol LIBS ng_io)
 ng_add_unit_test(puzzle LIBS ng_core)
 ng_add_unit_test(status LIBS ng_core)
 ng_add_unit_test(stream LIBS ng_core)
 ng_add_unit_test(support_allocator LIBS ng_core)
 ng_add_unit_test(support_rng LIBS ng_core)
+ng_add_unit_test(support_streams LIBS ng_core)
 ng_add_unit_test(types LIBS ng_core)
 ng_add_unit_test(version LIBS ng_core)
 
