@@ -548,6 +548,28 @@ Test(io_write_non, writes_the_canonical_text)
     release(&result);
 }
 
+Test(io_write_non, keeps_the_order_of_asymmetric_runs)
+{
+    /* "1,1" in the letter P reads the same both ways: these runs do not. */
+    static const char text[] = "width 8\n"
+                               "height 1\n"
+                               "\n"
+                               "rows\n"
+                               "1,2,3\n"
+                               "\n"
+                               "columns\n"
+                               "1\n0\n1\n1\n0\n1\n1\n1\n";
+    read_result result = read_text(text);
+    cr_assert_eq(result.status, NG_OK);
+
+    ng_buffer *buffer = write_to_buffer(result.puzzle, nullptr);
+
+    cr_assert_str_eq(ng_buffer_data(buffer), "width 8\nheight 1\n\nrows\n1,2,3\n\ncolumns\n"
+                                             "1\n0\n1\n1\n0\n1\n1\n1\n");
+    ng_buffer_destroy(buffer);
+    release(&result);
+}
+
 Test(io_write_non, without_metadata_only_dimensions_precede_the_clues)
 {
     read_result result = read_text(p_text);
