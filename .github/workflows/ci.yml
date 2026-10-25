@@ -7,8 +7,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# The test jobs run inside the image published to GHCR by the "image" job: pulling it needs
+# packages: read.
 permissions:
   contents: read
+  packages: read
 
 concurrency:
   group: ci-${{ github.ref }}
