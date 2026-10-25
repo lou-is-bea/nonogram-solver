@@ -6,6 +6,9 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Unreleased]
 
+### Ajouté
+- Politique de revue indépendante des PR (`docs/agents/REVIEW.md`) et agent relecteur Claude (`.claude/agents/pr-reviewer.md`) ; étape de revue indépendante dans AGENTS, CONTRIBUTING et le gabarit de PR.
+
 ## [0.1.0] - 2026-10-27
 
 Première version : modèle de données pour grilles massives, lecture et écriture des formats `.non` et `.sol` en flux, affichage texte, vérificateur indépendant et commandes `nonogram show` et `nonogram verify`. Fin de l'étape M3.

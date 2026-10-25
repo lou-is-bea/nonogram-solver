@@ -39,7 +39,7 @@ Pour reproduire exactement la CI : `docker build -t nonogram-dev tools/docker &&
 ## 3. Cycle de vie d'une modification
 
 ```
-ticket ─▶ branche ─▶ tests + code ─▶ check.sh local ─▶ PR ─▶ CI ─▶ revue ─▶ squash merge ─▶ main
+ticket ─▶ branche ─▶ tests + code ─▶ check.sh local ─▶ PR ─▶ CI ─▶ revue indépendante ─▶ revue humaine ─▶ squash merge ─▶ main
 ```
 
 1. **Ticket.** Chaque travail correspond à un ticket qui précise l'objectif, l'étape de la feuille de route et les critères d'acceptation.
@@ -48,8 +48,9 @@ ticket ─▶ branche ─▶ tests + code ─▶ check.sh local ─▶ PR ─▶
 4. **Validation locale.** `./scripts/check.sh` doit réussir.
 5. **Pull request.** Le gabarit [.github/pull_request_template.md](.github/pull_request_template.md) est obligatoire. Une PR correspond à un objectif et compte idéalement moins de 400 lignes modifiées, hors données de test.
 6. **CI.** Toutes les portes bloquantes doivent être vertes.
-7. **Revue.** Au moins un humain approuve. Une PR produite par un agent IA est toujours relue par un humain.
-8. **Fusion.** On fusionne en *squash merge*. Le message final respecte les Conventional Commits.
+7. **Revue indépendante.** Un relecteur qui n'est pas l'auteur (un agent IA démarrant sans contexte, ou une autre personne) applique [docs/agents/REVIEW.md](docs/agents/REVIEW.md) : il vérifie les affirmations de la PR, relance les portes que la CI ne couvre pas, éprouve les tests par des mutations et rend un verdict argumenté. L'auteur répond à chaque constat bloquant, majeur ou question.
+8. **Revue humaine.** Au moins un humain approuve, au vu de la PR et de la revue indépendante. Une PR produite par un agent IA est toujours relue par un humain.
+9. **Fusion.** On fusionne en *squash merge*. Le message final respecte les Conventional Commits.
 
 ## 4. Définition de « terminé »
 

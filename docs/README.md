@@ -26,6 +26,7 @@
 | [adr/](adr/README.md) | Décisions d'architecture | oui (une fois acceptées) |
 | [solvers/](solvers/TEMPLATE.md) | Une spécification par solver | oui |
 | [agents/PLAYBOOKS.md](agents/PLAYBOOKS.md) | Procédures pas à pas pour les agents | oui |
+| [agents/REVIEW.md](agents/REVIEW.md) | Politique de revue indépendante des PR | oui |
 | [../.github/pull_request_template.md](../.github/pull_request_template.md) | Gabarit de PR | oui |
 
 « Normatif » signifie que le code doit s'y conformer. Un écart constitue un défaut, soit du code, soit du document.

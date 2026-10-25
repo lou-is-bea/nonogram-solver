@@ -23,6 +23,7 @@ Lis-les dans cet ordre. Ne lis que ceux qui concernent ta tâche, mais **les deu
 5. [docs/adr/](docs/adr/README.md) : décisions déjà prises (ne pas les remettre en cause sans nouvel ADR).
 6. [docs/FILE_FORMATS.md](docs/FILE_FORMATS.md) : pour tout travail sur `src/io/` ou les données de test.
 7. [docs/agents/PLAYBOOKS.md](docs/agents/PLAYBOOKS.md) : procédures pas à pas pour les tâches courantes.
+8. [docs/agents/REVIEW.md](docs/agents/REVIEW.md) : politique de revue indépendante des PR, pour l'auteur comme pour le relecteur.
 
 ## 3. Règles d'or
 
@@ -62,6 +63,7 @@ cmake --preset asan && cmake --build --preset asan && ctest --preset asan   # sa
 6. **S'auto-relire** avec la liste du §7.
 7. **Documenter** : commentaires Doxygen de l'API, documents concernés, `CHANGELOG.md` (section `[Unreleased]`).
 8. **Rendre compte** au format du §8.
+9. **Faire relire** : une fois la PR ouverte et la CI verte, demander une revue indépendante selon [docs/agents/REVIEW.md](docs/agents/REVIEW.md), puis répondre à chaque constat bloquant, majeur ou question avant de solliciter la revue humaine.
 
 ## 6. Quand s'arrêter et demander
 
