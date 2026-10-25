@@ -20,7 +20,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - `.gitignore` et `.gitattributes` (fins de ligne LF).
 
 ### Modifié
-- M0 : la CI GitHub Actions est différée ; la validation se fait en local avec `scripts/check.sh` (critères de sortie de M0 ajustés en conséquence).
+- M0 : la CI GitHub Actions, d'abord différée (validation locale avec `scripts/check.sh`), tourne sur chaque PR ; les tâches de test ont reçu la permission `packages: read` pour télécharger l'image de référence.
 - ADR-0001 : passage de C11 à C23 (GCC ≥ 14, Clang ≥ 19), plateforme Linux uniquement.
 - ADR-0003 : Criterion remplace Unity comme framework de tests.
 - Retrait de toute cible Windows et MSVC (développement sous Ubuntu dans WSL2).

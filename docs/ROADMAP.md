@@ -36,12 +36,13 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 
 **Critères de sortie**
 
-> **Décision du 2026-10-25** : la CI GitHub Actions n'est pas utilisée pour l'instant. La validation se fait uniquement en local, avec `./scripts/check.sh` dans WSL. Le fichier `.github/workflows/ci.yml` et l'image `tools/docker/Dockerfile` restent dans le dépôt mais n'ont pas encore été exécutés. Les critères qui en dépendent sont différés jusqu'à l'activation de la CI.
+> **Historique** : le 2026-10-25, la CI a d'abord été différée (validation uniquement locale). Elle a été activée le même jour à l'ouverture des PR M0 à M3 : l'image de référence se construit telle quelle, et après une correction de permissions (`packages: read`), les quatre PR sont vertes.
 
-- ✅ Le build et les tests passent avec GCC 14, Clang 20 et Clang 19 (en local).
-- ✅ `check.sh` tourne de bout en bout dans WSL. *(différé : exécution dans le conteneur)*
-- ✅ Un warning, une erreur de format et une fuite introduits volontairement sont **bloqués** par `check.sh`, à chacune des portes concernées (vérifié en local, ainsi qu'un test en échec, `NULL`, un débordement signé et un accès hors limites). *(différé : la même vérification par la CI sur une PR)*
-- *(différé)* La CI est verte sur toute la matrice, et la branche `main` est protégée.
+- ✅ Le build et les tests passent avec GCC 14, Clang 20 et Clang 19, en local et dans la CI.
+- ✅ La CI est verte sur toute la matrice (image, lint, build-test GCC 14 / Clang 20 / Clang 19, sanitizers) sur les quatre PR M0 à M3 (2026-10-25).
+- ✅ `check.sh` tourne de bout en bout dans WSL. Dans le conteneur de la CI, il exécute G0, G2 et G6 (jobs `lint` et `sanitizers`), et les jobs `build-test` couvrent G1, G3, G4 et G5 avec CMake et CTest. *(reste à faire : G7, G8 et G9 dans la CI)*
+- ✅ Un warning, une erreur de format et une fuite introduits volontairement sont **bloqués** par `check.sh`, à chacune des portes concernées (vérifié en local, ainsi qu'un test en échec, `NULL`, un débordement signé et un accès hors limites). *(reste à faire : la même vérification par une PR de test dans la CI)*
+- *(reste à faire, par un humain)* La branche `main` est protégée (paramètres du dépôt).
 
 ## M1 — Modèle de données
 
