@@ -68,7 +68,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 - ✅ Couverture d'au moins 90 % sur `core` et `io` : 96,9 % et 96,7 % des lignes (89,3 % et 88,9 % des branches).
 - ✅ Chaque chemin d'échec d'allocation est testé (boucle sur l'échec de la n-ième allocation) : `ng_buffer`, `ng_grid`, `ng_puzzle`, `ng_io_read_non`, `ng_io_read_sol`.
 - ✅ Aucun débordement entier sous UBSan avec `-fsanitize=integer`, y compris sur les dimensions supérieures à 2¹⁶ (tests unitaires à 70 000, 100 000 et 10⁶ de côté, tests massifs).
-- ✅ Le fuzzer tourne 10 minutes sans aucun plantage : 15,2 millions d'entrées, aucun plantage. *Exécuté avec un contournement local tant que `libstdc++-14-dev` n'est pas installé dans WSL (voir [TESTING.md §4.7](TESTING.md#47-fuzzing)) ; la porte G9 elle-même en dépend.*
+- ✅ Le fuzzer tourne 10 minutes sans aucun plantage : 15,2 millions d'entrées, aucun plantage. La porte G9 (60 s) tourne dans WSL depuis l'installation de `libstdc++-14-dev` ; on a vérifié qu'elle bloque un plantage injecté.
 
 ## M2 — Affichage
 
