@@ -143,25 +143,29 @@ target_include_directories(ng_header_check PRIVATE
 target_link_libraries(ng_header_check PRIVATE ng_project_options)
 
 # --- CLI integration tests ------------------------------------------------------------------
-add_test(NAME cli_version COMMAND nonogram --version)
+add_test(NAME cli_version
+    COMMAND sh -c [=[$NG_CLI_WRAPPER "$1" --version]=] _ $<TARGET_FILE:nonogram>)
 set_tests_properties(cli_version PROPERTIES
     LABELS integration
     FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}"
     PASS_REGULAR_EXPRESSION "^nonogram ${PROJECT_VERSION}\n$")
 include(integration/cases.cmake)
 
-# Output failure: stdout on /dev/full (Linux) gives exit code 3.
-add_test(NAME cli_version_output_failure
-    COMMAND sh -c [=["$1" --version >/dev/full; [ "$?" -eq 3 ]]=] _ $<TARGET_FILE:nonogram>)
-set_tests_properties(cli_version_output_failure PROPERTIES
-    LABELS integration
-    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+# Output failures: stdout on /dev/full (Linux) gives exit code 3. --version and --help write
+# less than a buffer, so the error only shows when stdout is flushed. Like every CLI case, these
+# tests run under NG_CLI_WRAPPER (Valgrind in G7).
+foreach(option IN ITEMS version help)
+    add_test(NAME cli_${option}_output_failure
+        COMMAND sh -c [=[$NG_CLI_WRAPPER "$1" "--$2" >/dev/full; [ "$?" -eq 3 ]]=]
+            _ $<TARGET_FILE:nonogram> ${option})
+    set_tests_properties(cli_${option}_output_failure PROPERTIES
+        LABELS integration
+        FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+endforeach()
 
-# Output failure: stdout on /dev/full (Linux) must give exit code 3 and a message.
-# Output failures: stdout on /dev/full (Linux) must give exit code 3 and a message, both when
-# the error only shows at the final flush (small output) and when the renderer itself gets it
-# (output larger than the buffers: the 100 x 100 puzzle renders about 40 KB). These tests run
-# under NG_CLI_WRAPPER (Valgrind in G7) like the other cases.
+# show must also print a message, both when the error only shows at the final flush (small
+# output) and when the renderer itself gets it (output larger than the buffers: the 100 x 100
+# puzzle renders about 25 KB).
 foreach(output_case IN ITEMS "small:tests/data/puzzles/tiny/dot.non"
                              "large:tests/data/puzzles/large/stripes_100.non")
     string(REPLACE ":" ";" parts "${output_case}")
