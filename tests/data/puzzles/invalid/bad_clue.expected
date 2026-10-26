@@ -1,0 +1,3 @@
+status NG_ERR_PARSE
+position 4:3
+message invalid clue '1a' at position 2

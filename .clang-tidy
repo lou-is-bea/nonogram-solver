@@ -5,6 +5,9 @@
 #  - misc-include-cleaner: does not understand Criterion's macro-generated includes.
 #  - clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling: flags every
 #    memcpy/snprintf, which the standards explicitly allow with a known size.
+#  - readability-implicit-bool-conversion: in C a comparison has type int, so the check flags
+#    every boolean expression returned as bool. The rule "a comparison result is never used
+#    as an integer" (CODING_STANDARDS.md §4) is checked in review instead.
 Checks: >
   -*,
   bugprone-*,
@@ -22,7 +25,6 @@ Checks: >
   readability-braces-around-statements,
   readability-function-cognitive-complexity,
   readability-function-size,
-  readability-implicit-bool-conversion,
   readability-inconsistent-declaration-parameter-name,
   readability-isolate-declaration,
   readability-magic-numbers,
@@ -34,5 +36,4 @@ HeaderFilterRegex: '(include/nonogram|src|tests)/'
 CheckOptions:
   readability-function-cognitive-complexity.Threshold: 25
   readability-function-size.ParameterThreshold: 6
-  readability-implicit-bool-conversion.AllowPointerConditions: false
   readability-magic-numbers.IgnoredIntegerValues: '0;1;2'

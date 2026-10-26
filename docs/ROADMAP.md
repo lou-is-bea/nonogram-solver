@@ -7,7 +7,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 | Étape | Thème | Version visée | Statut |
 |---|---|---|---|
 | M0 | Fondations : build, CI, outillage | — | terminé |
-| M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | à faire |
+| M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
 | M2 | Affichage | — | à faire |
 | M3 | Vérificateur | 0.1.0 | à faire |
 | M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |
@@ -63,12 +63,12 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 - La cible de fuzzing `fuzz_non_parser`.
 - Les premiers tests massifs : création d'une grille 10⁴ × 10⁴, aller-retour par lignes, limites vérifiées avec l'allocateur plafonné.
 
-**Critères de sortie**
+**Critères de sortie** (bilan du 2026-10-25, après la revue indépendante)
 
-- Couverture d'au moins 90 % sur `core` et `io`.
-- Chaque chemin d'échec d'allocation est testé (boucle sur l'échec de la n-ième allocation).
-- Aucun débordement entier sous UBSan avec `-fsanitize=integer`, y compris sur les dimensions supérieures à 2¹⁶.
-- Le fuzzer tourne 10 minutes sans aucun plantage.
+- ✅ Couverture d'au moins 90 % sur `core` et `io` : 98,3 % et 96,7 % des lignes (94,8 % et 89,7 % des branches), en local et dans la CI (`full-check`).
+- ✅ Chaque chemin d'échec d'allocation est testé (boucle sur l'échec de la n-ième allocation) : `ng_buffer`, `ng_grid`, `ng_puzzle`, `ng_io_read_non`, `ng_io_read_sol`.
+- ✅ Aucun débordement entier sous UBSan avec `-fsanitize=integer`, y compris sur les dimensions supérieures à 2¹⁶ (tests unitaires à 70 000, 100 000 et 10⁶ de côté, tests massifs).
+- ✅ Le fuzzer tourne 10 minutes sans aucun plantage : 21,1 millions d'entrées avec le fuzzer corrigé, qui compare les longueurs des blocs (mesure de la seconde revue indépendante ; la première mesure, 15,2 millions d'entrées, utilisait l'ancien fuzzer). La porte G9 (60 s) tourne dans WSL depuis l'installation de `libstdc++-14-dev` ; on a vérifié qu'elle bloque un plantage injecté.
 
 ## M2 — Affichage
 

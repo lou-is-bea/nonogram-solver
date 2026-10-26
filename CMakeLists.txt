@@ -68,3 +68,7 @@ if(NG_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+if(NG_BUILD_FUZZ)
+    add_subdirectory(tests/fuzz)
+endif()

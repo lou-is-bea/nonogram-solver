@@ -1,0 +1,10 @@
+# Test code inherits the project configuration (../.clang-tidy) with two checks relaxed:
+#  - readability-magic-numbers: literal sizes, alignments and expected values are the test
+#    data itself; naming each one would hide what the test checks.
+#  - readability-function-cognitive-complexity: every Criterion assertion macro expands to
+#    several branches, so a three-line loop of assertions already exceeds the threshold.
+# Library code (src/, include/) keeps both checks.
+InheritParentConfig: true
+Checks: >
+  -readability-magic-numbers,
+  -readability-function-cognitive-complexity

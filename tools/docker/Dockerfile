@@ -20,6 +20,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends --snapshot "${UBUNTU_SNAPSHOT}" \
         build-essential=12.10ubuntu1 \
         gcc-14=14.2.0-4ubuntu2~24.04.1 \
+        libstdc++-14-dev=14.2.0-4ubuntu2~24.04.1 \
         clang-20=1:20.1.2-0ubuntu1~24.04.3 \
         clang-19=1:19.1.1-1ubuntu1~24.04.2 \
         clang-format-20=1:20.1.2-0ubuntu1~24.04.3 \

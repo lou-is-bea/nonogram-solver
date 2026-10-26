@@ -1,0 +1,15 @@
+title "Gap row"
+author "nonogram-solver"
+license "same as the project"
+width 5
+height 1
+
+rows
+2,2
+
+columns
+1
+1
+0
+1
+1

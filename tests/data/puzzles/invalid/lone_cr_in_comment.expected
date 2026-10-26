@@ -1,0 +1,3 @@
+status NG_ERR_PARSE
+position 1:4
+message carriage return not followed by a line feed

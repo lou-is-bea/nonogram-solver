@@ -35,6 +35,7 @@
 | `typeof` | uniquement dans les macros génériques de `src/core/internal/` |
 | `unreachable()` | uniquement via `NG_UNREACHABLE()`, qui commence par une assertion en Debug |
 | `auto` (inférence de type), `_BitInt`, `#embed` | **interdits** sauf ADR justifiant leur usage |
+| Attributs de fabricant dans la syntaxe standard (`[[gnu::format(printf, n, m)]]`) | autorisés **uniquement** s'ils n'ajoutent que des diagnostics (le code reste du C23 strict si le compilateur les ignore) ; décision du 2026-10-25 |
 
 ## 2. Nommage
 
@@ -69,11 +70,11 @@ Les types sont fixés par l'[ADR-0009](adr/0009-types-et-grilles-massives.md).
 - Tout calcul de taille d'allocation, et toute somme ou tout produit qui peut déborder, passe par `ckd_add` ou `ckd_mul`. Le résultat est testé. 🔧 (revue et recherche dans `check.sh`)
 - Les conversions entre types signés et non signés ou entre largeurs différentes sont **explicites** et justifiées si elles peuvent perdre de l'information. 🔧
 - Pour afficher ces types, on utilise les macros de format `NG_PRI_DIM`, `NG_PRI_CELL_INDEX`, etc.
-- Le résultat d'une comparaison n'est jamais utilisé comme un entier.
+- Le résultat d'une comparaison n'est jamais utilisé comme un entier (vérifié en revue : `readability-implicit-bool-conversion` signale en C toute expression booléenne, une comparaison y étant de type `int`).
 
 ## 5. Fonctions
 
-- **Une responsabilité par fonction.** On vise moins de 50 lignes par fonction. La complexité cognitive est limitée à 25 (clang-tidy `readability-function-cognitive-complexity`). 🔧
+- **Une responsabilité par fonction.** On vise moins de 50 lignes par fonction. La complexité cognitive est limitée à 25 (clang-tidy `readability-function-cognitive-complexity`). 🔧 Exception : le code de test (`tests/.clang-tidy`), où chaque assertion Criterion se développe en plusieurs branches (accord du responsable du projet, 2026-10-25).
 - Une fonction prend au plus 6 paramètres. Au-delà, on les regroupe dans une structure d'options.
 - La qualité `const` est appliquée partout où elle est possible (paramètres pointeurs en lecture seule, variables locales non modifiées).
 - La documentation de chaque paramètre pointeur indique s'il peut valoir `nullptr`. Par défaut, il ne le peut pas.
@@ -84,7 +85,7 @@ Les types sont fixés par l'[ADR-0009](adr/0009-types-et-grilles-massives.md).
 
 - Toute fonction publique qui peut échouer renvoie un `ng_status` marqué `[[nodiscard]]`. Les résultats passent par des pointeurs de sortie placés en dernier. 🔧
 - La bibliothèque n'utilise jamais `exit`, `abort` ni `printf` vers `stdout` ou `stderr`.
-- `NG_ASSERT` sert aux invariants internes, jamais à la validation des entrées. Toute entrée provenant de l'appelant est validée et une erreur est renvoyée.
+- `NG_ASSERT` sert aux invariants internes, jamais à la validation des entrées. Toute entrée provenant de l'appelant est validée et une erreur est renvoyée. Un accesseur qui ne peut pas renvoyer de statut (`ng_grid_get`, `ng_puzzle_line_length`…) documente une valeur de repli pour les arguments invalides et l'applique dans tous les builds.
 - Le nettoyage se fait avec un **unique** `goto cleanup;` en fin de fonction. C'est le seul usage autorisé de `goto`.
 
 ```c
@@ -135,7 +136,7 @@ Les règles détaillées sont dans l'[ADR-0004](adr/0004-gestion-memoire.md).
 | `rand`, `srand` | le générateur avec graine de `tests/support` | non reproductible, état global |
 | VLA, `alloca` | espace de travail pré-alloué | pile non bornée |
 | Variables globales modifiables | contexte passé explicitement | NF-08 |
-| Nombres magiques | `constexpr` ou constante d'énumération nommée | lisibilité |
+| Nombres magiques (hors données littérales des tests, voir `tests/.clang-tidy`) | `constexpr` ou constante d'énumération nommée | lisibilité |
 | Lecture d'un fichier entier en mémoire | `ng_reader`, lecture par blocs | grilles massives ([ADR-0010](adr/0010-formats-binaires-et-lecture-en-flux.md)) |
 | `memcpy` d'une structure vers un format binaire | sérialisation octet par octet, petit-boutiste | portabilité du format |
 

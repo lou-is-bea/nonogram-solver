@@ -1,0 +1,39 @@
+title "Full"
+author "nonogram-solver"
+license "same as the project"
+width 15
+height 15
+
+rows
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+
+columns
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15
+15

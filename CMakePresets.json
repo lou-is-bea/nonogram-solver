@@ -98,7 +98,8 @@
       "name": "base",
       "hidden": true,
       "output": { "outputOnFailure": true },
-      "execution": { "noTestsAction": "error" }
+      "execution": { "noTestsAction": "error" },
+      "filter": { "exclude": { "label": "massive" } }
     },
     { "name": "dev", "inherits": "base", "configurePreset": "dev" },
     { "name": "dev-clang", "inherits": "base", "configurePreset": "dev-clang" },
@@ -117,6 +118,13 @@
       "configurePreset": "ubsan",
       "environment": { "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1" }
     },
-    { "name": "coverage", "inherits": "base", "configurePreset": "coverage" }
+    { "name": "coverage", "inherits": "base", "configurePreset": "coverage" },
+    {
+      "name": "massive",
+      "displayName": "Massive grids (label massive, Release, nightly G12)",
+      "configurePreset": "release",
+      "output": { "outputOnFailure": true, "verbosity": "verbose" },
+      "filter": { "include": { "label": "massive" } }
+    }
   ]
 }

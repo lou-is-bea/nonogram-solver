@@ -1,0 +1,29 @@
+title "Smiley"
+author "nonogram-solver"
+license "same as the project"
+width 10
+height 10
+
+rows
+6
+1,1
+1,1,1,1
+1,1,1,1
+1,1
+1,1,1,1
+1,4,1
+1,1
+1,1
+6
+
+columns
+6
+1,1
+1,1,1
+1,2,1,1
+1,1,1
+1,1,1
+1,2,1,1
+1,1,1
+1,1
+6

@@ -1,0 +1,29 @@
+title "Stripes"
+author "nonogram-solver"
+license "same as the project"
+width 12
+height 8
+
+rows
+3,3,3
+0
+3,3,3
+0
+3,3,3
+0
+3,3,3
+0
+
+columns
+1,1
+1,1,1,1
+1,1,1,1
+1,1
+1,1
+1,1,1,1
+1,1,1,1
+1,1
+1,1
+1,1,1,1
+1,1,1,1
+1,1

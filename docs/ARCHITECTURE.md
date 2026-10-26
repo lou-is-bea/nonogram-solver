@@ -60,7 +60,8 @@ nonogram-solver/
 ├── src/
 │   ├── core/               # status.c allocator.c stream.c puzzle.c grid.c
 │   │   └── internal/       # en-têtes ngi_* partagés avec les autres couches
-│   ├── io/                 # non_parser.c sol_format.c (puis ngp_format.c ngg_format.c)
+│   ├── io/                 # non_lexer.c non_directives.c non_parser.c non_writer.c non_metadata.c sol_format.c (puis ngp_format.c ngg_format.c)
+│   │   └── internal/       # source de caractères par blocs, aides texte (ngi_*)
 │   ├── render/             # render_text.c
 │   ├── verify/             # verify.c
 │   ├── solvers/
@@ -155,7 +156,7 @@ struct ng_puzzle {
 
 **Identifiants de ligne unifiés** : `0 .. height-1` désignent les rangées, `height .. height+width-1` les colonnes.
 
-**Invariants**, vérifiés à la construction :
+**Invariants**, vérifiés à la construction (l'ordre exact des vérifications et le statut renvoyé par chacune sont documentés dans `puzzle.h`) :
 
 - `1 ≤ width, height ≤ NG_DIM_MAX` ;
 - toute longueur de bloc est `≥ 1` (une ligne vide n'a aucun bloc) ;
@@ -173,11 +174,11 @@ L'implémentation initiale stocke un octet par case, rangée par rangée, en une
 **Accès par copie de ligne.** Les solvers ne manipulent jamais le stockage directement :
 
 ```c
-ng_status ng_grid_load_line (const ng_grid *g, const ng_puzzle *p, ng_line_id line, ng_cell *buffer);
-ng_status ng_grid_store_line(ng_grid *g, const ng_puzzle *p, ng_line_id line, const ng_cell *buffer);
+ng_status ng_grid_load_line (const ng_grid *g, ng_line_id line, ng_cell *buffer);
+ng_status ng_grid_store_line(ng_grid *g, ng_line_id line, const ng_cell *buffer);
 ```
 
-Le tampon (de longueur `ng_puzzle_line_length(p, line)`) appartient à l'espace de travail du solver. Ce choix :
+La grille connaît ses dimensions : ces fonctions ne prennent pas le puzzle en paramètre (forme de l'[ADR-0009](adr/0009-types-et-grilles-massives.md)). Le tampon (de longueur `ng_puzzle_line_length(p, line)`, identique pour la grille) appartient à l'espace de travail du solver. Ce choix :
 
 - rend les solvers indépendants de la représentation (octets, bits, partitionnement entre nœuds) ;
 - offre un accès contigu, favorable au cache, même pour les colonnes ;
@@ -216,10 +217,15 @@ const ng_allocator *ng_allocator_default(void);   /* enveloppe malloc/free */
 /* stream.h */
 typedef struct ng_reader { ng_status (*read)(void *ctx, char *buf, size_t cap, size_t *got); void *ctx; } ng_reader;
 typedef struct ng_writer { ng_status (*write)(void *ctx, const char *buf, size_t len); void *ctx; } ng_writer;
+typedef struct ng_memory_source { const char *data; size_t size; size_t position; } ng_memory_source;
 ng_reader ng_reader_from_file(FILE *f);
-ng_reader ng_reader_from_memory(const char *data, size_t len);
+ng_reader ng_reader_from_memory(ng_memory_source *state, const char *data, size_t len); /* état fourni par l'appelant */
 ng_writer ng_writer_from_file(FILE *f);
 ng_writer ng_writer_from_buffer(ng_buffer *b);    /* tampon extensible, alloué via ng_allocator */
+ng_status ng_buffer_create(const ng_allocator *a, ng_buffer **out);  /* ng_buffer est opaque */
+void        ng_buffer_destroy(ng_buffer *b);
+const char *ng_buffer_data(const ng_buffer *b);   /* toujours suivi d'un octet nul */
+size_t      ng_buffer_size(const ng_buffer *b);
 
 /* puzzle.h */
 ng_status    ng_puzzle_create(const ng_allocator *a, ng_dim width, ng_dim height,
@@ -230,6 +236,7 @@ ng_dim       ng_puzzle_width(const ng_puzzle *p);
 ng_dim       ng_puzzle_height(const ng_puzzle *p);
 ng_line_id   ng_puzzle_line_count(const ng_puzzle *p);
 ng_dim       ng_puzzle_line_length(const ng_puzzle *p, ng_line_id line);
+ng_run_index ng_puzzle_total_runs(const ng_puzzle *p);
 ng_run_count ng_puzzle_line_run_count(const ng_puzzle *p, ng_line_id line);
 ng_status    ng_puzzle_copy_line_runs(const ng_puzzle *p, ng_line_id line,
                                       ng_dim *buffer, ng_run_count capacity);
@@ -237,19 +244,25 @@ ng_status    ng_puzzle_copy_line_runs(const ng_puzzle *p, ng_line_id line,
 /* grid.h */
 ng_status ng_grid_create(const ng_allocator *a, ng_dim width, ng_dim height, ng_grid **out);
 void      ng_grid_destroy(ng_grid *g);
+ng_dim    ng_grid_width(const ng_grid *g);
+ng_dim    ng_grid_height(const ng_grid *g);
 ng_cell   ng_grid_get(const ng_grid *g, ng_dim row, ng_dim col);
 void      ng_grid_set(ng_grid *g, ng_dim row, ng_dim col, ng_cell c);
 void      ng_grid_fill(ng_grid *g, ng_cell c);
 ng_status ng_grid_copy(ng_grid *dst, const ng_grid *src);
-ng_status ng_grid_load_line(const ng_grid *g, const ng_puzzle *p, ng_line_id line, ng_cell *buffer);
-ng_status ng_grid_store_line(ng_grid *g, const ng_puzzle *p, ng_line_id line, const ng_cell *buffer);
+ng_status ng_grid_load_line(const ng_grid *g, ng_line_id line, ng_cell *buffer);
+ng_status ng_grid_store_line(ng_grid *g, ng_line_id line, const ng_cell *buffer);
 
 /* io.h : tous les lecteurs fonctionnent en flux (ADR-0010) */
 typedef struct ng_parse_error { uint64_t line; uint64_t column; char message[160]; } ng_parse_error;
-ng_status ng_io_read_non(const ng_allocator *a, ng_reader *r, ng_puzzle **out, ng_parse_error *err);
-ng_status ng_io_read_sol(const ng_allocator *a, ng_reader *r, ng_grid **out, ng_parse_error *err);
-ng_status ng_io_write_non(const ng_puzzle *p, ng_writer *w);   /* aller-retour testé (P-IO2) */
-ng_status ng_io_write_sol(const ng_grid *g, ng_writer *w);
+typedef struct ng_non_metadata ng_non_metadata;   /* title, author, ... (opaque, séparé du puzzle) */
+const char *ng_non_metadata_get(const ng_non_metadata *m, ng_non_field field);  /* nullptr si absent */
+void        ng_non_metadata_destroy(ng_non_metadata *m);
+ng_status ng_io_read_non(const ng_allocator *a, const ng_reader *r, ng_puzzle **out,
+                         ng_non_metadata **metadata /* nullptr : ignorées */, ng_parse_error *err);
+ng_status ng_io_read_sol(const ng_allocator *a, const ng_reader *r, ng_grid **out, ng_parse_error *err);
+ng_status ng_io_write_non(const ng_puzzle *p, const ng_non_metadata *metadata, const ng_writer *w);  /* P-IO2 */
+ng_status ng_io_write_sol(const ng_grid *g, const ng_writer *w);
 /* M9 : ng_io_read_ngp / ng_io_write_ngp / ng_io_read_ngg / ng_io_write_ngg */
 
 /* render.h */
@@ -332,7 +345,8 @@ Le détail est dans l'[ADR-0004](adr/0004-gestion-memoire.md). En résumé :
 
 - Une **allocation par objet** (le puzzle, la grille, l'espace de travail d'un solver), découpée en interne. La mémoire est ainsi prévisible, il y a peu d'appels à l'allocateur et la libération est simple.
 - Les calculs de taille utilisent `ckd_add` et `ckd_mul` (`<stdckdint.h>`). Le produit de deux `ng_dim` se calcule toujours en `ng_cell_index`, via `ngi_cell_index()`.
-- En test, trois allocateurs remplacent l'allocateur par défaut : un **allocateur défaillant** (échec à la n-ième allocation), un **allocateur compteur** (pic mémoire, nombre d'allocations, fuites) et un **allocateur plafonné** (refus au-delà de N octets), qui permet de tester les grilles massives sans les allouer.
+- En test, trois allocateurs remplacent l'allocateur par défaut : un **allocateur défaillant** (échec à la n-ième allocation), un **allocateur compteur** (pic mémoire, nombre d'allocations, fuites) et un **allocateur plafonné** (refus au-delà de N octets), qui permet de tester les grilles massives sans les allouer. Les trois sont réunis dans un même objet, `ng_test_allocator` (`tests/support/test_allocator.h`).
+- L'allocateur par défaut refuse (renvoie `nullptr`) une taille nulle, une taille supérieure à `PTRDIFF_MAX` ou un alignement qui n'est pas une puissance de deux.
 
 ## 8. Gestion des erreurs
 

@@ -85,6 +85,8 @@ jobs:
         run: ctest --preset ${{ matrix.preset }} -L unit
       - name: G4 integration tests
         run: ctest --preset ${{ matrix.preset }} -L integration
+      - name: G5 property tests
+        run: ctest --preset ${{ matrix.preset }} -L property
 
   sanitizers:
     needs: image

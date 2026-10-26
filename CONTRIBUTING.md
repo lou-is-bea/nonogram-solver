@@ -16,7 +16,7 @@ Le développement se fait **exclusivement sous Linux**, avec **Ubuntu 24.04 LTS*
 
 ```sh
 # Ubuntu 24.04 LTS (mêmes paquets versionnés sur 26.04)
-sudo apt install build-essential gcc-14 clang-20 clang-19 clang-format-20 clang-tidy-20 \
+sudo apt install build-essential gcc-14 libstdc++-14-dev clang-20 clang-19 clang-format-20 clang-tidy-20 \
                  libclang-rt-20-dev llvm-20 cmake ninja-build pkg-config libcriterion-dev \
                  valgrind cppcheck gcovr python3 git gh rsync
 ```
