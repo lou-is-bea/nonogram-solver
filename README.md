@@ -22,7 +22,7 @@ Le projet vise trois objectifs :
 | Étape | Fonctionnalité | Statut |
 |---|---|---|
 | M1 | Modèle de données (puzzle, grille, indices) et lecture du format `.non` | terminé |
-| M2 | Affichage texte du problème et de la solution | en cours (sorties de référence à approuver) |
+| M2 | Affichage texte du problème et de la solution | terminé |
 | M3 | Vérification de la validité d'une solution | à faire |
 | M4 | Solver S0 : force brute (référence pour les petites grilles) | à faire |
 | M5 | Solver S1 : backtracking par placements de lignes | à faire |
