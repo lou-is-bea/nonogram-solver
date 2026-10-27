@@ -37,7 +37,7 @@ Une porte **bloquante** qui échoue empêche la fusion.
 | G4 | Tests d'intégration | `ctest --preset dev -L integration` | oui | M2 |
 | G5 | Propriétés et différentiel | `ctest --preset dev -L property` | oui | M1 (P-M1) |
 | G6 | Sanitizers | `ctest --preset asan` (ASan et LSan), `--preset ubsan` (UBSan, avec `-fsanitize=integer` sous Clang) | oui | M0 |
-| G7 | Valgrind memcheck | chaque exécutable de test (preset `dev`) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9) | oui | M1 |
+| G7 | Valgrind memcheck | chaque exécutable de test (preset `dev`) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9), et chaque cas d'intégration de la CLI via `NG_CLI_WRAPPER` | oui | M1 |
 | G8 | Couverture | preset `coverage` et `gcovr`, avec les seuils du §6 | oui | M1 |
 | G9 | Fuzzing rapide | 60 s par cible (preset `fuzz`, durée réglable par `FUZZ_SECONDS`) | oui | M1 |
 | G10 | Benchmarks | `bench_compare.py` comparé à la référence de `main` | oui si plus de 10 %, sinon simple rapport | M4 |
@@ -137,6 +137,7 @@ Le générateur `ng_test_rng` (`tests/support/test_rng.h`, xoshiro256** initiali
 ### 4.5 Tests d'intégration (CLI)
 
 - Chaque cas est un triplet (commande, fichier d'entrée, sortie attendue avec le code de sortie) décrit dans `tests/integration/cases.cmake`.
+- Chaque cas est enregistré par `ng_cli_case(<cas> EXIT <code> ARGS ...)`. Le script `tests/integration/run_case.cmake` lance la commande depuis la racine du dépôt et compare octet par octet le code de sortie, la sortie standard (`<cas>.out`) et la sortie d'erreur (`<cas>.err`).
 - Les sorties de référence (`tests/data/expected/`) sont **relues par un humain** lors de leur création. Une mise à jour en masse (`scripts/update_golden.sh`) se justifie dans la PR, et chaque modification se relit au diff.
 
 ### 4.6 Grilles massives

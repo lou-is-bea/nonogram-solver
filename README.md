@@ -22,7 +22,7 @@ Le projet vise trois objectifs :
 | Étape | Fonctionnalité | Statut |
 |---|---|---|
 | M1 | Modèle de données (puzzle, grille, indices) et lecture du format `.non` | terminé |
-| M2 | Affichage texte du problème et de la solution | à faire |
+| M2 | Affichage texte du problème et de la solution | terminé |
 | M3 | Vérification de la validité d'une solution | à faire |
 | M4 | Solver S0 : force brute (référence pour les petites grilles) | à faire |
 | M5 | Solver S1 : backtracking par placements de lignes | à faire |
@@ -35,7 +35,7 @@ Le détail et les critères de sortie de chaque étape sont dans [docs/ROADMAP.m
 
 ## Démarrage rapide (cible)
 
-> Les commandes de build, de test et `check.sh` sont disponibles. Les sous-commandes de `nonogram` arrivent à partir de M2.
+> Les commandes de build, de test et `check.sh` sont disponibles, ainsi que `nonogram show`. Les autres sous-commandes arrivent avec les étapes suivantes.
 
 ```sh
 # Configurer, compiler et tester (profil développement)
@@ -48,8 +48,8 @@ ctest --preset dev
 ```
 
 ```sh
-# Afficher une grille
-nonogram show tests/data/puzzles/small/duck.non
+# Afficher une grille (disponible), avec une solution, en Unicode
+nonogram show tests/data/puzzles/small/duck.non --solution tests/data/solutions/duck.sol --unicode
 
 # Résoudre avec un solver donné et afficher les statistiques
 nonogram solve tests/data/puzzles/small/duck.non --solver=line --stats
@@ -60,6 +60,10 @@ nonogram verify tests/data/puzzles/small/duck.non duck.sol
 # Lister les solvers disponibles
 nonogram list-solvers
 ```
+
+Les options à valeur s'écrivent `--option valeur` ou `--option=valeur` ; une valeur qui commence par `--` doit utiliser la seconde forme.
+
+Codes de sortie de `nonogram` (exigence F-41) : `0` succès, `1` puzzle insoluble ou solution invalide ou incomplète, `2` usage incorrect, `3` erreur d'entrée-sortie (fichier illisible ou mal formé, grille de mauvaise taille, sortie impossible à écrire), `4` erreur interne (y compris le manque de mémoire).
 
 ### Prérequis
 

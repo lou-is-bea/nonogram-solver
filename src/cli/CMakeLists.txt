@@ -1,4 +1,5 @@
 add_executable(nonogram
+    cmd_show.c
     main.c)
 target_link_libraries(nonogram PRIVATE
     ng_io

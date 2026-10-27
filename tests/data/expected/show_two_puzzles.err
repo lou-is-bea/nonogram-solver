@@ -1,0 +1,12 @@
+nonogram: unexpected argument 'tests/data/puzzles/tiny/dot.non'
+
+usage: nonogram <command> [arguments]
+
+commands:
+  show <puzzle.non> [--solution <grid.sol>] [--unicode] [--max-render <n>]
+      Print the puzzle with its clues, and a solution or partial grid if given.
+      Grids wider or taller than <n> cells (default 200) are summarised.
+
+options:
+  --help       print this help
+  --version    print the version

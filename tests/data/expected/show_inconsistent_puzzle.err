@@ -1,0 +1,1 @@
+tests/data/puzzles/invalid/row_too_long.non:4:1: error: row 1 clues need 7 cells, width is 5

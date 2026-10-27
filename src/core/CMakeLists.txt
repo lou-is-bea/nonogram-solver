@@ -8,6 +8,7 @@ configure_file(
 add_library(ng_core STATIC
     allocator.c
     buffer.c
+    output.c
     grid.c
     puzzle.c
     status.c

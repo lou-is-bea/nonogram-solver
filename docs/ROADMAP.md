@@ -8,7 +8,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 |---|---|---|---|
 | M0 | Fondations : build, CI, outillage | — | terminé |
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
-| M2 | Affichage | — | à faire |
+| M2 | Affichage | — | terminé |
 | M3 | Vérificateur | 0.1.0 | à faire |
 | M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |
 | M5 | S1 : backtracking par placements de lignes | 0.3.0 | à faire |
@@ -78,7 +78,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 
 - `render` : `ng_render_text`, en ASCII et en Unicode, avec ou sans indices.
 - CLI : la sous-commande `nonogram show <puzzle> [--solution <sol>] [--unicode]`. Au-delà de `--max-render` (200 × 200 par défaut), elle affiche un résumé au lieu de la grille.
-- Des tests d'intégration comparés à des sorties de référence (`tests/data/expected/*.txt`).
+- Des tests d'intégration comparés à des sorties de référence (`tests/data/expected/<cas>.out` et `<cas>.err`).
 
 Exemple de rendu attendu (ASCII) :
 
@@ -95,6 +95,8 @@ Exemple de rendu attendu (ASCII) :
 ```
 
 **Critères de sortie** : les sorties de référence sont relues et approuvées par un humain. L'affichage d'une grille 100×100 tient en moins de 2 ms.
+
+*Bilan du 2026-10-26* : les 35 cas `ng_cli_case` et leurs sorties de référence sont approuvés par le responsable du projet. Les 23 premiers l'ont été le 2026-10-25, les 12 ajoutés après les revues indépendantes le 2026-10-26 ; l'approbation est tracée dans la PR #3. Les tests d'échec d'écriture vérifient le code 3, sans sortie de référence. Affichage d'une grille 100 × 100 aléatoire avec indices (environ 5 000 blocs, 48 Ko de texte) : médiane 0,23 ms, maximum 0,84 ms sur 201 exécutions (Release, WSL2, 16 cœurs). Choix validés : largeur de colonne uniforme pour les indices à plusieurs chiffres, `?` pour les cases inconnues, blocs et cadre Unicode, `0` pour un indice vide. M2 est close.
 
 ## M3 — Vérificateur
 

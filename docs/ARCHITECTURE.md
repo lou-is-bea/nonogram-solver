@@ -71,7 +71,7 @@ nonogram-solver/
 │   │   ├── s1_backtrack/
 │   │   ├── s2_lineprop/
 │   │   └── s3_dp_search/
-│   └── cli/                # main.c cmd_show.c cmd_solve.c cmd_verify.c args.c
+│   └── cli/                # main.c cli.h cmd_show.c (puis cmd_solve.c cmd_verify.c)
 ├── tests/
 │   ├── support/            # allocateurs de test, générateur aléatoire, helpers Criterion
 │   ├── unit/               # test_<module>.c (Criterion)
@@ -103,7 +103,7 @@ nonogram-solver/
 
 - `verify` et `solvers` ne dépendent pas l'un de l'autre.
 - `io` et `render` ne dépendent pas de `solvers`.
-- Les en-têtes `src/core/internal/*.h` (préfixe `ngi_`) exposent les accès rapides internes. Ils ne sont **jamais** installés ni inclus depuis `include/`. Les solvers ne s'en servent **pas** pour accéder au stockage des cases (voir §4.4).
+- Les en-têtes `src/core/internal/*.h` (préfixe `ngi_`) exposent les accès rapides internes et les outils partagés par les couches (`assert.h`, `puzzle.h` pour lire les indices sans copie, `output.h` pour la sortie texte tamponnée). Ils ne sont **jamais** installés ni inclus depuis `include/`. Les solvers ne s'en servent **pas** pour accéder au stockage des cases (voir §4.4).
 - Un solver n'inclut pas les fichiers d'un autre solver. Le code partagé va dans `src/solvers/common/`.
 - La bibliothèque installée `libnonogram` regroupe `core`, `io`, `render`, `verify` et `solvers`.
 - Tant qu'un module ne contient aucun fichier source, sa cible est une bibliothèque `INTERFACE` qui ne fait que propager `ng_core`. Elle devient une bibliothèque `STATIC` avec son premier fichier source.
@@ -265,10 +265,11 @@ ng_status ng_io_write_non(const ng_puzzle *p, const ng_non_metadata *metadata, c
 ng_status ng_io_write_sol(const ng_grid *g, const ng_writer *w);
 /* M9 : ng_io_read_ngp / ng_io_write_ngp / ng_io_read_ngg / ng_io_write_ngg */
 
-/* render.h */
-typedef struct ng_render_options { bool show_clues; bool unicode; } ng_render_options;
-ng_status ng_render_text(const ng_puzzle *p, const ng_grid *g /* nullptr : grille vide */,
-                         const ng_render_options *opt, ng_writer *w);
+/* render.h : mise en page détaillée dans l'en-tête */
+typedef struct ng_render_options { bool hide_clues; bool unicode; } ng_render_options;  /* {} : indices, ASCII */
+ng_status ng_render_text(const ng_puzzle *p, const ng_grid *g /* nullptr : cases inconnues */,
+                         const ng_render_options *opt /* nullptr : indices, ASCII */, const ng_writer *w);
+ng_status ng_render_summary(const ng_puzzle *p, const ng_grid *g, const ng_writer *w);  /* au-delà de --max-render */
 
 /* verify.h */
 enum ng_verdict : uint8_t { NG_VERDICT_VALID, NG_VERDICT_INCOMPLETE, NG_VERDICT_INVALID };

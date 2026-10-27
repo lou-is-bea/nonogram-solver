@@ -9,6 +9,7 @@
 #include "nonogram/grid.h"
 #include "nonogram/io.h"
 #include "nonogram/puzzle.h"
+#include "nonogram/render.h"
 #include "nonogram/status.h"
 #include "nonogram/stream.h"
 #include "nonogram/types.h"
