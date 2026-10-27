@@ -1,6 +1,6 @@
 # Politique de revue des pull requests
 
-> Dernière revue : 2026-10-25. Ce document est **normatif**. Il complète [AGENTS.md](../../AGENTS.md) et [CONTRIBUTING.md §3](../../CONTRIBUTING.md#3-cycle-de-vie-dune-modification) : toute PR reçoit, avant la revue humaine, une **revue indépendante** menée selon cette politique. Il s'adresse à l'agent relecteur (humain ou IA) et à l'auteur qui lui répond.
+> Dernière revue : 2026-10-27. Ce document est **normatif**. Il complète [AGENTS.md](../../AGENTS.md) et [CONTRIBUTING.md §3](../../CONTRIBUTING.md#3-cycle-de-vie-dune-modification) : toute PR reçoit, avant la revue humaine, une **revue indépendante** menée selon cette politique. Il s'adresse à l'agent relecteur (humain ou IA) et à l'auteur qui lui répond.
 
 ---
 
@@ -11,7 +11,7 @@
 3. **Regard critique.** Le relecteur cherche ce qui manque autant que ce qui est faux : cas limites non testés, tests qui passeraient avec un code faux, chemins d'erreur oubliés, documentation en retard, choix discutables. Il conteste un choix de conception s'il le juge mauvais, même s'il est cohérent avec le reste de la PR, en le classant à sa juste gravité.
 4. **Preuves.** Chaque constat cite un fichier et une ligne, une commande et sa sortie, ou un scénario concret qui produit un résultat faux. Un soupçon sans preuve est une **question**, pas un défaut.
 5. **Lecture seule.** Le relecteur ne pousse aucun commit et ne modifie pas la PR. Il propose ; l'auteur corrige.
-6. **Décision humaine.** Le verdict du relecteur éclaire la décision, il ne la remplace pas : la fusion reste approuvée par un humain ([CONTRIBUTING.md §3](../../CONTRIBUTING.md#3-cycle-de-vie-dune-modification)).
+6. **Décision humaine.** Le verdict du relecteur éclaire la décision, il ne la remplace pas : la fusion reste approuvée par un humain ([CONTRIBUTING.md §3](../../CONTRIBUTING.md#3-cycle-de-vie-dune-modification)). Cet accord peut être donné dans la session de travail et relayé dans la PR par l'agent auteur (§5.1).
 
 ## 2. Périmètre
 
@@ -107,6 +107,17 @@ SHA relu : <sha> · Base : <branche> · Relecteur : <agent ou personne>
 - L'auteur répond à **chaque** constat bloquant, majeur ou question : corrigé (avec le commit), ou justifié (pourquoi le constat ne s'applique pas). Il ne marque pas lui-même un constat comme résolu.
 - Après des corrections, une nouvelle revue indépendante porte sur le nouveau SHA. Elle peut se limiter aux corrections et aux constats ouverts, sauf si les corrections sont étendues.
 - Pour une pile de PR, chaque PR est relue séparément ; une correction faite dans une PR antérieure impose de rebaser les suivantes, et leur revue porte alors sur le nouveau SHA.
+
+### 5.1 Accord humain donné dans la session de travail
+
+Le responsable humain du projet peut donner son accord à l'agent auteur directement dans la session de travail, sans l'écrire lui-même dans la PR. C'est le cas pour la fusion d'une PR, l'approbation de sorties de référence ou un accord exigé par une règle d'or d'AGENTS.md. Cet accord vaut accord humain tracé, à quatre conditions :
+
+1. **Trace dans la PR.** L'agent publie un commentaire qui indique qu'il est relayé par l'agent auteur. Il cite les mots du responsable **mot pour mot** et donne la date.
+2. **Périmètre explicite.** Le commentaire nomme ce qui est accepté : les décisions une par une, ou les cas et le SHA concernés pour des sorties de référence.
+3. **Rien d'ajouté.** L'agent ne reformule pas l'accord pour l'élargir. Ce que le responsable n'a pas dit n'est pas accordé, et toute ambiguïté se règle par une question dans la session.
+4. **Mention à la fusion.** Le message de *squash merge* rappelle que l'accord a été donné dans la session de travail.
+
+Le relecteur tient une telle trace pour un accord humain valable. Il ne la conteste pas au motif qu'elle est publiée par l'agent ou avec un compte partagé. Il vérifie en revanche que le périmètre cité correspond au contenu de la PR, et il signale tout écart, par exemple un cas modifié après l'accord. Il signale aussi tout accord invoqué sans commentaire de trace.
 
 ## 6. Interdits
 

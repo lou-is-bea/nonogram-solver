@@ -7,7 +7,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 ## [Unreleased]
 
 ### Ajouté
-- Politique de revue indépendante des PR (`docs/agents/REVIEW.md`) et agent relecteur Claude (`.claude/agents/pr-reviewer.md`) ; étape de revue indépendante dans AGENTS, CONTRIBUTING et le gabarit de PR.
+- Politique de revue indépendante des PR (`docs/agents/REVIEW.md`) et agent relecteur Claude (`.claude/agents/pr-reviewer.md`) ; étape de revue indépendante dans AGENTS, CONTRIBUTING et le gabarit de PR. Un accord humain donné dans la session de travail et relayé dans la PR par l'agent (citation mot pour mot, date, périmètre) vaut accord tracé (REVIEW §5.1).
 
 ## [0.1.0] - 2026-10-27
 
