@@ -1,13 +1,13 @@
 # Politique de revue des pull requests
 
-> Dernière revue : 2026-10-27. Ce document est **normatif**. Il complète [AGENTS.md](../../AGENTS.md) et [CONTRIBUTING.md §3](../../CONTRIBUTING.md#3-cycle-de-vie-dune-modification) : toute PR reçoit, avant la revue humaine, une **revue indépendante** menée selon cette politique. Il s'adresse à l'agent relecteur (humain ou IA) et à l'auteur qui lui répond.
+> Dernière revue : 2026-10-27. Ce document est **normatif**. Il complète [AGENTS.md](../../AGENTS.md) et [CONTRIBUTING.md §3](../../CONTRIBUTING.md#3-cycle-de-vie-dune-modification) : toute PR reçoit, avant la revue humaine, une **revue indépendante** menée selon cette politique. Il s'adresse au relecteur (une personne ou un agent IA) et à l'auteur qui lui répond.
 
 ---
 
 ## 1. Principes
 
 1. **Indépendance.** Le relecteur n'est pas l'auteur. Un agent IA relecteur démarre sans contexte : il n'a accès ni à la conversation ni aux notes de l'auteur, seulement au dépôt, à la PR et à la CI. Il ne relit jamais une PR à laquelle il a contribué.
-2. **Scepticisme.** La description de la PR est une liste d'**affirmations à vérifier**, pas une preuve. « Vérifié », « couverture de 97 % », « médiane de 0,23 ms », « aucun test affaibli » : chaque affirmation qui compte pour le verdict est recontrôlée, ou signalée comme non vérifiée.
+2. **Scepticisme.** La description de la PR est une liste d'**affirmations à vérifier**, pas une preuve. « Vérifié », « couverture de 97 % », « médiane de 0,23 ms », « aucun test affaibli » : chaque affirmation qui compte pour le verdict est recontrôlée, ou signalée comme non vérifiée. Seule exception : un accord humain relayé selon le §5.1, dont le relecteur vérifie le périmètre mais pas l'existence.
 3. **Regard critique.** Le relecteur cherche ce qui manque autant que ce qui est faux : cas limites non testés, tests qui passeraient avec un code faux, chemins d'erreur oubliés, documentation en retard, choix discutables. Il conteste un choix de conception s'il le juge mauvais, même s'il est cohérent avec le reste de la PR, en le classant à sa juste gravité.
 4. **Preuves.** Chaque constat cite un fichier et une ligne, une commande et sa sortie, ou un scénario concret qui produit un résultat faux. Un soupçon sans preuve est une **question**, pas un défaut.
 5. **Lecture seule.** Le relecteur ne pousse aucun commit et ne modifie pas la PR. Il propose ; l'auteur corrige.
@@ -30,8 +30,8 @@
 
 ### 3.2 Vérifier les faits
 
-1. **CI** : l'exécution de la CI sur le SHA de tête est verte (`gh pr checks <n>`). Une CI rouge ou absente est un constat bloquant, sauf justification écrite dans la PR.
-2. **Portes en local** : relancer `./scripts/check.sh` complet, depuis un build propre. La tâche CI `full-check` exécute déjà G0 à G9 dans le conteneur de référence ([TESTING.md §5](../TESTING.md#5-intégration-continue)) ; la relance locale montre que la PR passe aussi hors CI et donne les chiffres à recalculer (couverture, mutations). Une porte qui ne peut pas tourner est signalée, jamais présentée comme réussie. Relancer aussi toute porte dont le résultat est contesté ou paraît improbable.
+1. **CI** : l'exécution de la CI sur le SHA de tête est verte (`gh pr checks <n>`). Une CI rouge ou absente est un constat bloquant, sauf justification écrite dans la PR. Si elle tourne encore, le relecteur attend sa fin ; s'il ne peut pas l'attendre, il la marque « non vérifiée » et ne rend pas APPROUVÉE.
+2. **Portes en local** : relancer `./scripts/check.sh` complet, depuis un build propre. La tâche CI `full-check` exécute déjà G0 à G9 dans le conteneur de référence ([TESTING.md §5](../TESTING.md#5-intégration-continue)) ; la relance locale montre que la PR passe aussi hors CI et donne les chiffres de couverture à recalculer (G8). Une porte qui ne peut pas tourner est signalée, jamais présentée comme réussie. Relancer aussi toute porte dont le résultat est contesté ou paraît improbable.
 3. **Chiffres annoncés** : recalculer ce qui peut l'être à coût raisonnable (couverture par G8, nombre de tests, volume des propriétés). Pour une mesure de performance, refaire la mesure si un harnais existe, sinon la marquer « non vérifiée ».
 4. **Tests qui mordent** : pour chaque changement de comportement important, introduire au moins une **mutation ciblée** dans le code de la PR (inverser une condition, décaler un indice, supprimer une vérification) et constater qu'un test échoue. La mutation est annulée ensuite. Une mutation qui survit est un constat.
 
@@ -66,6 +66,8 @@
 | **CHANGEMENTS DEMANDÉS** | Au moins un constat bloquant ou majeur. |
 | **DÉCISION HUMAINE REQUISE** | La PR soulève une question qui n'appartient pas au relecteur : conflit avec un ADR ou une demande humaine, spécification ambiguë, arbitrage de priorités ([AGENTS.md §6](../../AGENTS.md#6-quand-sarrêter-et-demander)). |
 
+Quand une PR a un constat bloquant ou majeur et soulève aussi une question qui revient à un humain, le verdict est **CHANGEMENTS DEMANDÉS** et la question figure dans le rapport : les corrections viennent d'abord.
+
 Le relecteur n'approuve jamais une PR dont il n'a pas pu vérifier les faits essentiels : il rend alors **CHANGEMENTS DEMANDÉS** ou **DÉCISION HUMAINE REQUISE**, en disant ce qui l'en a empêché.
 
 ## 4. Format du rapport
@@ -85,7 +87,7 @@ SHA relu : <sha> · Base : <branche> · Relecteur : <agent ou personne>
 | Vérification | Résultat |
 |---|---|
 | CI sur le SHA relu | verte / rouge / absente |
-| `check.sh --only G7,G8,G9` (ou autres portes) | OK / KO (détail) |
+| `./scripts/check.sh` complet (local) | OK / KO (détail, portes SKIP) |
 | Affirmations de la description recontrôlées | <liste : confirmée / démentie / non vérifiée> |
 | Mutations ciblées | <n> essayées, <n> détectées (détail des survivantes) |
 
@@ -110,14 +112,18 @@ SHA relu : <sha> · Base : <branche> · Relecteur : <agent ou personne>
 
 ### 5.1 Accord humain donné dans la session de travail
 
-Le responsable humain du projet peut donner son accord à l'agent auteur directement dans la session de travail, sans l'écrire lui-même dans la PR. C'est le cas pour la fusion d'une PR, l'approbation de sorties de référence ou un accord exigé par une règle d'or d'AGENTS.md. Cet accord vaut accord humain tracé, à quatre conditions :
+Le responsable humain du projet peut donner son accord à l'agent auteur directement dans la session de travail, sans l'écrire lui-même dans la PR. C'est le cas, entre autres, pour la fusion d'une PR, l'approbation de sorties de référence ou un accord exigé par une règle d'or d'AGENTS.md. Cet accord vaut accord humain tracé, à quatre conditions :
 
-1. **Trace dans la PR.** L'agent publie un commentaire qui indique qu'il est relayé par l'agent auteur. Il cite les mots du responsable **mot pour mot** et donne la date.
-2. **Périmètre explicite.** Le commentaire nomme ce qui est accepté : les décisions une par une, ou les cas et le SHA concernés pour des sorties de référence.
+1. **Trace dans la PR.** L'agent auteur publie dans la PR un commentaire qui dit qu'il relaie un accord donné en session. Le commentaire cite les mots du responsable **mot pour mot** et donne la date.
+2. **Périmètre explicite.** Le commentaire nomme ce qui est accepté (les décisions une par une, ou les cas concernés pour des sorties de référence) et le **SHA de tête** auquel l'accord a été donné. Un commit ultérieur fait tomber l'accord pour tout ce qu'il modifie : ce qui a changé doit être accepté de nouveau.
 3. **Rien d'ajouté.** L'agent ne reformule pas l'accord pour l'élargir. Ce que le responsable n'a pas dit n'est pas accordé, et toute ambiguïté se règle par une question dans la session.
-4. **Mention à la fusion.** Le message de *squash merge* rappelle que l'accord a été donné dans la session de travail.
+4. **Mention à la fusion.** Le message de *squash merge* rappelle que l'accord a été donné dans la session de travail. L'auteur le vérifie aussitôt après la fusion ; si la mention manque, il publie un commentaire de rectification sur la PR.
 
-GitHub n'enregistre pas d'approbation venant du compte qui a ouvert la PR. Quand ce compte est partagé avec l'agent, la protection de `main` ne peut donc pas être satisfaite par une approbation : la fusion passe par le contournement administrateur (`gh pr merge --squash --admin`), seulement à la demande du responsable et après un verdict APPROUVÉE ou sa décision explicite.
+GitHub n'enregistre pas d'approbation venant du compte qui a ouvert la PR. Quand ce compte est partagé avec l'agent, la protection de `main` ne peut donc pas être satisfaite par une approbation : la fusion passe par le contournement administrateur (`gh pr merge --squash --admin`). Comme ce contournement ignore toutes les protections de `main`, CI comprise, il n'est permis que si trois conditions sont réunies :
+
+- le responsable a demandé la fusion, et son accord est tracé selon les conditions 1 à 4 ;
+- la CI est verte sur le SHA fusionné, que l'auteur fixe avec `--match-head-commit <sha>` ;
+- ce SHA a reçu un verdict APPROUVÉE, ou le responsable a décidé explicitement de passer outre au verdict, et le message de fusion le dit.
 
 Le relecteur tient une telle trace pour un accord humain valable. Il ne la conteste pas au motif qu'elle est publiée par l'agent ou avec un compte partagé. Il vérifie en revanche que le périmètre cité correspond au contenu de la PR, et il signale tout écart, par exemple un cas modifié après l'accord. Il signale aussi tout accord invoqué sans commentaire de trace.
 

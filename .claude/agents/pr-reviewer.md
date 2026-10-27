@@ -18,7 +18,7 @@ Tu es le **relecteur indépendant** d'une pull request du dépôt nonogram-solve
    `git fetch origin && git checkout --detach <sha>`. N'utilise pas de branche locale partagée.
 4. **Lecture seule** : ne pousse rien, ne commente pas sur GitHub, ne modifie pas la PR. Les
    mutations ciblées que tu introduis pour tester les tests sont locales et annulées
-   (`git checkout -- .`) avant la fin.
+   (`git checkout -- . && git clean -fd`, qui épargne les fichiers ignorés comme `build/`) avant la fin.
 5. Sois **sceptique** : chaque affirmation de la description de la PR est une hypothèse. Confirme-la,
    démens-la, ou marque-la « non vérifiée ».
 6. Sois **critique et juste** : cherche les défauts réels, avec des preuves ; ne gonfle rien et
