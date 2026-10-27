@@ -20,22 +20,6 @@ TestSuite(render_summary, .init = ng_test_setup, .fini = ng_test_teardown);
 /* The "P" of docs/FILE_FORMATS.md. */
 static const char *const p_rows[] = {"###..", "#.#..", "###..", "#....", "#...."};
 
-/* Grid from rows of '#', '.' and '?'. */
-static ng_grid *grid_of(const char *const *rows, ng_dim height)
-{
-    const ng_dim width = (ng_dim)strlen(rows[0]);
-    ng_grid *grid = nullptr;
-    cr_assert_eq(ng_grid_create(&ng_test_heap()->base, width, height, &grid), NG_OK);
-    for (ng_dim r = 0; r < height; ++r) {
-        for (ng_dim c = 0; c < width; ++c) {
-            const char s = rows[r][c];
-            ng_grid_set(grid, r, c,
-                        s == '#' ? NG_CELL_FILLED : (s == '.' ? NG_CELL_EMPTY : NG_CELL_UNKNOWN));
-        }
-    }
-    return grid;
-}
-
 typedef struct rendered {
     ng_buffer *buffer;
     ng_status status;
@@ -78,7 +62,7 @@ typedef struct p_fixture {
 
 static p_fixture make_p(void)
 {
-    p_fixture p = {.grid = grid_of(p_rows, 5)};
+    p_fixture p = {.grid = ng_test_grid_of(p_rows, 5)};
     p.puzzle = ng_test_puzzle_from_grid(p.grid);
     return p;
 }
@@ -161,8 +145,8 @@ Test(render_text, without_grid_every_cell_is_unknown)
 Test(render_text, partial_grid_shows_unknown_cells)
 {
     static const char *const partial[] = {"#?.", "???"};
-    ng_grid *grid = grid_of(partial, 2);
-    ng_grid *full = grid_of((const char *const[]){"#..", "..#"}, 2);
+    ng_grid *grid = ng_test_grid_of(partial, 2);
+    ng_grid *full = ng_test_grid_of((const char *const[]){"#..", "..#"}, 2);
     ng_puzzle *puzzle = ng_test_puzzle_from_grid(full);
     const ng_render_options options = {.hide_clues = true};
 
@@ -198,7 +182,7 @@ Test(render_text, multi_digit_column_clues_widen_every_column)
 {
     /* 2 wide x 10 tall: column clues 10 and 1. */
     static const char *const rows[] = {"##", "#.", "#.", "#.", "#.", "#.", "#.", "#.", "#.", "#."};
-    ng_grid *grid = grid_of(rows, 10);
+    ng_grid *grid = ng_test_grid_of(rows, 10);
     ng_puzzle *puzzle = ng_test_puzzle_from_grid(grid);
     const ng_render_options options = {};
 
@@ -224,7 +208,7 @@ Test(render_text, multi_digit_row_clues_widen_the_left_margin)
 {
     /* 12 wide x 2 tall: row clues "12" and "1 1 1". */
     static const char *const rows[] = {"############", "#.#.#......."};
-    ng_grid *grid = grid_of(rows, 2);
+    ng_grid *grid = ng_test_grid_of(rows, 2);
     ng_puzzle *puzzle = ng_test_puzzle_from_grid(grid);
     const ng_render_options options = {};
 
@@ -240,8 +224,8 @@ Test(render_text, multi_digit_row_clues_widen_the_left_margin)
 
 Test(render_text, one_by_one_puzzles)
 {
-    ng_grid *filled = grid_of((const char *const[]){"#"}, 1);
-    ng_grid *blank = grid_of((const char *const[]){"."}, 1);
+    ng_grid *filled = ng_test_grid_of((const char *const[]){"#"}, 1);
+    ng_grid *blank = ng_test_grid_of((const char *const[]){"."}, 1);
     ng_puzzle *filled_puzzle = ng_test_puzzle_from_grid(filled);
     ng_puzzle *blank_puzzle = ng_test_puzzle_from_grid(blank);
     const ng_render_options options = {};
@@ -257,7 +241,7 @@ Test(render_text, one_by_one_puzzles)
 Test(render_text, mismatched_grid_is_invalid_and_writes_nothing)
 {
     p_fixture p = make_p();
-    ng_grid *other = grid_of((const char *const[]){"##"}, 1);
+    ng_grid *other = ng_test_grid_of((const char *const[]){"##"}, 1);
     ng_test_sink sink;
     const ng_writer w = ng_test_failing_writer(&sink, SIZE_MAX);
 
@@ -334,7 +318,7 @@ Test(render_summary, without_grid_only_the_puzzle_line)
 Test(render_summary, unknown_cells_are_counted)
 {
     static const char *const partial[] = {"#?.", "???"};
-    ng_grid *grid = grid_of(partial, 2);
+    ng_grid *grid = ng_test_grid_of(partial, 2);
     ng_puzzle *puzzle = ng_test_puzzle_from_grid(grid);
 
     assert_summary(puzzle, grid,
@@ -347,7 +331,7 @@ Test(render_summary, unknown_cells_are_counted)
 Test(render_summary, invalid_arguments_are_rejected)
 {
     p_fixture p = make_p();
-    ng_grid *other = grid_of((const char *const[]){"##"}, 1);
+    ng_grid *other = ng_test_grid_of((const char *const[]){"##"}, 1);
     ng_test_sink sink;
     const ng_writer w = ng_test_failing_writer(&sink, SIZE_MAX);
 
@@ -376,7 +360,7 @@ Test(render_text, grid_differing_in_one_dimension_is_invalid_and_writes_nothing)
     p_fixture p = make_p();                                                    /* 5 x 5 */
     static const char *const shorter[] = {"#####", "#####", "#####"};          /* 5 x 3 */
     static const char *const narrower[] = {"###", "###", "###", "###", "###"}; /* 3 x 5 */
-    ng_grid *grids[] = {grid_of(shorter, 3), grid_of(narrower, 5)};
+    ng_grid *grids[] = {ng_test_grid_of(shorter, 3), ng_test_grid_of(narrower, 5)};
 
     for (size_t i = 0; i < 2; ++i) {
         ng_test_sink sink;

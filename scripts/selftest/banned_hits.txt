@@ -27,3 +27,11 @@ on the next line /* is still a string"; r = malloc(8);
     #define NG_COPY(n) ((n) < 1'000 ? malloc(n) : nullptr) /* 'x' */
     const ng_allocator *heap = ng_allocator_default();
     block = allocator->alloc(allocator->ctx, 8, 8);
+#include "solvers/s0_brute/brute.h"
+#include "nonogram/verify.h"
+#include <nonogram/verify.h>
+#include "../verify/verify.h"
+#include "./../verify/verify.h"
+#include "../../src/solvers/s0_brute/brute.h"
+#include "../../include/nonogram/verify.h"
+#include "nonogram/nonogram.h"

@@ -4,6 +4,8 @@ commands:
   show <puzzle.non> [--solution <grid.sol>] [--unicode] [--max-render <n>]
       Print the puzzle with its clues, and a solution or partial grid if given.
       Grids wider or taller than <n> cells (default 200) are summarised.
+  verify <puzzle.non> <grid.sol>
+      Check the grid against the clues: valid (exit 0), incomplete or invalid (exit 1).
 
 options:
   --help       print this help

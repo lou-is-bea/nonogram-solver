@@ -130,7 +130,7 @@ Le générateur produit une grille aléatoire `G` (dimensions et densité tirée
 | P-S5 | déterminisme : deux exécutions avec la même graine donnent des statistiques identiques |
 | P-S6 | aucune allocation : l'allocateur compteur ne voit aucune allocation pendant `solve()` |
 
-Volume : 1 000 cas par propriété sur chaque PR, 100 000 en nocturne.
+Volume : 1 000 cas par propriété sur chaque PR, 100 000 en nocturne (`NG_PROPERTY_CASES=100000`, lu par `ng_test_case_count`).
 
 Le générateur `ng_test_rng` (`tests/support/test_rng.h`, xoshiro256** initialisé par splitmix64) est vérifié contre des valeurs de référence. Il n'utilise pas le débordement non signé implicite : UBSan (`-fsanitize=integer`) le signalerait, et aucune suppression de sanitizer n'est ajoutée. L'arithmétique modulo 2⁶⁴ y est écrite explicitement.
 

@@ -6,6 +6,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-27
+
+Première version : modèle de données pour grilles massives, lecture et écriture des formats `.non` et `.sol` en flux, affichage texte, vérificateur indépendant et commandes `nonogram show` et `nonogram verify`. Fin de l'étape M3.
+
 ### Ajouté
 - M0 : build CMake (C23 strict, vérification des fonctionnalités C23 à la configuration), cibles `ng_core`, `ng_io`, `ng_render`, `ng_verify`, `ng_solvers` et `nonogram`, presets `dev`, `dev-clang`, `release`, `asan`, `ubsan`, `coverage` et `fuzz`.
 - M0 : API publique `version.h` (`NG_VERSION_MAJOR`, `NG_VERSION_MINOR`, `NG_VERSION_PATCH`, `ng_version_string()`) et `nonogram --version`.
@@ -37,11 +41,17 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 - M2 : `render.h` : `ng_render_text` (ASCII ou Unicode, avec ou sans indices, grille complète, partielle ou absente) et `ng_render_summary` ; module `ng_render`.
 - M2 : sous-commande `nonogram show <puzzle> [--solution <sol>] [--unicode] [--max-render <n>]`, aide `--help`, codes de sortie stables (F-41).
 - M2 : tests d'intégration de la CLI comparés à des sorties de référence (`tests/integration/`, `tests/data/expected/`), script `scripts/update_golden.sh`.
+- M3 : `verify.h` : vérificateur indépendant `ng_verify` (verdicts `VALID`, `INCOMPLETE`, `INVALID`, première ligne et premier bloc fautifs, nombre de cases inconnues) et `ng_verify_line_runs` (blocs observés d'une ligne) ; module `ng_verify`.
+- M3 : sous-commande `nonogram verify <puzzle> <grille>` (sortie `valid`, `incomplete: …` ou `invalid: row 2 has runs 1 2, expected 1 1`, codes de sortie 0 à 4 selon F-41 ; une grille de mauvaises dimensions est une erreur d'entrée, code 3).
+- M3 : propriétés P-V1 à P-V4 (et cohérence des blocs observés), nombre de cas réglable par `NG_PROPERTY_CASES` ; test massif du vérificateur sur 10⁸ cases ; grilles fausses de test (`tests/data/grids/`).
 
 ### Modifié
+- Troisième revue indépendante de M3 : cas `verify_extra_runs` (ligne qui a plus de blocs que son indice, détecté sous ASan si les tampons sont sous-dimensionnés) ; la règle ADR-0007 de G2 accepte tout préfixe de chemin ; test d'échec d'écriture de `verify` rangé avec les autres ; exemple du README corrigé.
 - M2 close : les 35 sorties de référence de la CLI sont approuvées par le responsable du projet (PR #3).
 - Troisième revue indépendante de M2 : test d'échec d'écriture de `--help` (code 3) ; `--version` testé sous `NG_CLI_WRAPPER` ; motif de `large/stripes_100.non` décrit dans le fichier ; grille inutilisée `grids/stripes_100_solution.sol` retirée.
+- Seconde revue indépendante de M3 : tailles des tampons de `nonogram verify` calculées avec `ckd_*` (règle d'or 6) ; cas d'un indice plus long que les blocs observés, d'une seule case inconnue (« 1 unknown cell »), d'une option en deuxième position et d'un échec d'écriture ; la règle ADR-0007 de G2 couvre aussi `nonogram/nonogram.h`, les `<…>` et les chemins relatifs.
 - Seconde revue indépendante de M2 : test d'échec d'écriture avec une sortie plus grande que les tampons (puzzle `large/stripes_100.non`), refus d'un `--max-render` répété testé, G2 interdit toute allocation dans `src/render/`, `--help` et `--version` vérifient leur écriture, G7 affiche le diagnostic d'un cas qui échoue sous Valgrind. M2 repasse « en cours » jusqu'à l'approbation des sorties de référence.
+- Revue indépendante de M3 : tests de `ng_verify` avec une seule dimension différente et sur une colonne de 10⁶ cases ; cas CLI `verify` d'un indice vide et d'une hauteur seule différente ; message d'erreur interne distinct du manque de mémoire ; G2 interdit à `verify` d'inclure un solver et inversement (ADR-0007).
 - Revue indépendante de M2 : `ng_render_options` devient `{ hide_clues, unicode }`, si bien qu'une valeur nulle et `nullptr` donnent le même rendu par défaut (indices, ASCII) ; l'exemple de `render.h` est corrigé. `nonogram show` refuse une option répétée et une option à la place d'une valeur. Nouveaux tests : une seule dimension différente (rendu, résumé, chargement), bornes de `--max-render`, `--solutionfoo`, échec d'écriture (code 3), absence d'allocation du rendu, grilles 1 × 1000 et 1000 × 1. G7 exécute aussi les cas d'intégration de la CLI sous Valgrind.
 - Revue indépendante de M1 : les accesseurs sans statut (`ng_grid_get`, `ng_grid_set`, `ng_grid_fill`, `ng_puzzle_line_length`, `ng_puzzle_line_run_count`) n'ont plus d'assertion sur les entrées de l'appelant ; leur valeur de repli documentée s'applique dans tous les builds (CODING_STANDARDS §6).
 - Revue indépendante de M1 : le fuzzer et le test massif d'aller-retour `.non` comparent les longueurs des blocs, plus seulement leur nombre ; le pic mémoire documenté des lecteurs est corrigé (jusqu'à environ 3 fois les indices ou la grille) ; un `\r` isolé est refusé aussi dans un commentaire ; l'analyseur `.non` est découpé en trois fichiers (`non_lexer.c`, `non_directives.c`, `non_parser.c`).

@@ -66,10 +66,11 @@ function(ng_add_massive_test name)
         FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 endfunction()
 
-ng_add_massive_test(massive LIBS ng_io)
+ng_add_massive_test(massive LIBS ng_io ng_verify)
 
 ng_add_property_test(grid LIBS ng_core)
 ng_add_property_test(io LIBS ng_io)
+ng_add_property_test(verify LIBS ng_verify)
 
 ng_add_unit_test(allocator LIBS ng_core)
 ng_add_unit_test(grid LIBS ng_core)
@@ -83,6 +84,7 @@ ng_add_unit_test(support_allocator LIBS ng_core)
 ng_add_unit_test(support_rng LIBS ng_core)
 ng_add_unit_test(support_streams LIBS ng_core)
 ng_add_unit_test(types LIBS ng_core)
+ng_add_unit_test(verify LIBS ng_verify)
 ng_add_unit_test(version LIBS ng_core)
 
 # --- Corpus (tests/data, see tests/data/README.md) -------------------------------------------
@@ -103,6 +105,7 @@ foreach(file IN LISTS ng_corpus_solved_files)
     get_filename_component(name ${file} NAME_WE)
     string(APPEND ng_corpus_header "    {\"${file}\", \"${ng_corpus_dir}/solutions/${name}.sol\"},\n")
 endforeach()
+
 string(APPEND ng_corpus_header "};\n\nstatic const char *ng_corpus_other[] = {\n")
 foreach(file IN LISTS ng_corpus_other_files)
     string(APPEND ng_corpus_header "    \"${file}\",\n")
@@ -178,3 +181,11 @@ foreach(output_case IN ITEMS "small:tests/data/puzzles/tiny/dot.non"
         LABELS integration
         FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 endforeach()
+
+# verify reports its write failure the same way.
+add_test(NAME cli_verify_output_failure
+    COMMAND sh -c [=[err=$($NG_CLI_WRAPPER "$1" verify "$2" "$3" 2>&1 >/dev/full); code=$?; printf '%s\n' "$err"; [ "$code" -eq 3 ] && printf '%s\n' "$err" | grep -q 'cannot write the output']=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/dot.non tests/data/solutions/dot.sol
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_tests_properties(cli_verify_output_failure PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")

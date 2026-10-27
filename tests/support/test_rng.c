@@ -86,17 +86,29 @@ uint64_t ng_test_rng_below(ng_test_rng *rng, uint64_t bound)
     return value % bound;
 }
 
+static uint64_t env_number(const char *name, uint64_t fallback)
+{
+    const char *text = getenv(name);
+    if (text == nullptr) {
+        return fallback;
+    }
+    char *end = nullptr;
+    errno = 0;
+    const unsigned long long parsed = strtoull(text, &end, 0);
+    cr_assert(errno == 0 && end != text && *end == '\0', "malformed %s: '%s'", name, text);
+    return (uint64_t)parsed;
+}
+
+uint64_t ng_test_case_count(uint64_t default_count)
+{
+    const uint64_t count = env_number("NG_PROPERTY_CASES", default_count);
+    cr_log_info("cases: %" PRIu64, count);
+    return count;
+}
+
 uint64_t ng_test_seed(void)
 {
-    uint64_t seed = NG_TEST_DEFAULT_SEED;
-    const char *text = getenv("NG_TEST_SEED");
-    if (text != nullptr) {
-        char *end = nullptr;
-        errno = 0;
-        const unsigned long long parsed = strtoull(text, &end, 0);
-        cr_assert(errno == 0 && end != text && *end == '\0', "malformed NG_TEST_SEED: '%s'", text);
-        seed = (uint64_t)parsed;
-    }
+    const uint64_t seed = env_number("NG_TEST_SEED", NG_TEST_DEFAULT_SEED);
     cr_log_info("seed: %" PRIu64 " (replay with NG_TEST_SEED=%" PRIu64 ")", seed, seed);
     return seed;
 }

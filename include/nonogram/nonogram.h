@@ -13,6 +13,7 @@
 #include "nonogram/status.h"
 #include "nonogram/stream.h"
 #include "nonogram/types.h"
+#include "nonogram/verify.h"
 #include "nonogram/version.h"
 
 #endif /* NG_NONOGRAM_NONOGRAM_H */

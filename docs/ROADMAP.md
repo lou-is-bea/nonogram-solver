@@ -9,7 +9,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 | M0 | Fondations : build, CI, outillage | — | terminé |
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
 | M2 | Affichage | — | terminé |
-| M3 | Vérificateur | 0.1.0 | à faire |
+| M3 | Vérificateur | 0.1.0 | terminé |
 | M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |
 | M5 | S1 : backtracking par placements de lignes | 0.3.0 | à faire |
 | M6 | S2 : propagation par lignes | 0.4.0 | à faire |
@@ -109,6 +109,14 @@ Exemple de rendu attendu (ASCII) :
 - Tests de propriétés du vérificateur ([TESTING.md §4.4](TESTING.md#44-tests-de-propriétés)).
 
 **Critères de sortie** : couverture d'au moins 95 % sur `verify` (c'est l'oracle, il doit être irréprochable). Les propriétés passent sur 100 000 grilles aléatoires. La vérification d'une grille 10⁴ × 10⁴ est mesurée et consignée. **Publication de la version 0.1.0.**
+
+*Bilan du 2026-10-25, complété le 2026-10-27* :
+- ✅ Couverture de `verify` : 100 % des lignes et 100 % des branches (seuils : 95 % et 90 %).
+- ✅ Propriétés P-V1 à P-V4 (et cohérence de `ng_verify_line_runs`) sur 100 000 grilles aléatoires chacune (`NG_PROPERTY_CASES=100000`, graine 7957700491342930285) : toutes passent, 1,1 s en Release.
+- ✅ Vérification d'une grille 10⁴ × 10⁴ valide (10⁸ cases, environ 2 × 10⁶ blocs) : médiane 0,76 s sur 5 exécutions (Release, WSL2, 16 cœurs). Le vérificateur est volontairement naïf (accès case par case) ; cette mesure sert de référence.
+- ✅ Sorties de référence approuvées par le responsable du projet le 2026-10-27 : les 15 cas `verify_*` et les 16 cas de M2 dont l'aide gagne les deux lignes de `verify` (trace dans la PR #4).
+- ✅ Version 0.1.0 : `project(VERSION 0.1.0)` et section `[0.1.0] - 2026-10-27` du CHANGELOG ; la publication est la fusion de la PR #4.
+- Choix validés : rapport de taille fixe et requête séparée des blocs observés (`ng_verify_line_runs`), sans allocation dans l'oracle.
 
 ## M4 — S0 : force brute et harnais de benchmark
 

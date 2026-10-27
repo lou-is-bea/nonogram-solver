@@ -71,7 +71,7 @@ nonogram-solver/
 │   │   ├── s1_backtrack/
 │   │   ├── s2_lineprop/
 │   │   └── s3_dp_search/
-│   └── cli/                # main.c cli.h cmd_show.c (puis cmd_solve.c cmd_verify.c)
+│   └── cli/                # main.c cli.h cli_load.c cmd_show.c cmd_verify.c (puis cmd_solve.c)
 ├── tests/
 │   ├── support/            # allocateurs de test, générateur aléatoire, helpers Criterion
 │   ├── unit/               # test_<module>.c (Criterion)
@@ -277,9 +277,12 @@ typedef enum ng_verdict ng_verdict;
 typedef struct ng_verify_report {
     ng_verdict    verdict;
     ng_line_id    first_bad_line;   /* si INVALID */
-    ng_cell_index unknown_cells;    /* si INCOMPLETE */
+    ng_run_count  first_bad_run;    /* si INVALID : premier bloc différent */
+    ng_cell_index unknown_cells;    /* INCOMPLETE si non nul (prioritaire sur INVALID) */
 } ng_verify_report;
 ng_status ng_verify(const ng_puzzle *p, const ng_grid *g, ng_verify_report *out);
+ng_status ng_verify_line_runs(const ng_grid *g, ng_line_id line, ng_dim *buffer,
+                              ng_run_count capacity, ng_run_count *count);  /* blocs observés (F-21) */
 ```
 
 L'affichage texte est destiné aux grilles de taille humaine. Au-delà d'un seuil (`--max-render`, 200 × 200 par défaut), la CLI affiche un résumé (dimensions, nombre de cases connues) au lieu de la grille.

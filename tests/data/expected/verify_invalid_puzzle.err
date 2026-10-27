@@ -1,0 +1,1 @@
+tests/data/puzzles/invalid/bad_clue.non:4:3: error: invalid clue '1a' at position 2

@@ -91,6 +91,8 @@ BANNED=(
     '\b(TODO|FIXME)(?!\(#\d+\)) @@ . @@ text @@ TODO/FIXME must reference a ticket: TODO(#42)'
     '\b(printf|puts|exit|_Exit|quick_exit|abort)\s*\(|\bstdout\b|\bstderr\b @@ ^src/(?!cli/) @@ code @@ no printf/exit/abort/stdout/stderr in the library'
     '\bng_allocator_default\b|->alloc\s*\( @@ ^src/render/ @@ code @@ the renderer allocates nothing (render.h)'
+    '#\s*include\s*["<]([^">]*/)?(solvers/|nonogram/solver\.h|nonogram/nonogram\.h) @@ ^src/verify/ @@ code @@ the verifier never depends on a solver, not even through nonogram.h (ADR-0007)'
+    '#\s*include\s*["<]([^">]*/)?(verify/|nonogram/verify\.h|nonogram/nonogram\.h) @@ ^src/solvers/ @@ code @@ a solver never includes the verifier, not even through nonogram.h (ADR-0007)'
 )
 
 # Prints "file:line:text" for every line of the files listed on stdin that matches the Perl

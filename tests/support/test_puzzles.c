@@ -3,6 +3,7 @@
 #include <criterion/criterion.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "nonogram/grid.h"
 #include "nonogram/puzzle.h"
@@ -29,6 +30,22 @@ ng_grid *ng_test_random_grid(ng_test_rng *rng, ng_dim max_side, bool with_unknow
                 cell = NG_CELL_UNKNOWN;
             }
             ng_grid_set(grid, r, c, cell);
+        }
+    }
+    return grid;
+}
+
+ng_grid *ng_test_grid_of(const char *const *rows, ng_dim height)
+{
+    const ng_dim width = (ng_dim)strlen(rows[0]);
+    ng_grid *grid = nullptr;
+    cr_assert_eq(ng_grid_create(&ng_test_heap()->base, width, height, &grid), NG_OK);
+    for (ng_dim r = 0; r < height; ++r) {
+        cr_assert_eq(strlen(rows[r]), (size_t)width, "row %u", r);
+        for (ng_dim c = 0; c < width; ++c) {
+            const char s = rows[r][c];
+            ng_grid_set(grid, r, c,
+                        s == '#' ? NG_CELL_FILLED : (s == '.' ? NG_CELL_EMPTY : NG_CELL_UNKNOWN));
         }
     }
     return grid;
@@ -71,6 +88,49 @@ ng_puzzle *ng_test_puzzle_from_grid(const ng_grid *grid)
     a->free(a->ctx, offsets, (line_count + 1u) * sizeof *offsets);
     a->free(a->ctx, runs, max_runs * sizeof *runs);
     return puzzle;
+}
+
+ng_grid *ng_test_transpose_grid(const ng_grid *grid)
+{
+    const ng_dim width = ng_grid_width(grid);
+    const ng_dim height = ng_grid_height(grid);
+    ng_grid *transposed = nullptr;
+    cr_assert_eq(ng_grid_create(&ng_test_heap()->base, height, width, &transposed), NG_OK);
+    for (ng_dim r = 0; r < height; ++r) {
+        for (ng_dim c = 0; c < width; ++c) {
+            ng_grid_set(transposed, c, r, ng_grid_get(grid, r, c));
+        }
+    }
+    return transposed;
+}
+
+ng_puzzle *ng_test_transpose_puzzle(const ng_puzzle *puzzle)
+{
+    const ng_allocator *a = &ng_test_heap()->base;
+    const ng_dim width = ng_puzzle_width(puzzle);
+    const ng_dim height = ng_puzzle_height(puzzle);
+    const size_t line_count = (size_t)width + height;
+    const size_t total = ng_puzzle_total_runs(puzzle);
+    const size_t runs_size = (total == 0u ? 1u : total) * sizeof(ng_dim);
+    ng_run_index *offsets = a->alloc(a->ctx, (line_count + 1u) * sizeof *offsets, 8);
+    ng_dim *runs = a->alloc(a->ctx, runs_size, 4);
+    cr_assert(offsets != nullptr && runs != nullptr);
+    ng_run_index count = 0;
+    offsets[0] = 0;
+    /* Lines of the transposed puzzle: the original columns become its rows, then the original
+     * rows become its columns. */
+    for (size_t t = 0; t < line_count; ++t) {
+        const ng_line_id source = t < width ? (ng_line_id)(height + t) : (ng_line_id)(t - width);
+        const ng_run_count n = ng_puzzle_line_run_count(puzzle, source);
+        cr_assert_eq(ng_puzzle_copy_line_runs(puzzle, source, runs + count, n), NG_OK);
+        count += n;
+        offsets[t + 1u] = count;
+    }
+    ng_puzzle *transposed = nullptr;
+    cr_assert_eq(ng_puzzle_create(a, height, width, runs, offsets, &transposed), NG_OK);
+    a->free(a->ctx, offsets, (line_count + 1u) * sizeof *offsets);
+    a->free(a->ctx, runs, runs_size);
+    return transposed;
 }
 
 void ng_test_assert_same_clues(const ng_puzzle *a, const ng_puzzle *b)
