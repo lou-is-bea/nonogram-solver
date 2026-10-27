@@ -31,7 +31,7 @@
 ### 3.2 Vérifier les faits
 
 1. **CI** : l'exécution de la CI sur le SHA de tête est verte (`gh pr checks <n>`). Une CI rouge ou absente est un constat bloquant, sauf justification écrite dans la PR.
-2. **Portes que la CI ne couvre pas** : les relancer localement. Au minimum `./scripts/check.sh --only G7,G8,G9` tant que la CI n'a pas de tâches Valgrind, couverture et fuzzing ([TESTING.md §5](../TESTING.md#5-intégration-continue)). Relancer aussi toute porte dont le résultat est contesté ou paraît improbable.
+2. **Portes en local** : relancer `./scripts/check.sh` complet, depuis un build propre. La tâche CI `full-check` exécute déjà G0 à G9 dans le conteneur de référence ([TESTING.md §5](../TESTING.md#5-intégration-continue)) ; la relance locale montre que la PR passe aussi hors CI et donne les chiffres à recalculer (couverture, mutations). Une porte qui ne peut pas tourner est signalée, jamais présentée comme réussie. Relancer aussi toute porte dont le résultat est contesté ou paraît improbable.
 3. **Chiffres annoncés** : recalculer ce qui peut l'être à coût raisonnable (couverture par G8, nombre de tests, volume des propriétés). Pour une mesure de performance, refaire la mesure si un harnais existe, sinon la marquer « non vérifiée ».
 4. **Tests qui mordent** : pour chaque changement de comportement important, introduire au moins une **mutation ciblée** dans le code de la PR (inverser une condition, décaler un indice, supprimer une vérification) et constater qu'un test échoue. La mutation est annulée ensuite. Une mutation qui survit est un constat.
 
@@ -116,6 +116,8 @@ Le responsable humain du projet peut donner son accord à l'agent auteur directe
 2. **Périmètre explicite.** Le commentaire nomme ce qui est accepté : les décisions une par une, ou les cas et le SHA concernés pour des sorties de référence.
 3. **Rien d'ajouté.** L'agent ne reformule pas l'accord pour l'élargir. Ce que le responsable n'a pas dit n'est pas accordé, et toute ambiguïté se règle par une question dans la session.
 4. **Mention à la fusion.** Le message de *squash merge* rappelle que l'accord a été donné dans la session de travail.
+
+GitHub n'enregistre pas d'approbation venant du compte qui a ouvert la PR. Quand ce compte est partagé avec l'agent, la protection de `main` ne peut donc pas être satisfaite par une approbation : la fusion passe par le contournement administrateur (`gh pr merge --squash --admin`), seulement à la demande du responsable et après un verdict APPROUVÉE ou sa décision explicite.
 
 Le relecteur tient une telle trace pour un accord humain valable. Il ne la conteste pas au motif qu'elle est publiée par l'agent ou avec un compte partagé. Il vérifie en revanche que le périmètre cité correspond au contenu de la PR, et il signale tout écart, par exemple un cas modifié après l'accord. Il signale aussi tout accord invoqué sans commentaire de trace.
 
