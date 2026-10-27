@@ -106,12 +106,6 @@ foreach(file IN LISTS ng_corpus_solved_files)
     string(APPEND ng_corpus_header "    {\"${file}\", \"${ng_corpus_dir}/solutions/${name}.sol\"},\n")
 endforeach()
 
-add_test(NAME cli_verify_output_failure
-    COMMAND sh -c [=[err=$($NG_CLI_WRAPPER "$1" verify "$2" "$3" 2>&1 >/dev/full); code=$?; printf '%s\n' "$err"; [ "$code" -eq 3 ] && printf '%s\n' "$err" | grep -q 'cannot write the output']=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/dot.non tests/data/solutions/dot.sol
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-set_tests_properties(cli_verify_output_failure PROPERTIES
-    LABELS integration
-    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 string(APPEND ng_corpus_header "};\n\nstatic const char *ng_corpus_other[] = {\n")
 foreach(file IN LISTS ng_corpus_other_files)
     string(APPEND ng_corpus_header "    \"${file}\",\n")
@@ -187,3 +181,11 @@ foreach(output_case IN ITEMS "small:tests/data/puzzles/tiny/dot.non"
         LABELS integration
         FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 endforeach()
+
+# verify reports its write failure the same way.
+add_test(NAME cli_verify_output_failure
+    COMMAND sh -c [=[err=$($NG_CLI_WRAPPER "$1" verify "$2" "$3" 2>&1 >/dev/full); code=$?; printf '%s\n' "$err"; [ "$code" -eq 3 ] && printf '%s\n' "$err" | grep -q 'cannot write the output']=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/dot.non tests/data/solutions/dot.sol
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_tests_properties(cli_verify_output_failure PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")

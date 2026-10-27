@@ -73,6 +73,8 @@ ng_cli_case(verify_wrong_height EXIT 3
     ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_three_rows.sol)
 ng_cli_case(verify_missing_runs EXIT 1
     ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_empty_row.sol)
+ng_cli_case(verify_extra_runs EXIT 1
+    ARGS verify ${P}/tiny/letter_p.non ${G}/letter_p_extra_runs.sol)
 ng_cli_case(verify_one_unknown_cell EXIT 1 ARGS verify ${P}/tiny/dot.non ${G}/dot_unknown.sol)
 ng_cli_case(verify_option_second EXIT 2 ARGS verify ${P}/tiny/letter_p.non --fast)
 ng_cli_case(verify_wrong_size EXIT 3 ARGS verify ${P}/tiny/letter_p.non ${S}/duck.sol)

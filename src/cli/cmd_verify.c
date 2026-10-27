@@ -36,7 +36,8 @@ static int print_invalid(FILE *out, FILE *err, const ng_puzzle *puzzle, const ng
         (void)fputs("nonogram: internal error: cannot read the runs of the bad line\n", err);
         return CLI_EXIT_INTERNAL;
     }
-    /* One more element than the larger count, so that an empty line still gets a buffer. */
+    /* A bad line has at least one run on one side, so larger >= 1; the extra element only keeps
+     * the allocation size non-zero should that ever change. */
     const ng_run_count larger = expected_count > observed_count ? expected_count : observed_count;
     size_t capacity = 0;
     size_t bytes = 0;

@@ -46,6 +46,7 @@ Première version : modèle de données pour grilles massives, lecture et écrit
 - M3 : propriétés P-V1 à P-V4 (et cohérence des blocs observés), nombre de cas réglable par `NG_PROPERTY_CASES` ; test massif du vérificateur sur 10⁸ cases ; grilles fausses de test (`tests/data/grids/`).
 
 ### Modifié
+- Troisième revue indépendante de M3 : cas `verify_extra_runs` (ligne qui a plus de blocs que son indice, détecté sous ASan si les tampons sont sous-dimensionnés) ; la règle ADR-0007 de G2 accepte tout préfixe de chemin ; test d'échec d'écriture de `verify` rangé avec les autres ; exemple du README corrigé.
 - M2 close : les 35 sorties de référence de la CLI sont approuvées par le responsable du projet (PR #3).
 - Troisième revue indépendante de M2 : test d'échec d'écriture de `--help` (code 3) ; `--version` testé sous `NG_CLI_WRAPPER` ; motif de `large/stripes_100.non` décrit dans le fichier ; grille inutilisée `grids/stripes_100_solution.sol` retirée.
 - Seconde revue indépendante de M3 : tailles des tampons de `nonogram verify` calculées avec `ckd_*` (règle d'or 6) ; cas d'un indice plus long que les blocs observés, d'une seule case inconnue (« 1 unknown cell »), d'une option en deuxième position et d'un échec d'écriture ; la règle ADR-0007 de G2 couvre aussi `nonogram/nonogram.h`, les `<…>` et les chemins relatifs.

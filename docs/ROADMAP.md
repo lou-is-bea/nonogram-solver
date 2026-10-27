@@ -110,7 +110,7 @@ Exemple de rendu attendu (ASCII) :
 
 **Critères de sortie** : couverture d'au moins 95 % sur `verify` (c'est l'oracle, il doit être irréprochable). Les propriétés passent sur 100 000 grilles aléatoires. La vérification d'une grille 10⁴ × 10⁴ est mesurée et consignée. **Publication de la version 0.1.0.**
 
-*Bilan du 2026-10-25* :
+*Bilan du 2026-10-25, complété le 2026-10-27* :
 - ✅ Couverture de `verify` : 100 % des lignes et 100 % des branches (seuils : 95 % et 90 %).
 - ✅ Propriétés P-V1 à P-V4 (et cohérence de `ng_verify_line_runs`) sur 100 000 grilles aléatoires chacune (`NG_PROPERTY_CASES=100000`, graine 7957700491342930285) : toutes passent, 1,1 s en Release.
 - ✅ Vérification d'une grille 10⁴ × 10⁴ valide (10⁸ cases, environ 2 × 10⁶ blocs) : médiane 0,76 s sur 5 exécutions (Release, WSL2, 16 cœurs). Le vérificateur est volontairement naïf (accès case par case) ; cette mesure sert de référence.

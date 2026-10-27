@@ -55,7 +55,7 @@ nonogram show tests/data/puzzles/small/duck.non --solution tests/data/solutions/
 nonogram solve tests/data/puzzles/small/duck.non --solver=line --stats
 
 # Vérifier une solution
-nonogram verify tests/data/puzzles/small/duck.non duck.sol
+nonogram verify tests/data/puzzles/small/duck.non tests/data/solutions/duck.sol
 
 # Lister les solvers disponibles
 nonogram list-solvers
