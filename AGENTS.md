@@ -23,11 +23,12 @@ Lis-les dans cet ordre. Ne lis que ceux qui concernent ta tâche, mais **les deu
 5. [docs/adr/](docs/adr/README.md) : décisions déjà prises (ne pas les remettre en cause sans nouvel ADR).
 6. [docs/FILE_FORMATS.md](docs/FILE_FORMATS.md) : pour tout travail sur `src/io/` ou les données de test.
 7. [docs/agents/PLAYBOOKS.md](docs/agents/PLAYBOOKS.md) : procédures pas à pas pour les tâches courantes.
+8. [docs/agents/REVIEW.md](docs/agents/REVIEW.md) : politique de revue indépendante des PR, pour l'auteur comme pour le relecteur.
 
 ## 3. Règles d'or
 
 1. **Aucun changement sans test.** Toute modification de comportement s'accompagne d'un test qui échoue avant le changement et réussit après.
-2. **Ne jamais affaiblir un test pour le faire passer.** Il est interdit de supprimer une assertion, d'augmenter une tolérance, de désactiver un test, d'ajouter une suppression de sanitizer ou de baisser un seuil de couverture sans accord humain explicite et tracé dans la PR.
+2. **Ne jamais affaiblir un test pour le faire passer.** Il est interdit de supprimer une assertion, d'augmenter une tolérance, de désactiver un test, d'ajouter une suppression de sanitizer ou de baisser un seuil de couverture sans accord humain explicite et tracé dans la PR (un accord donné dans la session de travail doit être tracé selon [docs/agents/REVIEW.md §5.1](docs/agents/REVIEW.md#51-accord-humain-donné-dans-la-session-de-travail)).
 3. **Respecter les couches.** Les dépendances entre modules sont fixées dans [docs/ARCHITECTURE.md §3](docs/ARCHITECTURE.md#3-modules-et-dépendances). Un solver n'inclut jamais `verify.h`. Le cœur (`core`) n'inclut rien du projet hors de lui-même.
 4. **Mémoire explicite.** Toute allocation passe par `ng_allocator`. Aucune allocation dans la boucle de résolution d'un solver. Chaque `*_create` a son `*_destroy`. Voir l'[ADR-0004](docs/adr/0004-gestion-memoire.md).
 5. **Pas d'état global mutable**, ni de `exit()`, `abort()` ou `printf()` dans la bibliothèque. Les erreurs remontent sous forme de `ng_status`.
@@ -62,6 +63,7 @@ cmake --preset asan && cmake --build --preset asan && ctest --preset asan   # sa
 6. **S'auto-relire** avec la liste du §7.
 7. **Documenter** : commentaires Doxygen de l'API, documents concernés, `CHANGELOG.md` (section `[Unreleased]`).
 8. **Rendre compte** au format du §8.
+9. **Faire relire** : une fois la PR ouverte et la CI verte, demander une revue indépendante selon [docs/agents/REVIEW.md](docs/agents/REVIEW.md), puis répondre à chaque constat bloquant, majeur ou question avant de solliciter la revue humaine.
 
 ## 6. Quand s'arrêter et demander
 

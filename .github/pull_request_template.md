@@ -28,6 +28,14 @@ Refs : #<ticket> · Exigences : <F-xx / NF-xx> · Étape : M<x>
 - [ ] Documents de `docs/` concernés mis à jour
 - [ ] `CHANGELOG.md` (`[Unreleased]`) mis à jour
 
+## Revue indépendante
+
+<!-- Selon docs/agents/REVIEW.md, après l'ouverture de la PR et une CI verte. -->
+
+- [ ] Revue indépendante demandée (relecteur distinct de l'auteur)
+- [ ] Verdict : APPROUVÉE / CHANGEMENTS DEMANDÉS / DÉCISION HUMAINE REQUISE (lien vers le commentaire)
+- [ ] Réponse apportée à chaque constat bloquant, majeur ou question
+
 ## Auteur
 
 - [ ] Humain
