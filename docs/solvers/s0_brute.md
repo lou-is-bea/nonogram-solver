@@ -72,7 +72,9 @@ Les zones sont rangées par alignement décroissant, ce qui évite tout rempliss
 | `candidate` | `N × sizeof(ng_cell)` = `N` | grille en cours d'examen, rangée par rangée |
 | `première` | `N × sizeof(ng_cell)` = `N` | première solution trouvée, gardée pendant le comptage |
 
-**Formule de `workspace_size`** : `S + 8 N + 8 (L + 1) + 4 R + 2 N = S + 10 N + 8 L + 4 R + 8`, calculée avec `ckd_add` et `ckd_mul`. Un test vérifie cette formule sur plusieurs puzzles, avec la valeur de `S` exposée par l'en-tête interne.
+**Formule de `workspace_size`** : `S + 8 N + 8 (L + 1) + 4 R + 2 N = S + 10 N + 8 L + 4 R + 8`, calculée avec `ckd_add` et `ckd_mul`. Un test vérifie la partie variable de la formule par différences entre puzzles de tailles et d'indices différents (`10 ΔN + 8 ΔL + 4 ΔR`), et que `S` est le même pour tous ; il n'a donc pas besoin de connaître `S`.
+
+L'espace de travail doit être aligné au moins sur `alignof(ng_cell_index)` ; `ng_solve` le fournit aligné sur `alignof(max_align_t)` (#10).
 
 `workspace_size` renvoie `NG_ERR_LIMIT` dans trois cas :
 
@@ -80,7 +82,9 @@ Les zones sont rangées par alignement décroissant, ce qui évite tout rempliss
 - la taille n'est pas représentable ;
 - `max_memory_bytes` est non nul et inférieur à la taille.
 
-`NG_BRUTE_MAX_CELLS` vaut **25**. C'est une constante de compilation de l'en-tête interne `src/solvers/s0_brute/brute.h`, sans réglage à l'exécution.
+`NG_BRUTE_MAX_CELLS` vaut **25**. C'est une constante de compilation de `src/solvers/s0_brute/brute.c`, sans réglage à l'exécution. L'en-tête interne `brute.h` n'expose que la vtable `ngi_solver_brute`, comme le demande [PLAYBOOKS P1](../agents/PLAYBOOKS.md#p1--ajouter-un-solver) ; les tests utilisent la valeur 25 de cette spécification.
+
+Avec `ng_dim` sur 32 bits, le produit `l × h` tient toujours sur 64 bits : `ckd_mul` ne peut pas y déborder, mais il reste employé comme pour tout calcul de taille (règle d'or 6).
 
 ## 5. Limites et comportements
 
@@ -90,7 +94,12 @@ Les zones sont rangées par alignement décroissant, ce qui évite tout rempliss
   - `max_time_ms` est contrôlée tous les `NGI_BRUTE_TIME_CHECK` nœuds (4 096), pour ne pas lire l'horloge à chaque candidate. Le dépassement est d'au plus un intervalle ; l'horloge vient de l'infrastructure solver ([#10](https://github.com/lou-is-bea/nonogram-solver/issues/10)).
 - **Grille d'entrée partiellement remplie** : les cases connues ne changent jamais (P-S4). Si elles contredisent les indices, aucune candidate ne passe et le résultat est `UNSOLVABLE`. Une grille déjà complète donne `k = 0` et un seul nœud.
 - **Comptage de solutions** : supporté. S0 s'arrête dès que `max_solutions` solutions sont trouvées. Si l'énumération se termine avant, `solutions_found` est le nombre **exact** de solutions.
-- **Graine** : ignorée. S0 n'a aucune source d'aléa ; nœuds, résultat et grille sont identiques d'une exécution à l'autre (NF-12, P-S5).
+- **Graine** : ignorée. S0 n'a aucune source d'aléa. Sans limite de temps, nœuds, résultat et grille sont identiques d'une exécution à l'autre (NF-12, P-S5). Un arrêt par `max_time_ms` dépend par nature de la machine : le nombre de nœuds au moment de l'arrêt n'est pas reproductible.
+- **Statistiques** : `solve` écrit `nodes` (candidates examinées), `solutions_found` et `line_solves = 0`. `elapsed_ns` et `workspace_bytes` sont remplis par `ng_solve` (#10).
+- **Erreurs** (le solver peut être appelé directement par sa vtable, sans passer par `ng_solve`) :
+  - `workspace_size` : `NG_ERR_INVALID_ARGUMENT` pour un puzzle, des options ou un `out` nuls, ou `max_solutions = 0` ; `NG_ERR_LIMIT` selon le §4.
+  - `init` : `NG_ERR_INVALID_ARGUMENT` pour un puzzle ou des options nuls, `max_solutions = 0`, un espace de travail nul, désaligné ou plus petit que `workspace_size` pour ce puzzle et ces options. Il ne lit ni n'écrit rien au-delà de `ws_size`.
+  - `solve` : `NG_ERR_INVALID_ARGUMENT` pour un argument nul, un espace de travail que `init` n'a pas préparé (l'état porte une marque posée par `init`), ou une grille dont les dimensions diffèrent de celles du puzzle ; ces contrôles précèdent toute écriture, donc la grille, les statistiques et le résultat restent inchangés. Une grille de mauvaise taille ne peut donc pas faire déborder `candidate[]`.
 - **Résultats possibles** :
 
 | Résultat | Condition | Grille `inout` | `solutions_found` |
@@ -102,32 +111,38 @@ Les zones sont rangées par alignement décroissant, ce qui évite tout rempliss
 
 ## 6. Plan de test
 
-- [ ] Cas limites de [TESTING.md §4.2](../TESTING.md#42-cas-limites-obligatoires) :
+**Budget de temps.** Une énumération de 25 cases inconnues examine jusqu'à `3,4 × 10⁷` candidates : environ 9 s sous Valgrind (G7) d'après la mesure de la revue de la spécification, au-delà du `.timeout` de 10 s des tests de solver (TESTING §4.1). Les tests sont donc répartis en deux groupes :
+
+- **tests courants** (labels `unit` et `property`, donc G3 à G7, sanitizers et Valgrind compris) : au plus **16 cases inconnues** (`2^16` candidates) par résolution, avec le `.timeout` de 10 s ;
+- **test exhaustif du corpus** (label `exhaustive`, Release seulement, ajouté à G3 par #11, sans sanitizer ni Valgrind, `.timeout` de 120 s) : résolution de tout le corpus `tiny` depuis une grille vide. C'est le critère de sortie de M4. La justesse mémoire du code exercé est déjà couverte par les tests courants, qui passent par les mêmes chemins sur de plus petites grilles.
+
+**Cas.**
+
+- [ ] Cas limites de [TESTING.md §4.2](../TESTING.md#42-cas-limites-obligatoires), dans la limite de 25 cases :
   - grille 1×1, vide puis pleine ;
   - ligne d'indice vide, ligne entièrement pleine, indices sans liberté de placement ;
-  - grilles non carrées dans les deux sens ;
-  - puzzle à solutions multiples et puzzle insoluble.
-
-  Les dimensions extrêmes (`1 × 10⁶`, `NG_DIM_MAX`, produit au-delà de 2³²) sont refusées avec `NG_ERR_LIMIT` par `workspace_size`, sans allocation de grille, avec l'allocateur plafonné.
+  - grilles non carrées dans les deux sens, dont `1 × 16` et `16 × 1` ;
+  - puzzle à solutions multiples (`checker_n2`, `diagonal_n2`) et puzzle insoluble (`crossed`).
+- [ ] Dimensions hors limite, refusées par `workspace_size` avec `NG_ERR_LIMIT` sans allocation de grille : `1 × 26`, `26 × 1`, `6 × 5`, `1 × 10⁶`, `10⁶ × 1` et `70 000 × 70 000` (produit au-delà de 2³²). `NG_DIM_MAX` n'est pas testable ici : `ng_puzzle_create` refuse déjà `NG_DIM_MAX + 1`, et un puzzle de `NG_DIM_MAX` lignes demanderait environ 16 Gio d'indices.
+- [ ] Erreurs du §5 : chaque argument nul, `max_solutions = 0`, espace de travail désaligné, trop petit d'un octet, non initialisé ; grille plus large, plus étroite, plus haute et plus basse que le puzzle (rien n'est écrit) ; espace de travail exactement à la taille de la formule (accepté).
 - [ ] Propriétés applicables :
-  - P-S1 sur des grilles aléatoires d'au plus 25 cases ;
+  - P-S1 sur des grilles aléatoires d'au plus **16 cases** ;
   - P-S4 : cases connues en entrée, y compris contradictoires ;
-  - P-S5 : déterminisme des nœuds et de la grille ;
+  - P-S5 : déterminisme des nœuds et de la grille, sans limite de temps ;
   - P-S6 : allocateur compteur à 0 pendant `solve`.
 
   Exclusions : P-S2 concerne S2 seulement. P-S3 (différentiel) n'a pas encore d'autre solver complet : il est remplacé à M4 par la comparaison avec les nombres de solutions documentés du corpus, et deviendra effectif avec S1.
-- [ ] Test différentiel contre : aucun solver à M4 ; contre S0 lui-même pour S1 et les suivants.
+- [ ] Revérification du corpus, annoncée par `tests/data/README.md` : unicité de chaque puzzle `tiny` (comptage avec `max_solutions = 2`, résultat 1, test exhaustif) ; nombre de solutions des puzzles `multi` d'au plus 25 cases ; `UNSOLVABLE` pour `crossed`.
 - [ ] Aucune allocation pendant `solve` (P-S6).
 - [ ] Tests spécifiques à l'algorithme :
   - ordre d'énumération : sur un puzzle à deux solutions, la solution renvoyée est la plus petite ;
   - nombre de nœuds d'une énumération complète égal à `2^k`, avec et sans cases connues ;
   - `max_nodes` : arrêt exact, et `LIMIT_REACHED` qui conserve une solution déjà trouvée ;
-  - `max_time_ms` avec une horloge de test ;
+  - `max_time_ms` avec une horloge de test (horloge injectable de #10) ;
   - `max_memory_bytes` juste au-dessous et au-dessus de la formule ;
   - `max_solutions = 1` et `> 1`, avec un nombre exact quand l'énumération se termine ;
-  - formule de `workspace_size` ;
-  - refus à 26 cases ;
-  - mutations ciblées : retenue de l'incrément, comparaison du dernier bloc d'une ligne, ligne d'indice vide, condition d'arrêt du comptage.
+  - formule de `workspace_size` (par différences, voir le §4) ;
+  - mutations ciblées : retenue de l'incrément, comparaison du dernier bloc d'une ligne, ligne d'indice vide, condition d'arrêt du comptage, contrôle des dimensions dans `solve`.
 
 ## 7. Mesures
 
@@ -161,4 +176,6 @@ Cette spécification fixe quatre points que la feuille de route ne tranche pas :
 1. **Un nœud est une grille candidate examinée** : `max_nodes` et `nodes` en dépendent.
 2. **`LIMIT_REACHED` pendant un comptage** conserve dans la grille la première solution trouvée, si elle existe. `solutions_found` est alors une borne inférieure. Le contrat d'ARCHITECTURE §6 ne garantit une grille complète que pour `SOLVED` : c'est une garantie en plus.
 3. **`NG_BRUTE_MAX_CELLS` est une constante de compilation** (25), et non une option à l'exécution.
-4. **Critère de sortie de M4 sur le comptage** : trois des cinq puzzles de `multi` dépassent 25 cases (`letters_ng_n2` 105, `smiley_n9` 100, `stripes_n6` 96). S0 ne peut donc compter que `checker_n2` et `diagonal_n2`. Proposition : le critère porte sur les puzzles de `multi` d'au plus 25 cases, et #11 ajoute au corpus deux ou trois puzzles à solutions multiples de cette taille, avec leur nombre de solutions dans le nom, comme les autres.
+4. **Critère de sortie de M4 sur le comptage** : trois des cinq puzzles de `multi` dépassent 25 cases (`letters_ng_n2` 105, `smiley_n9` 100, `stripes_n6` 96). S0 ne peut donc compter que `checker_n2` et `diagonal_n2`. Proposition : le critère porte sur les puzzles de `multi` d'au plus 25 cases, et #11 ajoute au corpus deux ou trois puzzles à solutions multiples de cette taille, avec leur nombre de solutions dans le nom, comme les autres. Ce nombre est établi indépendamment de S0, par la même énumération indépendante que le reste du corpus (`tests/data/README.md`), puis revérifié par S0.
+
+Une fois ces décisions prises, le texte de M4 dans la feuille de route sera aligné : énumération des `2^k` cases inconnues plutôt que `2^(largeur×hauteur)`, et `NG_BRUTE_MAX_CELLS` constante (25) plutôt que « 25 par défaut ».
