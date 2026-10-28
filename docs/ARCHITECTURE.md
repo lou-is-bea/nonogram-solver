@@ -66,6 +66,9 @@ nonogram-solver/
 │   ├── verify/             # verify.c
 │   ├── solvers/
 │   │   ├── registry.c      # tableau statique des solvers
+│   │   ├── solve.c         # ng_solve, options par défaut, horloge par défaut
+│   │   ├── deadline.c      # budget de temps max_time_ms, partagé par les solvers
+│   │   ├── internal/       # en-têtes ngi_* du module (deadline.h, registry.h)
 │   │   ├── common/         # utilitaires partagés entre solvers (pile explicite, trail, file de lignes)
 │   │   ├── s0_brute/
 │   │   ├── s1_backtrack/
@@ -296,13 +299,21 @@ enum ng_solve_result : uint8_t {
 };
 typedef enum ng_solve_result ng_solve_result;
 
+typedef struct ng_clock {          /* injectable, comme l'allocateur */
+    uint64_t (*now_ns)(void *ctx);
+    void      *ctx;
+} ng_clock;
+const ng_clock *ng_clock_default(void);   /* timespec_get(TIME_UTC) */
+
 typedef struct ng_solve_options {
-    ng_counter max_nodes;          /* 0 : illimité */
-    uint64_t   max_time_ms;        /* 0 : illimité */
-    size_t     max_memory_bytes;   /* 0 : illimité */
-    uint32_t   max_solutions;      /* 1 : arrêt à la première ; >1 : comptage */
-    uint64_t   seed;
+    ng_counter      max_nodes;          /* 0 : illimité */
+    uint64_t        max_time_ms;        /* budget de solve, contrôlé par le solver ; 0 : illimité */
+    size_t          max_memory_bytes;   /* 0 : illimité */
+    uint32_t        max_solutions;      /* 1 : arrêt à la première ; >1 : comptage ; 0 refusé */
+    uint64_t        seed;
+    const ng_clock *clock;              /* nullptr : ng_clock_default() */
 } ng_solve_options;
+ng_solve_options ng_solve_options_default(void);
 
 typedef struct ng_solve_stats {
     ng_counter nodes;              /* nœuds de recherche */
@@ -325,10 +336,11 @@ const ng_solver_vtable *ng_solver_find(const char *name);
 size_t                  ng_solver_count(void);
 const ng_solver_vtable *ng_solver_at(size_t index);
 
-/* Fonction de commodité : calcule la taille, alloue l'espace de travail, init, solve, libère. */
+/* Fonction de commodité : calcule la taille, alloue l'espace de travail, init, solve, libère.
+ * options nullptr : options par défaut. outcome n'est écrit qu'en cas de NG_OK. */
+typedef struct ng_solve_outcome { ng_solve_result result; ng_solve_stats stats; } ng_solve_outcome;
 ng_status ng_solve(const ng_allocator *a, const ng_solver_vtable *s, const ng_puzzle *p,
-                   const ng_solve_options *o, ng_grid *inout,
-                   ng_solve_stats *stats, ng_solve_result *res);
+                   const ng_solve_options *o, ng_grid *inout, ng_solve_outcome *outcome);
 ```
 
 **Contrat d'un solver :**
@@ -340,6 +352,8 @@ ng_status ng_solve(const ng_allocator *a, const ng_solver_vtable *s, const ng_pu
 5. Le solver accède à la grille **par lignes** (`ng_grid_load_line` / `ng_grid_store_line`) ou par cases, jamais par un pointeur sur le stockage.
 6. La recherche n'utilise **pas de récursion** : elle s'appuie sur une pile explicite dans l'espace de travail. Sa profondeur peut atteindre le nombre de cases, et la pile d'un thread est limitée (8 Mo par défaut sous Linux, souvent moins pour les threads de travail).
 7. Tout est déterministe pour une graine donnée.
+8. `solve` remplit `nodes`, `line_solves` et `solutions_found` ; `ng_solve` remet les statistiques à zéro avant l'appel et fournit `elapsed_ns` (durée de `init` + `solve`) et `workspace_bytes`. Le temps vient de l'horloge des options : aucun état global, et des tests qui pilotent le temps. Les solvers contrôlent `max_time_ms` avec l'aide interne `ngi_deadline` (`src/solvers/internal/deadline.h`).
+9. `ng_solve` refuse un espace de travail plus grand que `max_memory_bytes` même si le solver l'accepte, et renvoie `NG_ERR_INTERNAL` si le solver produit un résultat hors de l'énumération.
 
 Ajouter un solver suit la procédure de [agents/PLAYBOOKS.md](agents/PLAYBOOKS.md#p1--ajouter-un-solver).
 
