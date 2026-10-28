@@ -24,7 +24,7 @@
 | [FILE_FORMATS.md](FILE_FORMATS.md) | Formats d'entrée et de sortie | oui |
 | [GLOSSARY.md](GLOSSARY.md) | Vocabulaire | non |
 | [adr/](adr/README.md) | Décisions d'architecture | oui (une fois acceptées) |
-| [solvers/](solvers/TEMPLATE.md) | Une spécification par solver | oui |
+| [solvers/](solvers/TEMPLATE.md) | Une spécification par solver ([S0 : force brute](solvers/s0_brute.md)) | oui |
 | [agents/PLAYBOOKS.md](agents/PLAYBOOKS.md) | Procédures pas à pas pour les agents | oui |
 | [agents/REVIEW.md](agents/REVIEW.md) | Politique de revue indépendante des PR | oui |
 | [../.github/pull_request_template.md](../.github/pull_request_template.md) | Gabarit de PR | oui |

@@ -10,7 +10,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
 | M2 | Affichage | — | terminé |
 | M3 | Vérificateur | 0.1.0 | terminé |
-| M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |
+| M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | en cours |
 | M5 | S1 : backtracking par placements de lignes | 0.3.0 | à faire |
 | M6 | S2 : propagation par lignes | 0.4.0 | à faire |
 | M7 | S3 : ligne exacte (programmation dynamique), propagation et recherche | 0.5.0 | à faire |
