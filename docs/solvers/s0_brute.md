@@ -98,7 +98,7 @@ Avec `ng_dim` sur 32 bits, le produit `l × h` tient toujours sur 64 bits : `ckd
 - **Statistiques** : `solve` écrit `nodes` (candidates examinées), `solutions_found` et `line_solves = 0`. `elapsed_ns` et `workspace_bytes` sont remplis par `ng_solve` (#10).
 - **Erreurs** (le solver peut être appelé directement par sa vtable, sans passer par `ng_solve`) :
   - `workspace_size` : `NG_ERR_INVALID_ARGUMENT` pour un puzzle, des options ou un `out` nuls, ou `max_solutions = 0` ; `NG_ERR_LIMIT` selon le §4.
-  - `init` : `NG_ERR_INVALID_ARGUMENT` pour un puzzle ou des options nuls, `max_solutions = 0`, un espace de travail nul, désaligné ou plus petit que `workspace_size` pour ce puzzle et ces options. Il ne lit ni n'écrit rien au-delà de `ws_size`.
+  - `init` : `NG_ERR_INVALID_ARGUMENT` pour un puzzle ou des options nuls, `max_solutions = 0`, un espace de travail nul, désaligné ou plus petit que `workspace_size` pour ce puzzle et ces options ; `NG_ERR_LIMIT` pour un puzzle de plus de `NG_BRUTE_MAX_CELLS` cases, comme `workspace_size`. Il ne lit ni n'écrit rien au-delà de `ws_size`. Quand l'espace de travail est assez grand pour contenir l'état, `init` efface d'abord la marque : un `init` qui échoue laisse donc un espace de travail que `solve` refuse, même s'il avait été préparé par un appel précédent.
   - `solve` : `NG_ERR_INVALID_ARGUMENT` pour un argument nul, un espace de travail que `init` n'a pas préparé (l'état porte une marque posée par `init`), ou une grille dont les dimensions diffèrent de celles du puzzle ; ces contrôles précèdent toute écriture, donc la grille, les statistiques et le résultat restent inchangés. Une grille de mauvaise taille ne peut donc pas faire déborder `candidate[]`.
 - **Résultats possibles** :
 
@@ -111,10 +111,10 @@ Avec `ng_dim` sur 32 bits, le produit `l × h` tient toujours sur 64 bits : `ckd
 
 ## 6. Plan de test
 
-**Budget de temps.** Une énumération de 25 cases inconnues examine jusqu'à `3,4 × 10⁷` candidates : environ 9 s sous Valgrind (G7) d'après la mesure de la revue de la spécification, au-delà du `.timeout` de 10 s des tests de solver (TESTING §4.1). Les tests sont donc répartis en deux groupes :
+**Budget de temps.** Une énumération de 25 cases inconnues examine jusqu'à `3,4 × 10⁷` candidates. La revue de la spécification a mesuré environ 9 s sous Valgrind (G7, `-O0`), 0,1 s en `-O2`, 0,7 s sous ASan et 1,5 s sous UBSan. Le `.timeout` de 10 s (TESTING §4.1) vaut pour un test Criterion entier, pas pour une résolution. Seul Valgrind est donc hors budget, et les tests se répartissent ainsi :
 
-- **tests courants** (labels `unit` et `property`, donc G3 à G7, sanitizers et Valgrind compris) : au plus **16 cases inconnues** (`2^16` candidates) par résolution, avec le `.timeout` de 10 s ;
-- **test exhaustif du corpus** (label `exhaustive`, Release seulement, ajouté à G3 par #11, sans sanitizer ni Valgrind, `.timeout` de 120 s) : résolution de tout le corpus `tiny` depuis une grille vide. C'est le critère de sortie de M4. La justesse mémoire du code exercé est déjà couverte par les tests courants, qui passent par les mêmes chemins sur de plus petites grilles.
+- **tests courants** (`tests/unit/`, `tests/property/`, donc G3 à G8, Valgrind compris) : au plus **2²⁰ candidates par test Criterion**, toutes résolutions confondues, avec le nombre de cas par défaut. Chaque résolution compte donc au plus 16 cases inconnues, et les tests de propriétés utilisent des grilles d'au plus **12 cases** : même les 100 000 cas du G5 nocturne restent sous les 10 s en Release ;
+- **test exhaustif du corpus** (`tests/exhaustive/`, label `exhaustive`, `.timeout` de 120 s) : résolution de tout le corpus `tiny` depuis une grille vide. C'est le critère de sortie de M4. Son dossier le tient hors de G7, qui ne lance que les binaires de `tests/unit/` et `tests/property/`. G6 (sanitizers) et G8 (couverture) le lancent déjà, comme tout label autre que `massive`. #11 ajoute à G3 son exécution en `dev` et en `release`. Ce découpage change la chaîne de validation de TESTING.md : c'est la décision 5 du §10.
 
 **Cas.**
 
@@ -122,11 +122,12 @@ Avec `ng_dim` sur 32 bits, le produit `l × h` tient toujours sur 64 bits : `ckd
   - grille 1×1, vide puis pleine ;
   - ligne d'indice vide, ligne entièrement pleine, indices sans liberté de placement ;
   - grilles non carrées dans les deux sens, dont `1 × 16` et `16 × 1` ;
+  - la borne acceptée `N = 25`, sous sanitizers et Valgrind : un puzzle 5 × 5 du corpus avec 9 cases déjà connues (16 inconnues) ;
   - puzzle à solutions multiples (`checker_n2`, `diagonal_n2`) et puzzle insoluble (`crossed`).
 - [ ] Dimensions hors limite, refusées par `workspace_size` avec `NG_ERR_LIMIT` sans allocation de grille : `1 × 26`, `26 × 1`, `6 × 5`, `1 × 10⁶`, `10⁶ × 1` et `70 000 × 70 000` (produit au-delà de 2³²). `NG_DIM_MAX` n'est pas testable ici : `ng_puzzle_create` refuse déjà `NG_DIM_MAX + 1`, et un puzzle de `NG_DIM_MAX` lignes demanderait environ 16 Gio d'indices.
-- [ ] Erreurs du §5 : chaque argument nul, `max_solutions = 0`, espace de travail désaligné, trop petit d'un octet, non initialisé ; grille plus large, plus étroite, plus haute et plus basse que le puzzle (rien n'est écrit) ; espace de travail exactement à la taille de la formule (accepté).
+- [ ] Erreurs du §5 : chaque argument nul, `max_solutions = 0`, puzzle de 26 cases passé directement à `init` (`NG_ERR_LIMIT`), espace de travail désaligné ou trop petit d'un octet ; espace de travail jamais préparé, sous la forme d'un tampon mis à zéro pour que Valgrind ne signale pas une lecture non initialisée ; espace de travail préparé puis passé à un `init` qui échoue (refusé par `solve`) ; grille plus large, plus étroite, plus haute et plus basse que le puzzle (rien n'est écrit) ; espace de travail exactement à la taille de la formule (accepté).
 - [ ] Propriétés applicables :
-  - P-S1 sur des grilles aléatoires d'au plus **16 cases** ;
+  - P-S1 sur des grilles aléatoires d'au plus **12 cases** ;
   - P-S4 : cases connues en entrée, y compris contradictoires ;
   - P-S5 : déterminisme des nœuds et de la grille, sans limite de temps ;
   - P-S6 : allocateur compteur à 0 pendant `solve`.
@@ -171,11 +172,13 @@ Ces optimisations sont précisément celles qui rendent S1 et les suivants plus 
 
 ## 10. Décisions à approuver
 
-Cette spécification fixe quatre points que la feuille de route ne tranche pas :
+Cette spécification fixe cinq points que la feuille de route ne tranche pas :
 
 1. **Un nœud est une grille candidate examinée** : `max_nodes` et `nodes` en dépendent.
 2. **`LIMIT_REACHED` pendant un comptage** conserve dans la grille la première solution trouvée, si elle existe. `solutions_found` est alors une borne inférieure. Le contrat d'ARCHITECTURE §6 ne garantit une grille complète que pour `SOLVED` : c'est une garantie en plus.
 3. **`NG_BRUTE_MAX_CELLS` est une constante de compilation** (25), et non une option à l'exécution.
 4. **Critère de sortie de M4 sur le comptage** : trois des cinq puzzles de `multi` dépassent 25 cases (`letters_ng_n2` 105, `smiley_n9` 100, `stripes_n6` 96). S0 ne peut donc compter que `checker_n2` et `diagonal_n2`. Proposition : le critère porte sur les puzzles de `multi` d'au plus 25 cases, et #11 ajoute au corpus deux ou trois puzzles à solutions multiples de cette taille, avec leur nombre de solutions dans le nom, comme les autres. Ce nombre est établi indépendamment de S0, par la même énumération indépendante que le reste du corpus (`tests/data/README.md`), puis revérifié par S0.
+
+5. **Découpage des tests** (§6, « Budget de temps ») : un test exhaustif du corpus `tiny`, avec le label `exhaustive` et dans son propre dossier, hors de Valgrind mais sous sanitizers et couverture, que #11 ajoute à G3. Les tests courants sont plafonnés à 2²⁰ candidates par test. Ce découpage modifie la chaîne de validation de TESTING.md, que #11 mettra à jour.
 
 Une fois ces décisions prises, le texte de M4 dans la feuille de route sera aligné : énumération des `2^k` cases inconnues plutôt que `2^(largeur×hauteur)`, et `NG_BRUTE_MAX_CELLS` constante (25) plutôt que « 25 par défaut ».
