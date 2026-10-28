@@ -66,7 +66,7 @@
 | **CHANGEMENTS DEMANDÉS** | Au moins un constat bloquant ou majeur. |
 | **DÉCISION HUMAINE REQUISE** | La PR soulève une question qui n'appartient pas au relecteur : conflit avec un ADR ou une demande humaine, spécification ambiguë, arbitrage de priorités ([AGENTS.md §6](../../AGENTS.md#6-quand-sarrêter-et-demander)). |
 
-Une **décision humaine justifiée** peut orienter le verdict, jamais le remplacer. Après un verdict DÉCISION HUMAINE REQUISE, ou sur un constat que l'auteur conteste, le responsable du projet tranche dans la PR (directement, ou en session selon le §5.1) et motive sa décision. Il peut par exemple lever une question, choisir entre deux conceptions, ou accepter une dette signalée et en fixer la suite. Le relecteur rend alors un nouveau verdict qui tient compte de cette décision. La décision ne dispense d'aucune vérification du §3.2 et ne rend jamais acceptable une porte rouge, un test affaibli sans l'accord prévu par la règle d'or 2, ni un bug démontré.
+Une **décision humaine justifiée** peut orienter le verdict, jamais le remplacer. Après un verdict DÉCISION HUMAINE REQUISE, ou sur un constat que l'auteur conteste, le responsable du projet tranche dans la PR (directement, ou en session selon le §5.1) et motive sa décision. Il peut par exemple lever une question, choisir entre deux conceptions, ou accepter une dette signalée et en fixer la suite. Le relecteur rend alors un nouveau verdict qui tient compte de cette décision. La décision ne dispense d'aucune vérification du §3.2 et ne rend jamais acceptable un constat BLOQUANT (§3.4). Seul un accord humain prévu par une règle d'or elle-même, comme celui de la règle 2, peut lever le constat qui relève de cette règle.
 
 Quand une PR a un constat bloquant ou majeur et soulève aussi une question qui revient à un humain, le verdict est **CHANGEMENTS DEMANDÉS** et la question figure dans le rapport : les corrections viennent d'abord.
 
@@ -110,7 +110,7 @@ SHA relu : <sha> · Base : <branche> · Relecteur : <agent ou personne>
 - Le rapport est publié **en commentaire de revue sur la PR**. GitHub interdit d'approuver une PR avec le compte qui l'a ouverte : quand le relecteur utilise ce compte, le verdict figure dans le texte du commentaire et la revue est de type « commentaire ».
 - L'auteur répond à **chaque** constat bloquant, majeur ou question : corrigé (avec le commit), ou justifié (pourquoi le constat ne s'applique pas). Il ne marque pas lui-même un constat comme résolu.
 - Après des corrections, une nouvelle revue indépendante porte sur le nouveau SHA. Elle peut se limiter aux corrections et aux constats ouverts, sauf si les corrections sont étendues.
-- Pour une pile de PR, chaque PR est relue séparément ; une correction faite dans une PR antérieure impose de rebaser les suivantes, et leur revue porte alors sur le nouveau SHA.
+- Pour une pile de PR, chaque PR est relue séparément ; une correction faite dans une PR antérieure impose de rebaser les suivantes, et le §5.2 dit si leur verdict est reporté sur le nouveau SHA ou si une nouvelle revue est nécessaire.
 
 ### 5.1 Accord humain donné dans la session de travail
 
@@ -143,10 +143,10 @@ Un verdict et un accord humain portent sur un SHA précis. Comme pour l'option d
 Pour reporter un verdict ou un accord après un rebasage, l'auteur publie dans la PR, avant la fusion :
 
 1. l'ancien et le nouveau SHA ;
-2. la preuve que le contenu est inchangé : `git range-diff <ancienne base>..<ancien head> <nouvelle base>..<nouveau head>`, où chaque commit est marqué `=`, ou l'égalité des deux diffs propres ;
+2. la preuve que le contenu est inchangé : `git range-diff <ancienne base>..<ancien head> <nouvelle base>..<nouveau head>`, où chaque commit est marqué `=` ; ou, si la base n'a pas changé (force-push du même contenu), l'égalité des arbres, `git rev-parse <ancien head>^{tree}` et `git rev-parse <nouveau head>^{tree}` donnant le même résultat ;
 3. le résultat de la CI sur le nouveau SHA, qui doit être verte.
 
-Sans cette preuve, le rebasage compte comme un nouveau commit. Le relecteur suivant vérifie la preuve. Un report n'est jamais implicite.
+Sans cette preuve, le rebasage compte comme un nouveau commit. Avant la fusion, l'auteur s'assure que la preuve est publiée et complète, et le message de fusion y renvoie ; si une nouvelle revue a lieu, le relecteur la vérifie aussi. Un report n'est jamais implicite.
 
 ## 6. Interdits
 
