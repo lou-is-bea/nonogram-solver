@@ -1,15 +1,18 @@
 #include <criterion/criterion.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <time.h>
 
 #include "nonogram/solver.h"
 
 #include "ng_test_fixture.h"
-#include "solvers/internal/deadline.h"
+#include "solvers/common/deadline.h"
+#include "solvers/internal/clock.h"
 #include "solvers/internal/registry.h"
 
 TestSuite(solver_deadline, .init = ng_test_setup, .fini = ng_test_teardown);
 TestSuite(solver_registry_list, .init = ng_test_setup, .fini = ng_test_teardown);
+TestSuite(solver_clock, .init = ng_test_setup, .fini = ng_test_teardown);
 
 /* A clock whose reading the test sets directly. */
 static uint64_t manual_now(void *ctx)
@@ -124,4 +127,51 @@ Test(solver_registry_list, find_returns_the_first_entry_with_that_name)
     cr_assert_null(ngi_registry_find(two_entries, "seconds"));
     cr_assert_null(ngi_registry_find(two_entries, nullptr));
     cr_assert_null(ngi_registry_find(no_entry, "first"));
+}
+
+Test(solver_deadline, clock_without_reading_function_falls_back_to_the_default)
+{
+    const ng_clock broken = {.now_ns = nullptr, .ctx = nullptr};
+    ng_solve_options options = ng_solve_options_default();
+    options.clock = &broken;
+    options.max_time_ms = UINT64_C(3600000);
+    ngi_deadline deadline;
+
+    ngi_deadline_start(&deadline, &options);
+
+    cr_assert_eq(deadline.clock, ng_clock_default());
+    cr_assert_not(ngi_deadline_passed(&deadline));
+}
+
+/* --- solver_clock --------------------------------------------------------------------------- */
+
+Test(solver_clock, failed_reading_gives_zero)
+{
+    const struct timespec now = {.tv_sec = 10, .tv_nsec = 5};
+    cr_assert_eq(ngi_clock_ns_from_timespec(false, &now), 0u);
+}
+
+Test(solver_clock, time_before_the_epoch_gives_zero)
+{
+    const struct timespec before = {.tv_sec = -1, .tv_nsec = 0};
+    const struct timespec bad_nanoseconds = {.tv_sec = 1, .tv_nsec = -1};
+    cr_assert_eq(ngi_clock_ns_from_timespec(true, &before), 0u);
+    cr_assert_eq(ngi_clock_ns_from_timespec(true, &bad_nanoseconds), 0u);
+}
+
+Test(solver_clock, reading_is_converted_exactly)
+{
+    const struct timespec now = {.tv_sec = 1700000000, .tv_nsec = 123456789};
+    cr_assert_eq(ngi_clock_ns_from_timespec(true, &now), UINT64_C(1700000000123456789));
+}
+
+Test(solver_clock, largest_representable_reading_is_exact_and_beyond_saturates)
+{
+    /* UINT64_MAX = 18446744073 s + 709551615 ns. */
+    const struct timespec largest = {.tv_sec = 18446744073, .tv_nsec = 709551615};
+    const struct timespec one_more = {.tv_sec = 18446744073, .tv_nsec = 709551616};
+    const struct timespec next_second = {.tv_sec = 18446744074, .tv_nsec = 0};
+    cr_assert_eq(ngi_clock_ns_from_timespec(true, &largest), UINT64_MAX);
+    cr_assert_eq(ngi_clock_ns_from_timespec(true, &one_more), UINT64_MAX);
+    cr_assert_eq(ngi_clock_ns_from_timespec(true, &next_second), UINT64_MAX);
 }

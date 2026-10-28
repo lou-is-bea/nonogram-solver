@@ -32,10 +32,13 @@ typedef enum ng_solve_result ng_solve_result;
  * @brief Source of time for elapsed_ns and max_time_ms.
  *
  * Injectable like the allocator, so that tests can drive time and the library keeps no global
- * state. now_ns returns nanoseconds since an arbitrary origin and must never decrease.
+ * state. A clock should not go backwards; when it does, the library clamps the elapsed time
+ * to 0 instead of reporting negative time.
  */
 typedef struct ng_clock {
+    /** Nanoseconds since an arbitrary origin. Must not be nullptr. */
     uint64_t (*now_ns)(void *ctx);
+    /** Passed to now_ns; owned by whoever owns the clock. */
     void *ctx;
 } ng_clock;
 
@@ -79,8 +82,8 @@ typedef struct ng_solve_stats {
 
 /** @brief What ng_solve returns on success: the result and the statistics. */
 typedef struct ng_solve_outcome {
-    ng_solve_result result;
-    ng_solve_stats stats;
+    ng_solve_result result; /**< Outcome of the search. */
+    ng_solve_stats stats;   /**< Statistics of the solver and of ng_solve. */
 } ng_solve_outcome;
 
 /**
@@ -92,35 +95,56 @@ typedef struct ng_solve_outcome {
  * NG_SOLVE_SOLVED, accesses the grid by lines or cells only, uses no recursion and is
  * deterministic for a given seed. solve fills nodes, line_solves and solutions_found of
  * @p stats, which the caller zeroes first. The options passed to init, and the clock they
- * point to, stay valid until solve returns.
+ * point to, stay valid until solve returns. A solver may be called directly through this
+ * table, without ng_solve: it then validates its own arguments.
  */
 typedef struct ng_solver_vtable {
     const char *name;    /**< Registry name, e.g. "brute". */
     const char *summary; /**< One line, for list-solvers. */
     bool complete;       /**< Always finds a solution when one exists, without limits. */
+    /**
+     * Workspace size for @p puzzle and @p options, written to @p out.
+     * Returns NG_OK, NG_ERR_LIMIT (too large, or above max_memory_bytes), or
+     * NG_ERR_INVALID_ARGUMENT. Pure: no allocation, no side effect.
+     */
     ng_status (*workspace_size)(const ng_puzzle *puzzle, const ng_solve_options *options,
                                 size_t *out);
+    /**
+     * Prepare @p workspace (@p workspace_size bytes, aligned on alignof(max_align_t); nullptr
+     * when the size is 0) for @p puzzle. Everything is borrowed until solve returns.
+     * Returns NG_OK or an error (NG_ERR_INVALID_ARGUMENT for a workspace that does not fit).
+     */
     ng_status (*init)(void *workspace, size_t workspace_size, const ng_puzzle *puzzle,
                       const ng_solve_options *options);
+    /**
+     * Search from the cells of @p inout and write *@p result. Returns NG_OK, or an error,
+     * in which case *@p result is meaningless and @p inout may hold sure deductions.
+     */
     ng_status (*solve)(void *workspace, ng_grid *inout, ng_solve_stats *stats,
                        ng_solve_result *result);
 } ng_solver_vtable;
 
 /**
  * @brief Find a solver of the registry by name.
- * @param name Registry name; may be nullptr.
+ * @param name Registry name; may be nullptr. Borrowed.
  * @return The solver, or nullptr when @p name is nullptr or unknown.
+ * @ownership The returned table has static storage duration; never free it.
  * @complexity O(number of solvers), no allocation.
  */
 const ng_solver_vtable *ng_solver_find(const char *name);
 
-/** @brief Number of solvers in the registry. O(number of solvers), no allocation. */
+/**
+ * @brief Number of solvers in the registry.
+ * @return The number of solvers; ng_solver_at() accepts every index below it.
+ * @complexity O(number of solvers), no allocation.
+ */
 size_t ng_solver_count(void);
 
 /**
  * @brief Solver at a position of the registry, in a fixed order.
  * @param index Position, below ng_solver_count().
  * @return The solver, or nullptr when @p index is out of range.
+ * @ownership The returned table has static storage duration; never free it.
  * @complexity O(number of solvers), no allocation.
  */
 const ng_solver_vtable *ng_solver_at(size_t index);
@@ -138,10 +162,12 @@ const ng_solver_vtable *ng_solver_at(size_t index);
  * @param outcome   Receives the result and the statistics. Must not be nullptr. Written only
  *                  on NG_OK.
  * @return NG_OK (the outcome is in @p outcome); NG_ERR_INVALID_ARGUMENT for a nullptr
- *         argument, an incomplete vtable, mismatched dimensions or max_solutions = 0;
- *         NG_ERR_LIMIT when the workspace exceeds max_memory_bytes or is not representable;
- *         NG_ERR_OUT_OF_MEMORY when the allocator refuses; otherwise the error of the solver.
- *         On error, @p inout may hold deductions already made by solve.
+ *         argument, an incomplete vtable, a clock without now_ns, mismatched dimensions or
+ *         max_solutions = 0; NG_ERR_LIMIT when the workspace exceeds max_memory_bytes or is
+ *         not representable; NG_ERR_OUT_OF_MEMORY when the allocator refuses;
+ *         NG_ERR_INTERNAL when the solver breaks its contract (returns NG_OK without a
+ *         result of the enumeration); otherwise the error of the solver. On error,
+ *         @p inout may hold deductions already made by solve.
  * @ownership Every argument is borrowed. The workspace is freed before returning, on every
  *            path.
  * @complexity That of the solver, plus one allocation.

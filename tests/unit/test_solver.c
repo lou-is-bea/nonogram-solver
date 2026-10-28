@@ -30,6 +30,7 @@ typedef struct fake_solver {
     ng_status solve_status; /* returned by solve */
     ng_solve_result result; /* written by solve on NG_OK */
     ng_counter nodes;       /* written into the stats by solve */
+    bool skip_result;       /* solve returns NG_OK without writing the result */
     /* Observed by the fake functions. */
     void *seen_workspace;
     size_t seen_workspace_size;
@@ -78,7 +79,9 @@ static ng_status fake_solve(void *workspace, ng_grid *inout, ng_solve_stats *sta
     }
     stats->nodes = fake.nodes;
     stats->solutions_found = fake.result == NG_SOLVE_SOLVED ? 1u : 0u;
-    *result = fake.result;
+    if (!fake.skip_result) {
+        *result = fake.result;
+    }
     return NG_OK;
 }
 
@@ -104,6 +107,34 @@ static void fake_reset(void)
         .result = NG_SOLVE_SOLVED,
         .nodes = 7,
     };
+}
+
+/* --- An allocator that records the alignment it is asked for, over the test heap ---------- */
+
+typedef struct recording_allocator {
+    ng_allocator base;
+    size_t last_align;
+} recording_allocator;
+
+static void *recording_alloc(void *ctx, size_t size, size_t align)
+{
+    recording_allocator *recorder = ctx;
+    recorder->last_align = align;
+    const ng_allocator *heap = &ng_test_heap()->base;
+    return heap->alloc(heap->ctx, size, align);
+}
+
+static void recording_free(void *ctx, void *ptr, size_t size)
+{
+    (void)ctx;
+    const ng_allocator *heap = &ng_test_heap()->base;
+    heap->free(heap->ctx, ptr, size);
+}
+
+static void recording_init(recording_allocator *recorder)
+{
+    *recorder = (recording_allocator){
+        .base = {.alloc = recording_alloc, .free = recording_free, .ctx = recorder}};
 }
 
 /* --- A clock that returns scripted readings ------------------------------------------------ */
@@ -301,6 +332,21 @@ Test(solve_arguments, grid_of_other_dimensions_is_rejected)
     fixture_destroy(&f);
 }
 
+Test(solve_arguments, clock_without_reading_function_is_rejected)
+{
+    fixture f = fixture_create();
+    outputs out = outputs_untouched();
+    const ng_clock broken = {.now_ns = nullptr, .ctx = nullptr};
+    ng_solve_options options = ng_solve_options_default();
+    options.clock = &broken;
+
+    cr_assert_eq(solve_with(&f, &ng_test_heap()->base, &options, &out), NG_ERR_INVALID_ARGUMENT);
+
+    assert_untouched(&out);
+    cr_assert_eq(fake.init_calls, 0);
+    fixture_destroy(&f);
+}
+
 Test(solve_arguments, zero_max_solutions_is_rejected)
 {
     fixture f = fixture_create();
@@ -373,6 +419,19 @@ Test(solve_workspace, workspace_has_the_requested_size_and_maximal_alignment)
     cr_assert_eq(ng_test_heap()->peak_bytes >= 1000u, true);
     cr_assert_eq(ng_test_heap()->misuse_count, 0u);
     fixture_destroy(&f); /* the teardown fails the test if the workspace leaked */
+}
+
+Test(solve_workspace, workspace_is_requested_with_maximal_alignment)
+{
+    fixture f = fixture_create();
+    outputs out = outputs_untouched();
+    recording_allocator recorder;
+    recording_init(&recorder);
+
+    cr_assert_eq(solve_with(&f, &recorder.base, nullptr, &out), NG_OK);
+
+    cr_assert_eq(recorder.last_align, alignof(max_align_t));
+    fixture_destroy(&f);
 }
 
 Test(solve_workspace, empty_workspace_is_not_allocated)
@@ -491,17 +550,24 @@ Test(solve_outcome, options_are_passed_to_the_solver)
     fixture f = fixture_create();
     outputs out = outputs_untouched();
     ng_solve_options options = ng_solve_options_default();
+    static const uint64_t readings[] = {1};
+    script_clock script = {.readings = readings, .count = 1};
+    const ng_clock clock = {.now_ns = script_now, .ctx = &script};
     options.max_nodes = 11;
     options.max_time_ms = 22;
+    options.max_memory_bytes = 1000;
     options.max_solutions = 33;
     options.seed = 44;
+    options.clock = &clock;
 
     cr_assert_eq(solve_with(&f, &ng_test_heap()->base, &options, &out), NG_OK);
 
     cr_assert_eq(fake.seen_options.max_nodes, 11u);
     cr_assert_eq(fake.seen_options.max_time_ms, 22u);
+    cr_assert_eq(fake.seen_options.max_memory_bytes, 1000u);
     cr_assert_eq(fake.seen_options.max_solutions, 33u);
     cr_assert_eq(fake.seen_options.seed, 44u);
+    cr_assert_eq(fake.seen_options.clock, &clock);
     fixture_destroy(&f);
 }
 
@@ -548,6 +614,20 @@ Test(solve_outcome, result_outside_the_enumeration_is_an_internal_error)
     const uint8_t broken = (uint8_t)NG_SOLVE_LIMIT_REACHED + 1u;
     static_assert(sizeof fake.result == sizeof broken);
     memcpy(&fake.result, &broken, sizeof broken);
+
+    cr_assert_eq(solve_with(&f, &ng_test_heap()->base, nullptr, &out), NG_ERR_INTERNAL);
+
+    assert_untouched(&out);
+    cr_assert_eq(ng_test_heap()->live_bytes, live_before);
+    fixture_destroy(&f);
+}
+
+Test(solve_outcome, unwritten_result_is_an_internal_error)
+{
+    fixture f = fixture_create();
+    outputs out = outputs_untouched();
+    const size_t live_before = ng_test_heap()->live_bytes;
+    fake.skip_result = true;
 
     cr_assert_eq(solve_with(&f, &ng_test_heap()->base, nullptr, &out), NG_ERR_INTERNAL);
 

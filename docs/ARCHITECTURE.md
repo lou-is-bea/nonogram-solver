@@ -67,9 +67,8 @@ nonogram-solver/
 │   ├── solvers/
 │   │   ├── registry.c      # tableau statique des solvers
 │   │   ├── solve.c         # ng_solve, options par défaut, horloge par défaut
-│   │   ├── deadline.c      # budget de temps max_time_ms, partagé par les solvers
-│   │   ├── internal/       # en-têtes ngi_* du module (deadline.h, registry.h)
-│   │   ├── common/         # utilitaires partagés entre solvers (pile explicite, trail, file de lignes)
+│   │   ├── internal/       # en-têtes ngi_* propres au module (clock.h, registry.h)
+│   │   ├── common/         # utilitaires partagés entre solvers (deadline : budget max_time_ms ; puis pile explicite, trail, file de lignes)
 │   │   ├── s0_brute/
 │   │   ├── s1_backtrack/
 │   │   ├── s2_lineprop/
@@ -352,7 +351,7 @@ ng_status ng_solve(const ng_allocator *a, const ng_solver_vtable *s, const ng_pu
 5. Le solver accède à la grille **par lignes** (`ng_grid_load_line` / `ng_grid_store_line`) ou par cases, jamais par un pointeur sur le stockage.
 6. La recherche n'utilise **pas de récursion** : elle s'appuie sur une pile explicite dans l'espace de travail. Sa profondeur peut atteindre le nombre de cases, et la pile d'un thread est limitée (8 Mo par défaut sous Linux, souvent moins pour les threads de travail).
 7. Tout est déterministe pour une graine donnée.
-8. `solve` remplit `nodes`, `line_solves` et `solutions_found` ; `ng_solve` remet les statistiques à zéro avant l'appel et fournit `elapsed_ns` (durée de `init` + `solve`) et `workspace_bytes`. Le temps vient de l'horloge des options : aucun état global, et des tests qui pilotent le temps. Les solvers contrôlent `max_time_ms` avec l'aide interne `ngi_deadline` (`src/solvers/internal/deadline.h`).
+8. `solve` remplit `nodes`, `line_solves` et `solutions_found` ; `ng_solve` remet les statistiques à zéro avant l'appel et fournit `elapsed_ns` (durée de `init` + `solve`) et `workspace_bytes`. Le temps vient de l'horloge des options : aucun état global, et des tests qui pilotent le temps. Les solvers contrôlent `max_time_ms` avec l'aide interne `ngi_deadline` (`src/solvers/common/deadline.h`).
 9. `ng_solve` refuse un espace de travail plus grand que `max_memory_bytes` même si le solver l'accepte, et renvoie `NG_ERR_INTERNAL` si le solver produit un résultat hors de l'énumération.
 
 Ajouter un solver suit la procédure de [agents/PLAYBOOKS.md](agents/PLAYBOOKS.md#p1--ajouter-un-solver).

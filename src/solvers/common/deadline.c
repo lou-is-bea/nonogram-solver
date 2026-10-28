@@ -1,4 +1,4 @@
-#include "solvers/internal/deadline.h"
+#include "solvers/common/deadline.h"
 
 #include <stdckdint.h>
 #include <stdint.h>
@@ -7,7 +7,8 @@ static constexpr uint64_t ns_per_ms = 1000000u;
 
 void ngi_deadline_start(ngi_deadline *deadline, const ng_solve_options *options)
 {
-    deadline->clock = options->clock != nullptr ? options->clock : ng_clock_default();
+    const bool usable = options->clock != nullptr && options->clock->now_ns != nullptr;
+    deadline->clock = usable ? options->clock : ng_clock_default();
     deadline->end_ns = 0;
     deadline->active = false;
     if (options->max_time_ms == 0u) {

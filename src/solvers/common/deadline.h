@@ -5,8 +5,8 @@
  * A solver starts the deadline at the beginning of solve() and checks it from time to time;
  * each check reads the clock once. Nothing is allocated and no state is global.
  */
-#ifndef NG_SOLVERS_INTERNAL_DEADLINE_H
-#define NG_SOLVERS_INTERNAL_DEADLINE_H
+#ifndef NG_SOLVERS_COMMON_DEADLINE_H
+#define NG_SOLVERS_COMMON_DEADLINE_H
 
 #include <stdint.h>
 
@@ -22,6 +22,7 @@ typedef struct ngi_deadline {
  * @brief Start the budget of @p options now.
  *
  * Without a time limit, or when the end does not fit in 64 bits, the deadline never passes.
+ * A missing clock, or one without now_ns, means ng_clock_default().
  *
  * @param deadline Receives the deadline. Must not be nullptr.
  * @param options  Options of the solve. Must not be nullptr; the clock is borrowed.
@@ -35,4 +36,4 @@ void ngi_deadline_start(ngi_deadline *deadline, const ng_solve_options *options)
  */
 bool ngi_deadline_passed(const ngi_deadline *deadline);
 
-#endif /* NG_SOLVERS_INTERNAL_DEADLINE_H */
+#endif /* NG_SOLVERS_COMMON_DEADLINE_H */

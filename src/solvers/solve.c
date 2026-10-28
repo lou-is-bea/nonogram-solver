@@ -1,25 +1,38 @@
 #include <stdalign.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <time.h>
 
 #include "nonogram/solver.h"
 
+#include "solvers/internal/clock.h"
+
 static constexpr uint64_t ns_per_s = 1000000000u;
+
+/* Byte pattern of a result no solver wrote: outside the enumeration of ng_solve_result. */
+static constexpr unsigned char unwritten_result_byte = 0xFF;
+
+uint64_t ngi_clock_ns_from_timespec(bool valid, const struct timespec *now)
+{
+    if (!valid || now->tv_sec < 0 || now->tv_nsec < 0) {
+        return 0;
+    }
+    /* Saturate rather than wrap: 2^64 ns is about 584 years after the epoch. */
+    const uint64_t seconds = (uint64_t)now->tv_sec;
+    const uint64_t nanoseconds = (uint64_t)now->tv_nsec;
+    if (seconds > (UINT64_MAX - nanoseconds) / ns_per_s) {
+        return UINT64_MAX;
+    }
+    return seconds * ns_per_s + nanoseconds;
+}
 
 static uint64_t default_now_ns(void *ctx)
 {
     (void)ctx;
     struct timespec now = {0};
-    if (timespec_get(&now, TIME_UTC) != TIME_UTC || now.tv_sec < 0) {
-        return 0;
-    }
-    /* Saturate rather than wrap: 2^64 ns is about 584 years after the epoch. */
-    const uint64_t seconds = (uint64_t)now.tv_sec;
-    if (seconds > (UINT64_MAX - (uint64_t)now.tv_nsec) / ns_per_s) {
-        return UINT64_MAX;
-    }
-    return seconds * ns_per_s + (uint64_t)now.tv_nsec;
+    const bool valid = timespec_get(&now, TIME_UTC) == TIME_UTC;
+    return ngi_clock_ns_from_timespec(valid, &now);
 }
 
 static const ng_clock default_clock = {.now_ns = default_now_ns, .ctx = nullptr};
@@ -63,6 +76,9 @@ static ng_status check_call(const solve_call *call, const ng_solve_outcome *outc
     }
     const ng_solver_vtable *solver = call->solver;
     if (solver->workspace_size == nullptr || solver->init == nullptr || solver->solve == nullptr) {
+        return NG_ERR_INVALID_ARGUMENT;
+    }
+    if (call->options->clock != nullptr && call->options->clock->now_ns == nullptr) {
         return NG_ERR_INVALID_ARGUMENT;
     }
     if (ng_grid_width(call->inout) != ng_puzzle_width(call->puzzle) ||
@@ -122,7 +138,10 @@ ng_status ng_solve(const ng_allocator *allocator, const ng_solver_vtable *solver
         }
     }
 
-    ng_solve_outcome local = {.result = NG_SOLVE_INCOMPLETE};
+    ng_solve_outcome local = {0};
+    /* An unwritten result stays outside the enumeration: a solver that returns NG_OK without
+     * writing it is caught below as a broken contract. */
+    memset(&local.result, unwritten_result_byte, sizeof local.result);
     status = run(&call, workspace, workspace_size, &local);
     if (workspace != nullptr) {
         allocator->free(allocator->ctx, workspace, workspace_size);
