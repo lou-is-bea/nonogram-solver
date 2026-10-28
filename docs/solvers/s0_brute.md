@@ -2,7 +2,7 @@
 
 - **Nom dans le registre** : `brute`
 - **Étape** : M4
-- **Statut** : Spécifié
+- **Statut** : Spécifié (décisions du §10 approuvées le 2026-10-28)
 - **Complet** : oui (voir [GLOSSARY.md](../GLOSSARY.md))
 
 ## 1. Principe
@@ -181,4 +181,4 @@ Cette spécification fixe cinq points que la feuille de route ne tranche pas :
 
 5. **Découpage des tests** (§6, « Budget de temps ») : un test exhaustif du corpus `tiny`, avec le label `exhaustive` et dans son propre dossier, hors de Valgrind mais sous sanitizers et couverture, que #11 ajoute à G3. Les tests courants sont plafonnés à 2²⁰ candidates par test. Ce découpage modifie la chaîne de validation de TESTING.md, que #11 mettra à jour.
 
-Une fois ces décisions prises, le texte de M4 dans la feuille de route sera aligné : énumération des `2^k` cases inconnues plutôt que `2^(largeur×hauteur)`, et `NG_BRUTE_MAX_CELLS` constante (25) plutôt que « 25 par défaut ».
+Les cinq décisions ont été approuvées par le responsable du projet le 2026-10-28 (trace dans la PR #16). Le texte de M4 dans la feuille de route est aligné sur elles.
