@@ -49,8 +49,8 @@ ticket ─▶ branche ─▶ tests + code ─▶ check.sh local ─▶ PR ─▶
 5. **Pull request.** Le gabarit [.github/pull_request_template.md](.github/pull_request_template.md) est obligatoire. Une PR correspond à un objectif et compte idéalement moins de 400 lignes modifiées, hors données de test.
 6. **CI.** Toutes les portes bloquantes doivent être vertes.
 7. **Revue indépendante.** Un relecteur qui n'est pas l'auteur (un agent IA démarrant sans contexte, ou une autre personne) applique [docs/agents/REVIEW.md](docs/agents/REVIEW.md) : il vérifie les affirmations de la PR, relance `./scripts/check.sh` en local, éprouve les tests par des mutations et rend un verdict argumenté. L'auteur répond à chaque constat bloquant, majeur ou question.
-8. **Revue humaine.** Au moins un humain approuve, au vu de la PR et de la revue indépendante. Une PR produite par un agent IA est toujours relue par un humain. L'accord peut être donné à l'agent dans la session de travail, qui le relaie dans la PR selon [docs/agents/REVIEW.md §5.1](docs/agents/REVIEW.md#51-accord-humain-donné-dans-la-session-de-travail).
-9. **Fusion.** On fusionne en *squash merge*. Le message final respecte les Conventional Commits. Quand l'approbation ne peut pas être enregistrée par GitHub (compte partagé avec l'agent), la fusion suit les conditions de [docs/agents/REVIEW.md §5.1](docs/agents/REVIEW.md#51-accord-humain-donné-dans-la-session-de-travail).
+8. **Revue humaine.** Au moins un responsable du projet approuve, au vu de la PR et de la revue indépendante. Une PR produite par un agent IA est toujours relue par un humain. L'accord peut être donné à l'agent dans la session de travail, qui le relaie dans la PR selon [docs/agents/REVIEW.md §5.1](docs/agents/REVIEW.md#51-accord-humain-donné-dans-la-session-de-travail).
+9. **Fusion.** On fusionne en *squash merge*. Le message final respecte les Conventional Commits. Quand l'approbation ne peut pas être enregistrée par GitHub (compte partagé avec l'agent), la fusion suit les conditions de [docs/agents/REVIEW.md §5.1](docs/agents/REVIEW.md#51-accord-humain-donné-dans-la-session-de-travail), dont la mise à jour de la branche avec `main` ([§5.2](docs/agents/REVIEW.md#52-nouveaux-commits-et-rebasages)).
 
 ## 4. Définition de « terminé »
 
@@ -62,8 +62,8 @@ Une modification est terminée quand **toutes** ces conditions sont réunies :
 - [ ] Il n'y a aucune régression de benchmark au-delà des seuils, ou la régression est justifiée et acceptée dans la PR.
 - [ ] L'API publique est documentée (Doxygen) et son impact est indiqué dans la PR.
 - [ ] La documentation concernée et le `CHANGELOG.md` sont à jour.
-- [ ] Une revue indépendante a rendu un verdict APPROUVÉE, ou un humain a décidé explicitement de passer outre.
-- [ ] Un humain a approuvé la PR.
+- [ ] Une revue indépendante a rendu un verdict APPROUVÉE sur le SHA fusionné (directement ou par report, [REVIEW.md §5.2](docs/agents/REVIEW.md#52-nouveaux-commits-et-rebasages)).
+- [ ] Un responsable du projet a approuvé la PR.
 
 ## 5. Messages de commit
 

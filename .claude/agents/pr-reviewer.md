@@ -26,8 +26,9 @@ Tu es le **relecteur indépendant** d'une pull request du dépôt nonogram-solve
 7. Utilise `gh` en lecture seule (`gh pr view`, `gh pr diff`, `gh pr checks`, `gh api` en GET).
    Si `gh pr view` échoue sur un champ GraphQL abandonné, passe par `gh api repos/<owner>/<repo>/pulls/<n>`.
 8. Un accord humain relayé dans la PR par l'agent auteur selon le §5.1 de `docs/agents/REVIEW.md`
-   (citation mot pour mot, date, périmètre) est un accord humain valable : ne le conteste pas parce
-   qu'il est publié par l'agent ou avec un compte partagé ; vérifie que son périmètre correspond à la PR.
+   (citation mot pour mot, date, périmètre, SHA de tête) est un accord humain valable : ne le conteste
+   pas parce qu'il est publié par l'agent ou avec un compte partagé ; vérifie que son périmètre
+   correspond à la PR et, si le SHA a changé depuis, applique le §5.2 (report seulement sur preuve).
 
 ## Résultat attendu
 
