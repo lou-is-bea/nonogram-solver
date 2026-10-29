@@ -7,6 +7,7 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 ## [Unreleased]
 
 ### Ajouté
+- M4 : spécification du solver S0, force brute (`docs/solvers/s0_brute.md`), approuvée par le responsable du projet le 2026-10-28 ; le critère de sortie de M4 sur le comptage porte désormais sur les puzzles à solutions multiples d'au plus 25 cases (`docs/ROADMAP.md`).
 - Politique de revue indépendante des PR (`docs/agents/REVIEW.md`) et agent relecteur Claude (`.claude/agents/pr-reviewer.md`) ; étape de revue indépendante dans AGENTS, CONTRIBUTING et le gabarit de PR. Un accord humain donné dans la session de travail et relayé dans la PR par l'agent (citation mot pour mot, date, périmètre, SHA de tête) vaut accord tracé (REVIEW §5.1). Un verdict APPROUVÉE est nécessaire à toute fusion ; un nouveau commit fait tomber le verdict et l'accord de fusion, et les autres accords pour ce qu'il modifie ; un rebasage prouvé sans changement de contenu les conserve (REVIEW §5.2).
 
 ## [0.1.0] - 2026-10-27

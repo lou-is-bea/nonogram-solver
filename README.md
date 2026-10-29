@@ -24,7 +24,7 @@ Le projet vise trois objectifs :
 | M1 | Modèle de données (puzzle, grille, indices) et lecture du format `.non` | terminé |
 | M2 | Affichage texte du problème et de la solution | terminé |
 | M3 | Vérification de la validité d'une solution | terminé (0.1.0) |
-| M4 | Solver S0 : force brute (référence pour les petites grilles) | à faire |
+| M4 | Solver S0 : force brute (référence pour les petites grilles) | en cours |
 | M5 | Solver S1 : backtracking par placements de lignes | à faire |
 | M6 | Solver S2 : propagation par lignes jusqu'à point fixe | à faire |
 | M7 | Solver S3 : solveur de ligne exact (programmation dynamique) avec propagation et recherche | à faire |

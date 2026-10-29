@@ -10,7 +10,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
 | M2 | Affichage | — | terminé |
 | M3 | Vérificateur | 0.1.0 | terminé |
-| M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | à faire |
+| M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | en cours |
 | M5 | S1 : backtracking par placements de lignes | 0.3.0 | à faire |
 | M6 | S2 : propagation par lignes | 0.4.0 | à faire |
 | M7 | S3 : ligne exacte (programmation dynamique), propagation et recherche | 0.5.0 | à faire |
@@ -122,7 +122,7 @@ Exemple de rendu attendu (ASCII) :
 
 **Objectif** : un premier solver volontairement naïf, qui sert d'oracle de référence sur les petites grilles, et l'outil de mesure qui servira à toutes les étapes suivantes.
 
-**Algorithme** : énumérer les `2^(largeur×hauteur)` grilles possibles, dans l'ordre binaire, et vérifier chacune. Le solver refuse les grilles de plus de `NG_BRUTE_MAX_CELLS` cases (25 par défaut) et renvoie alors `NG_ERR_LIMIT`.
+**Algorithme** : énumérer les `2^k` grilles possibles, où `k` est le nombre de cases inconnues de la grille d'entrée, dans l'ordre binaire, et vérifier chacune. Le solver refuse les grilles de plus de `NG_BRUTE_MAX_CELLS` cases (constante de compilation, 25) et renvoie alors `NG_ERR_LIMIT`. Détails dans la [spécification](solvers/s0_brute.md).
 
 **Livrables**
 
@@ -131,7 +131,7 @@ Exemple de rendu attendu (ASCII) :
 - CLI : `solve` et `list-solvers`.
 - `bench/` : le harnais (temps médian sur N exécutions, pic mémoire via l'allocateur compteur, sortie JSON), le script `bench_compare.py` et un premier fichier de référence.
 
-**Critères de sortie** : S0 résout tout le corpus `tiny` et le vérificateur valide chaque solution. Le comptage de solutions est correct sur les puzzles à solutions multiples du corpus.
+**Critères de sortie** : S0 résout tout le corpus `tiny` et le vérificateur valide chaque solution. Le comptage de solutions est correct sur les puzzles à solutions multiples du corpus d'au plus 25 cases, la limite de S0 (décision 4 de la [spécification](solvers/s0_brute.md#10-décisions-à-approuver), approuvée le 2026-10-28).
 
 ## M5 — S1 : backtracking par placements de lignes
 
