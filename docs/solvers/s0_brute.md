@@ -2,7 +2,7 @@
 
 - **Nom dans le registre** : `brute`
 - **Étape** : M4
-- **Statut** : Spécifié (décisions du §10 approuvées le 2026-10-28)
+- **Statut** : Implémenté (décisions du §10 approuvées le 2026-10-28 ; implémentation : #11)
 - **Complet** : oui (voir [GLOSSARY.md](../GLOSSARY.md))
 
 ## 1. Principe
@@ -147,12 +147,14 @@ Avec `ng_dim` sur 32 bits, le produit `l × h` tient toujours sur 64 bits : `ckd
 
 ## 7. Mesures
 
-À compléter à la livraison du solver (#11), avec le harnais de benchmark (#13).
+Mesures de la livraison (#11). Le harnais de benchmark (#13) les remplacera par des temps médians par puzzle et des pics mémoire mesurés par l'allocateur compteur.
 
-| Corpus | Résolus | Temps médian | Pic mémoire | Commit et machine |
+| Corpus | Résolus | Temps | Mémoire (espace de travail) | Commit et machine |
 |---|---|---|---|---|
-| tiny | | | | |
+| tiny (12 puzzles) | 12 sur 12, chacun unique et égal à sa solution | 0,93 s (médiane de 5) pour tout le test exhaustif en Release : `tiny`, les 5 puzzles de `multi` d'au plus 25 cases (comptage complet) et `crossed` | 106 à 468 octets selon le puzzle (formule du §4) | branche de #11, WSL2, 16 cœurs |
 | small | hors limite (plus de 25 cases) | — | — | — |
+
+Les propriétés P-S1, P-S4 et P-S5 avec 100 000 cas (`NG_PROPERTY_CASES`, volume du G5 nocturne) prennent 0,75 s dans le preset `dev`.
 
 ## 8. Passage à l'échelle et parallélisation
 

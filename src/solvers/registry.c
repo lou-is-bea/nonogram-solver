@@ -5,10 +5,13 @@
 
 #include "nonogram/solver.h"
 
+#include "solvers/s0_brute/brute.h"
+
 /* The solvers of the library, in the order of list-solvers, terminated by nullptr. Adding a
  * solver adds one line here (NF-11). The list is scanned rather than counted at compile time,
  * so that an empty registry stays valid C without always-false comparisons. */
 static const ng_solver_vtable *const registry[] = {
+    &ngi_solver_brute,
     nullptr,
 };
 

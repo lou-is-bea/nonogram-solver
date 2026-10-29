@@ -36,6 +36,8 @@ Le détail et les critères de sortie de chaque étape sont dans [docs/ROADMAP.m
 ## Démarrage rapide (cible)
 
 > Les commandes de build, de test et `check.sh` sont disponibles, ainsi que `nonogram show` et `nonogram verify`. `solve` et `list-solvers` arrivent avec M4.
+>
+> Solvers de la bibliothèque : `brute` (S0, force brute sur les cases inconnues, au plus 25 cases ; oracle de référence, [spécification](docs/solvers/s0_brute.md)).
 
 ```sh
 # Configurer, compiler et tester (profil développement)

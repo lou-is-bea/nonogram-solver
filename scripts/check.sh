@@ -217,11 +217,13 @@ gate_G2() {
 
 # --- G3..G5: test suites ------------------------------------------------------------------------
 gate_G3() {
-    say "G3 unit tests (dev, then release: internal assertions compiled out)"
+    say "G3 unit and exhaustive tests (dev, then release: internal assertions compiled out)"
     preset dev
     ctest --preset dev -L unit -j "$JOBS"
+    ctest --preset dev -L exhaustive -j "$JOBS"
     preset release
     ctest --preset release -L unit -j "$JOBS"
+    ctest --preset release -L exhaustive -j "$JOBS"
 }
 
 gate_G4() {

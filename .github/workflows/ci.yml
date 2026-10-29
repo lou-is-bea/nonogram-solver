@@ -83,6 +83,8 @@ jobs:
           cmake --build --preset ${{ matrix.preset }}
       - name: G3 unit tests
         run: ctest --preset ${{ matrix.preset }} -L unit
+      - name: G3 exhaustive tests
+        run: ctest --preset ${{ matrix.preset }} -L exhaustive
       - name: G4 integration tests
         run: ctest --preset ${{ matrix.preset }} -L integration
       - name: G5 property tests
