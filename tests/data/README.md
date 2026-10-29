@@ -7,6 +7,7 @@ Ce dossier contient le corpus de puzzles utilisé par les tests ([TESTING.md §7
 | Fichiers | Provenance | Licence |
 |---|---|---|
 | `puzzles/tiny/*`, `puzzles/small/*`, `puzzles/multi/*`, `puzzles/unsolvable/*`, `solutions/*` | Dessinés à la main pour ce projet (2026-10-25). Les indices sont dérivés du dessin, qui est la solution. | celle du projet (à définir, question Q1 de la [feuille de route](../../docs/ROADMAP.md#questions-ouvertes)) |
+| `puzzles/multi/permutation_n24.non`, `two_checkers_n8.non`, `steps_n6.non` | Dessinés à la main pour ce projet (2026-10-29), pour que des puzzles à solutions multiples tiennent dans la limite de 25 cases de S0 (décision 4 de [docs/solvers/s0_brute.md](../../docs/solvers/s0_brute.md#10-décisions-à-approuver)). Indices dérivés du dessin. | idem |
 | `puzzles/invalid/*`, `grids/*` | Écrits à la main pour ce projet (2026-10-25), un cas d'erreur par fichier. | idem |
 
 Aucun puzzle n'est importé d'une source externe.
@@ -37,5 +38,5 @@ La position est `ligne:colonne` (base 1) et le message est un fragment qui doit 
 ## Vérifications
 
 - `tests/unit/test_corpus.c` lit chaque puzzle et, pour `tiny` et `small`, vérifie que les indices recalculés depuis la solution sont exactement ceux du puzzle et que les dimensions respectent la catégorie. Pour `invalid`, il vérifie le statut, la position et le message attendus.
-- L'unicité (`tiny`, `small`), le nombre de solutions (`multi`) et l'absence de solution (`unsolvable`) ont été vérifiés à la création par une énumération indépendante (placements de lignes avec élagage par colonnes). Ils seront revérifiés par le solver S0 à partir de M4.
+- L'unicité (`tiny`, `small`), le nombre de solutions (`multi`) et l'absence de solution (`unsolvable`) ont été vérifiés à la création par une énumération indépendante (placements de lignes avec élagage par colonnes), y compris pour les trois puzzles `multi` ajoutés le 2026-10-29. Le solver S0 les revérifie dans `tests/exhaustive/test_exhaustive_brute.c` pour tout puzzle d'au plus 25 cases : unicité de chaque puzzle `tiny`, nombre exact de solutions des puzzles `multi`, absence de solution de `crossed`.
 - Le corpus sert aussi de corpus initial au fuzzer `fuzz_non_parser`.

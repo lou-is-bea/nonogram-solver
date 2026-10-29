@@ -19,6 +19,7 @@
 | Unitaire | `tests/unit/` | Criterion et CTest | une fonction ou un module isolé |
 | Propriétés et différentiel | `tests/property/` | Criterion et le générateur avec graine | des invariants sur des milliers d'entrées aléatoires, et l'accord entre solvers |
 | Intégration (CLI) | `tests/integration/` | CTest et un script de comparaison | l'exécutable de bout en bout, comparé à des sorties de référence |
+| Exhaustif | `tests/exhaustive/` | Criterion, label `exhaustive` | les énumérations complètes du corpus par un solver (S0 sur tout le corpus d'au plus 25 cases) : trop longues pour Valgrind, mais lancées sous sanitizers et couverture |
 | Grilles massives | `tests/massive/` | Criterion, label `massive` | le passage à l'échelle des types, des formats et des solvers |
 | Fuzzing | `tests/fuzz/` | libFuzzer (Clang) | la robustesse des analyseurs face à des entrées arbitraires |
 | Mémoire | toute la suite | ASan, UBSan, LSan, Valgrind | fuites, accès hors limites, comportement indéfini, débordements entiers |
@@ -33,11 +34,11 @@ Une porte **bloquante** qui échoue empêche la fusion.
 | G0 | Formatage | `clang-format --dry-run --Werror` | oui | M0 |
 | G1 | Compilation sans warning (GCC et Clang) | presets `dev` (GCC) et `dev-clang`, avec `-Werror` | oui | M0 |
 | G2 | Analyse statique | `clang-tidy`, `cppcheck --error-exitcode=1`, recherche des fonctions interdites | oui | M0 |
-| G3 | Tests unitaires | `ctest --preset dev -L unit`, puis `--preset release` (assertions internes désactivées par `NDEBUG`) | oui | M0 |
+| G3 | Tests unitaires et exhaustifs | `ctest --preset dev -L unit` et `-L exhaustive`, puis la même chose en `--preset release` (assertions internes désactivées par `NDEBUG`) | oui | M0 (`exhaustive` : M4) |
 | G4 | Tests d'intégration | `ctest --preset dev -L integration` | oui | M2 |
 | G5 | Propriétés et différentiel | `ctest --preset dev -L property` | oui | M1 (P-M1) |
 | G6 | Sanitizers | `ctest --preset asan` (ASan et LSan), `--preset ubsan` (UBSan, avec `-fsanitize=integer` sous Clang) | oui | M0 |
-| G7 | Valgrind memcheck | chaque exécutable de test (preset `dev`) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9), et chaque cas d'intégration de la CLI via `NG_CLI_WRAPPER` | oui | M1 |
+| G7 | Valgrind memcheck | chaque exécutable de `tests/unit/` et `tests/property/` (preset `dev` ; les tests `exhaustive` en sont exclus par leur dossier) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9), et chaque cas d'intégration de la CLI via `NG_CLI_WRAPPER` | oui | M1 |
 | G8 | Couverture | preset `coverage` et `gcovr`, avec les seuils du §6 | oui | M1 |
 | G9 | Fuzzing rapide | 60 s par cible (preset `fuzz`, durée réglable par `FUZZ_SECONDS`) | oui | M1 |
 | G10 | Benchmarks | `bench_compare.py` comparé à la référence de `main` | oui si plus de 10 %, sinon simple rapport | M4 |
@@ -56,7 +57,7 @@ Une porte **bloquante** qui échoue empêche la fusion.
 - Les tests sont indépendants. Criterion exécute chaque test dans un processus séparé, mais un test ne doit pas pour autant dépendre de cette isolation.
 - Chaque suite déclare la fixture commune `ng_test_fixture` (`.init` et `.fini`, définie dans `tests/support/`). Elle installe un allocateur compteur (`ng_test_heap()`) et **fait échouer le test s'il laisse une fuite** ou s'il viole le contrat de l'allocateur (taille nulle, alignement invalide, `free` avec une taille différente de celle de l'allocation). Criterion 2.4 ignorant les assertions levées dans `.fini`, la fixture écrit un marqueur `NG_FIXTURE_FAILURE` que CTest transforme en échec (§4.9).
 - On utilise les attributs Criterion à bon escient :
-  - `.timeout` sur tout test de solver (par défaut 10 s), pour qu'une boucle infinie apparaisse comme un échec ;
+  - `.timeout` sur tout test de solver (par défaut 10 s), pour qu'une boucle infinie apparaisse comme un échec. Un test courant de solver reste sous 2²⁰ candidates (ou l'équivalent pour les solvers suivants), pour tenir aussi sous Valgrind ; une énumération plus longue va dans `tests/exhaustive/` (label `exhaustive`, `.timeout` de 120 s) ;
   - `.signal = SIGABRT` pour vérifier qu'une assertion **interne** se déclenche en Debug, dans un bloc `#ifndef NDEBUG` (jamais pour une entrée de l'appelant, qui a un comportement documenté, testé dans tous les builds) ;
   - `ParameterizedTest` pour les tableaux de cas limites et l'itération sur les fichiers du corpus.
 - On exécute un sous-ensemble avec `./build/dev/tests/unit/test_grid --filter 'grid_create/*'`, ou avec `ctest --preset dev -R grid`.

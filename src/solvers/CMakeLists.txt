@@ -2,6 +2,7 @@
 add_library(ng_solvers STATIC
     common/deadline.c
     registry.c
+    s0_brute/brute.c
     solve.c)
 # Headers shared inside the module (prefix ngi) are reachable as "solvers/common/...",
 # "solvers/internal/..." and "core/internal/...".
