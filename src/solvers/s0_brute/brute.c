@@ -15,17 +15,18 @@
 
 #include "solvers/common/deadline.h"
 
-/* Largest grid S0 accepts (§4): 2^25 candidates at most. */
-static constexpr ng_cell_index max_cells = 25;
+/* Largest grid S0 accepts (§4): 2^25 candidates at most. The names of the constants and of
+ * the state are those of the specification. */
+static constexpr ng_cell_index NG_BRUTE_MAX_CELLS = 25;
 
 /* The clock is read every this many nodes only (§5). */
-static constexpr ng_counter time_check_interval = 4'096;
+static constexpr ng_counter NGI_BRUTE_TIME_CHECK = 4'096;
 
 /* Written by init, checked by solve: "S0BRUTE1". */
 static constexpr uint64_t prepared_marker = UINT64_C(0x5330425255544531);
 
 /* The workspace (§4): this state, then the zones it points to, by decreasing alignment. */
-typedef struct brute_state {
+typedef struct ngi_brute_state {
     uint64_t marker;
     ng_dim width;
     ng_dim height;
@@ -36,10 +37,10 @@ typedef struct brute_state {
     ng_dim *runs;                    /* the clues, line after line */
     ng_cell *candidate;              /* the grid being examined, row-major */
     ng_cell *first;                  /* the first solution found */
-} brute_state;
+} ngi_brute_state;
 
-/* sizeof(brute_state) rounded up so that the zone after it stays aligned. */
-static constexpr size_t state_bytes = (sizeof(brute_state) + alignof(ng_cell_index) - 1u) /
+/* sizeof(ngi_brute_state) rounded up so that the zone after it stays aligned. */
+static constexpr size_t state_bytes = (sizeof(ngi_brute_state) + alignof(ng_cell_index) - 1u) /
                                       alignof(ng_cell_index) * alignof(ng_cell_index);
 
 /* Number of cells, or NG_ERR_LIMIT above the limit of S0. */
@@ -47,7 +48,7 @@ static ng_status count_cells(const ng_puzzle *puzzle, ng_cell_index *cells)
 {
     if (ckd_mul(cells, (ng_cell_index)ng_puzzle_width(puzzle),
                 (ng_cell_index)ng_puzzle_height(puzzle)) ||
-        *cells > max_cells) {
+        *cells > NG_BRUTE_MAX_CELLS) {
         return NG_ERR_LIMIT;
     }
     return NG_OK;
@@ -101,11 +102,11 @@ static ng_status brute_workspace_size(const ng_puzzle *puzzle, const ng_solve_op
 
 static bool is_aligned(const void *workspace)
 {
-    return (uintptr_t)workspace % alignof(brute_state) == 0u;
+    return (uintptr_t)workspace % alignof(ngi_brute_state) == 0u;
 }
 
 /* Points the zones of @p state into the workspace that follows it and copies the clues. */
-static ng_status lay_out(brute_state *state, const ng_puzzle *puzzle)
+static ng_status lay_out(ngi_brute_state *state, const ng_puzzle *puzzle)
 {
     /* Each zone starts where the previous one ends (§4); the order keeps every zone aligned. */
     const ng_line_id lines = ng_puzzle_line_count(puzzle);
@@ -139,7 +140,7 @@ static ng_status brute_init(void *workspace, size_t workspace_size, const ng_puz
 {
     /* A failed init must leave a workspace that solve refuses, even a previously prepared one. */
     if (workspace != nullptr && is_aligned(workspace) && workspace_size >= state_bytes) {
-        ((brute_state *)workspace)->marker = 0;
+        ((ngi_brute_state *)workspace)->marker = 0;
     }
     if (workspace == nullptr || !is_aligned(workspace)) {
         return NG_ERR_INVALID_ARGUMENT;
@@ -152,8 +153,8 @@ static ng_status brute_init(void *workspace, size_t workspace_size, const ng_puz
     if (workspace_size < needed) {
         return NG_ERR_INVALID_ARGUMENT;
     }
-    brute_state *state = workspace;
-    *state = (brute_state){
+    ngi_brute_state *state = workspace;
+    *state = (ngi_brute_state){
         .width = ng_puzzle_width(puzzle),
         .height = ng_puzzle_height(puzzle),
         .options = options,
@@ -170,7 +171,7 @@ static ng_status brute_init(void *workspace, size_t workspace_size, const ng_puz
 }
 
 /* Whether line @p line of the candidate matches its clue, read in one pass. */
-static bool line_matches(const brute_state *state, ng_line_id line)
+static bool line_matches(const ngi_brute_state *state, ng_line_id line)
 {
     const bool is_row = line < state->height;
     const ng_dim length = is_row ? state->width : state->height;
@@ -186,6 +187,8 @@ static bool line_matches(const brute_state *state, ng_line_id line)
         if (filled) {
             ++run;
         } else if (run != 0u) {
+            /* found == expected_count comes first: besides rejecting an extra run, it keeps
+             * expected[found] inside the clue (memory safety, not only correctness). */
             if (found == expected_count || expected[found] != run) {
                 return false;
             }
@@ -197,7 +200,7 @@ static bool line_matches(const brute_state *state, ng_line_id line)
 }
 
 /* Rows first, then columns; stops at the first line that does not match (§2). */
-static bool candidate_matches(const brute_state *state)
+static bool candidate_matches(const ngi_brute_state *state)
 {
     const ng_line_id lines = state->height + state->width;
     for (ng_line_id line = 0; line < lines; ++line) {
@@ -209,7 +212,7 @@ static bool candidate_matches(const brute_state *state)
 }
 
 /* Loads the grid into the candidate, lists the unknown cells and sets them EMPTY. */
-static ng_status load(brute_state *state, const ng_grid *grid, ng_cell_index *unknown_count)
+static ng_status load(ngi_brute_state *state, const ng_grid *grid, ng_cell_index *unknown_count)
 {
     for (ng_dim row = 0; row < state->height; ++row) {
         const ng_status status =
@@ -231,7 +234,7 @@ static ng_status load(brute_state *state, const ng_grid *grid, ng_cell_index *un
 
 /* Next candidate in binary order, the last unknown cell being the least significant digit.
  * Returns false once every candidate has been examined. */
-static bool next_candidate(brute_state *state, ng_cell_index unknown_count)
+static bool next_candidate(ngi_brute_state *state, ng_cell_index unknown_count)
 {
     ng_cell_index digit = unknown_count;
     while (digit > 0u && state->candidate[state->unknown[digit - 1u]] == NG_CELL_FILLED) {
@@ -245,7 +248,7 @@ static bool next_candidate(brute_state *state, ng_cell_index unknown_count)
     return true;
 }
 
-static void keep_first(brute_state *state)
+static void keep_first(ngi_brute_state *state)
 {
     for (ng_cell_index cell = 0; cell < state->cells; ++cell) {
         state->first[cell] = state->candidate[cell];
@@ -259,7 +262,7 @@ typedef struct search_outcome {
 } search_outcome;
 
 /* The enumeration loop of §2. */
-static search_outcome search(brute_state *state, ng_cell_index unknown_count)
+static search_outcome search(ngi_brute_state *state, ng_cell_index unknown_count)
 {
     const ng_solve_options *options = state->options;
     ngi_deadline deadline;
@@ -270,7 +273,7 @@ static search_outcome search(brute_state *state, ng_cell_index unknown_count)
             out.result = NG_SOLVE_LIMIT_REACHED;
             return out;
         }
-        if (out.nodes % time_check_interval == 0u && ngi_deadline_passed(&deadline)) {
+        if (out.nodes % NGI_BRUTE_TIME_CHECK == 0u && ngi_deadline_passed(&deadline)) {
             out.result = NG_SOLVE_LIMIT_REACHED;
             return out;
         }
@@ -292,7 +295,7 @@ static search_outcome search(brute_state *state, ng_cell_index unknown_count)
     }
 }
 
-static ng_status store_first(const brute_state *state, ng_grid *grid)
+static ng_status store_first(const ngi_brute_state *state, ng_grid *grid)
 {
     for (ng_dim row = 0; row < state->height; ++row) {
         const ng_status status =
@@ -311,7 +314,7 @@ static ng_status brute_solve(void *workspace, ng_grid *inout, ng_solve_stats *st
         !is_aligned(workspace)) {
         return NG_ERR_INVALID_ARGUMENT;
     }
-    brute_state *state = workspace;
+    ngi_brute_state *state = workspace;
     if (state->marker != prepared_marker || ng_grid_width(inout) != state->width ||
         ng_grid_height(inout) != state->height) {
         return NG_ERR_INVALID_ARGUMENT;

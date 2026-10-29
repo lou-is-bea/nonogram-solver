@@ -83,7 +83,11 @@ static void assert_valid(const ng_puzzle *puzzle, const ng_grid *grid, const cha
 Test(exhaustive_brute, every_tiny_puzzle_is_solved_uniquely_and_validated)
 {
     size_t tiny_count = 0;
+    size_t tiny_listed = 0;
     for (size_t i = 0; i < sizeof ng_corpus_solved / sizeof ng_corpus_solved[0]; ++i) {
+        if (strstr(ng_corpus_solved[i].puzzle, "/puzzles/tiny/") != nullptr) {
+            ++tiny_listed;
+        }
         ng_puzzle *puzzle = read_puzzle(ng_corpus_solved[i].puzzle);
         if (cells_of(puzzle) > brute_max_cells) { /* small/: beyond S0 */
             ng_puzzle_destroy(puzzle);
@@ -111,6 +115,7 @@ Test(exhaustive_brute, every_tiny_puzzle_is_solved_uniquely_and_validated)
         ng_puzzle_destroy(puzzle);
     }
     cr_assert_gt(tiny_count, 0u, "the tiny corpus is empty");
+    cr_assert_eq(tiny_count, tiny_listed, "every tiny puzzle is solved, none skipped");
 }
 
 /* Expected number of solutions of puzzles/multi/<name>_n<count>.non. */
@@ -125,11 +130,30 @@ static uint32_t expected_count(const char *path)
     return (uint32_t)count;
 }
 
-/* Multi puzzles within the limit (exit criterion, decision 4 of the specification): exactly
- * the count of their name. The unsolvable ones: no solution. */
+/* The multi puzzles of at most 25 cells (decision 4 of the specification); each one must be
+ * checked, so that a skipped file fails the test. Larger ones are beyond S0. */
+static const char *const small_multi[] = {"checker_n2.non", "diagonal_n2.non",
+                                          "permutation_n24.non", "two_checkers_n8.non",
+                                          "steps_n6.non"};
+
+static void mark_checked(const char *path, bool *checked)
+{
+    for (size_t i = 0; i < sizeof small_multi / sizeof small_multi[0]; ++i) {
+        const size_t path_length = strlen(path);
+        const size_t name_length = strlen(small_multi[i]);
+        if (path_length > name_length &&
+            strcmp(path + path_length - name_length, small_multi[i]) == 0 &&
+            path[path_length - name_length - 1u] == '/') {
+            checked[i] = true;
+        }
+    }
+}
+
+/* Multi puzzles within the limit (exit criterion): exactly the count of their name. The
+ * unsolvable ones: no solution. */
 Test(exhaustive_brute, multi_and_unsolvable_puzzles_within_the_limit_have_their_count)
 {
-    size_t multi_count = 0;
+    bool checked[sizeof small_multi / sizeof small_multi[0]] = {};
     size_t unsolvable_count = 0;
     for (size_t i = 0; i < sizeof ng_corpus_other / sizeof ng_corpus_other[0]; ++i) {
         const char *path = ng_corpus_other[i];
@@ -150,7 +174,7 @@ Test(exhaustive_brute, multi_and_unsolvable_puzzles_within_the_limit_have_their_
 
         cr_assert_eq(outcome.stats.solutions_found, expected, "%s", path);
         if (multi) {
-            ++multi_count;
+            mark_checked(path, checked);
             cr_assert_eq(outcome.result, NG_SOLVE_SOLVED, "%s", path);
             assert_valid(puzzle, grid, path);
         } else {
@@ -160,6 +184,8 @@ Test(exhaustive_brute, multi_and_unsolvable_puzzles_within_the_limit_have_their_
         ng_grid_destroy(grid);
         ng_puzzle_destroy(puzzle);
     }
-    cr_assert_geq(multi_count, 2u, "multi puzzles within the limit");
+    for (size_t i = 0; i < sizeof small_multi / sizeof small_multi[0]; ++i) {
+        cr_assert(checked[i], "%s was not checked", small_multi[i]);
+    }
     cr_assert_geq(unsolvable_count, 1u);
 }

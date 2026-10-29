@@ -355,6 +355,26 @@ Test(brute_solve_arguments, null_arguments_are_refused_and_nothing_is_written)
     ng_puzzle_destroy(puzzle);
 }
 
+Test(brute_solve_arguments, misaligned_workspace_is_refused)
+{
+    ng_puzzle *puzzle = puzzle_of(p_rows, 5);
+    const ng_solve_options options = ng_solve_options_default();
+    workspace ws = workspace_alloc(workspace_bytes(puzzle, &options) + alignof(max_align_t));
+    ng_grid *grid = unknown_grid_for(puzzle);
+    ng_solve_stats stats = {};
+    ng_solve_result result = NG_SOLVE_INCOMPLETE;
+    cr_assert_eq(ngi_solver_brute.init(ws.data, ws.size, puzzle, &options), NG_OK);
+
+    cr_assert_eq(ngi_solver_brute.solve((unsigned char *)ws.data + 1, grid, &stats, &result),
+                 NG_ERR_INVALID_ARGUMENT);
+
+    assert_all_unknown(grid);
+    cr_assert_eq(result, NG_SOLVE_INCOMPLETE);
+    ng_grid_destroy(grid);
+    workspace_free(&ws);
+    ng_puzzle_destroy(puzzle);
+}
+
 Test(brute_solve_arguments, never_prepared_workspace_is_refused)
 {
     ng_puzzle *puzzle = puzzle_of(p_rows, 5);
