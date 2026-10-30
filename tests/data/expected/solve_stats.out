@@ -1,0 +1,14 @@
+solved
+    4 1 1
+  +-------+
+1 | # . . |
+1 | # . . |
+1 | # . . |
+3 | # # # |
+  +-------+
+solver: brute
+nodes: 2344
+line solves: 0
+solutions found: 1
+workspace: 284 bytes
+elapsed: <ns> ns

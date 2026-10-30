@@ -114,7 +114,12 @@ Ces formats sont destinés aux grilles massives : 2 bits par case pour `.ngg`, i
 
 ## 4. Sorties de la CLI
 
-- **Texte** (par défaut) : le rendu décrit dans [ROADMAP.md, M2](ROADMAP.md#m2--affichage).
+- **Texte** (par défaut) : le rendu décrit dans [ROADMAP.md, M2](ROADMAP.md#m2--affichage). Pour `nonogram solve`, dans l'ordre :
+  - une ligne de résultat : `solved`, `unsolvable`, `incomplete` ou `limit reached` ;
+  - avec `--count`, une ligne `solutions: <n>`, ou `solutions: at least <n>` quand le compte est une borne inférieure (plafond atteint, ou limite atteinte) ;
+  - sauf pour `unsolvable`, la grille (complète ou partielle, les cases inconnues en `?`) avec ses indices, ou le résumé au-delà de 200 × 200 ;
+  - avec `--stats`, les lignes `solver`, `nodes`, `line solves`, `solutions found`, `workspace` (octets) et `elapsed` (ns).
+- **`nonogram list-solvers`** : une ligne par solver du registre, dans son ordre : nom, `complete` ou `incomplete`, résumé, en colonnes séparées par deux espaces.
 - **JSON** (`--format=json`, pour `solve` et `bench`), avec un schéma versionné :
 
 ```json
@@ -128,5 +133,7 @@ Ces formats sont destinés aux grilles massives : 2 bits par case pour `.ngg`, i
   "grid": ["###..", "#.#..", "###..", "#....", "#...."]
 }
 ```
+
+Dans `nonogram-solve/1`, `result` vaut `SOLVED`, `UNSOLVABLE`, `INCOMPLETE` ou `LIMIT_REACHED`. `verified` vaut `true` seulement pour `SOLVED` : la CLI passe alors la grille par le vérificateur (F-32) et sort avec le code 4 si elle n'est pas valide. `grid` liste les rangées (`#` pleine, `.` vide, `?` inconnue) ; il vaut `null` pour `UNSOLVABLE`. `stats` est toujours présent, avec ou sans `--stats`.
 
 Toute modification incompatible du JSON incrémente le numéro de `schema`.

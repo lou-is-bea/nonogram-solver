@@ -12,8 +12,15 @@ static const char usage_text[] =
     "  show <puzzle.non> [--solution <grid.sol>] [--unicode] [--max-render <n>]\n"
     "      Print the puzzle with its clues, and a solution or partial grid if given.\n"
     "      Grids wider or taller than <n> cells (default 200) are summarised.\n"
+    "  solve <puzzle.non> [--solver <name>] [--count <n>] [--max-nodes <n>]\n"
+    "        [--max-time <ms>] [--max-memory <bytes>] [--output <grid.sol>] [--stats]\n"
+    "        [--format text|json]\n"
+    "      Solve the puzzle (default solver: the first complete one of list-solvers):\n"
+    "      solved (exit 0); unsolvable, incomplete or limit reached (exit 1).\n"
     "  verify <puzzle.non> <grid.sol>\n"
     "      Check the grid against the clues: valid (exit 0), incomplete or invalid (exit 1).\n"
+    "  list-solvers\n"
+    "      List the solvers: name, complete or not, summary.\n"
     "\n"
     "options:\n"
     "  --help       print this help\n"
@@ -59,6 +66,12 @@ int main(int argc, char *argv[])
     }
     if (strcmp(command, "verify") == 0) {
         return cli_verify(argc - 2, argv + 2, stdout, stderr);
+    }
+    if (strcmp(command, "solve") == 0) {
+        return cli_solve(argc - 2, argv + 2, stdout, stderr);
+    }
+    if (strcmp(command, "list-solvers") == 0) {
+        return cli_list_solvers(argc - 2, argv + 2, stdout, stderr);
     }
     cli_report_usage_error(stderr, "unknown command", command);
     return CLI_EXIT_USAGE;

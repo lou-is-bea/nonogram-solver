@@ -211,6 +211,44 @@ foreach(output_case IN ITEMS "small:tests/data/puzzles/tiny/dot.non"
         FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 endforeach()
 
+# solve and list-solvers report their write failures the same way (code 3).
+foreach(command IN ITEMS "solve|tests/data/puzzles/tiny/dot.non" "list-solvers|")
+    string(REPLACE "|" ";" parts "${command}")
+    list(GET parts 0 name)
+    list(GET parts 1 input)
+    string(REPLACE "-" "_" test_name "${name}")
+    add_test(NAME cli_${test_name}_output_failure
+        COMMAND sh -c [=[err=$($NG_CLI_WRAPPER "$1" $2 $3 2>&1 >/dev/full); code=$?; printf '%s\n' "$err"; [ "$code" -eq 3 ] && printf '%s\n' "$err" | grep -q 'cannot write the output']=] _ $<TARGET_FILE:nonogram> ${name} ${input}
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+    set_tests_properties(cli_${test_name}_output_failure PROPERTIES
+        LABELS integration
+        FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+endforeach()
+
+# solve --output writes the solution as a .sol file, byte for byte the reference one.
+add_test(NAME cli_solve_output_file
+    COMMAND sh -c [=[out="$4/cli_solve_output.sol"; rm -f "$out"; $NG_CLI_WRAPPER "$1" solve "$2" --output "$out" > /dev/null && cmp "$out" "$3"]=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/l_shape.non tests/data/solutions/l_shape.sol ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_tests_properties(cli_solve_output_file PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+
+# solve --output writes nothing when the puzzle is not solved.
+add_test(NAME cli_solve_output_unsolved
+    COMMAND sh -c [=[out="$3/cli_solve_output_unsolved.sol"; rm -f "$out"; $NG_CLI_WRAPPER "$1" solve "$2" --output "$out" > /dev/null; code=$?; [ "$code" -eq 1 ] && [ ! -e "$out" ]]=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/unsolvable/crossed.non ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_tests_properties(cli_solve_output_unsolved PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+
+# The JSON output escapes the puzzle path: a name with a quote and a backslash.
+add_test(NAME cli_solve_json_escapes_the_path
+    COMMAND sh -c [=[dir="$3/json escape"; mkdir -p "$dir"; in="$dir/q\"b\\.non"; cp "$2" "$in"; $NG_CLI_WRAPPER "$1" solve "$in" --format json | grep -F -q 'json escape/q\"b\\.non"']=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/dot.non ${CMAKE_CURRENT_BINARY_DIR}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_tests_properties(cli_solve_json_escapes_the_path PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+
 # verify reports its write failure the same way.
 add_test(NAME cli_verify_output_failure
     COMMAND sh -c [=[err=$($NG_CLI_WRAPPER "$1" verify "$2" "$3" 2>&1 >/dev/full); code=$?; printf '%s\n' "$err"; [ "$code" -eq 3 ] && printf '%s\n' "$err" | grep -q 'cannot write the output']=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/dot.non tests/data/solutions/dot.sol

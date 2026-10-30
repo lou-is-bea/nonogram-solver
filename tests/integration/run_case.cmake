@@ -16,6 +16,12 @@ execute_process(
     OUTPUT_VARIABLE actual_stdout
     ERROR_VARIABLE actual_stderr)
 
+# Elapsed times change from run to run: they are replaced by "<ns>" before comparison (and in
+# the reference files), in both the text (--stats) and the JSON outputs of nonogram solve.
+string(REGEX REPLACE "\"elapsed_ns\": [0-9]+" "\"elapsed_ns\": <ns>" actual_stdout
+    "${actual_stdout}")
+string(REGEX REPLACE "elapsed: [0-9]+ ns" "elapsed: <ns> ns" actual_stdout "${actual_stdout}")
+
 set(stdout_file ${EXPECTED_DIR}/${CASE}.out)
 set(stderr_file ${EXPECTED_DIR}/${CASE}.err)
 

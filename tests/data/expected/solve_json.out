@@ -1,0 +1,9 @@
+{
+  "schema": "nonogram-solve/1",
+  "puzzle": "tests/data/puzzles/tiny/l_shape.non",
+  "solver": "brute",
+  "result": "SOLVED",
+  "verified": true,
+  "stats": { "nodes": 2344, "line_solves": 0, "elapsed_ns": <ns>, "workspace_bytes": 284, "solutions_found": 1 },
+  "grid": ["#..", "#..", "#..", "###"]
+}
