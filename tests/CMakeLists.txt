@@ -128,6 +128,10 @@ string(APPEND ng_corpus_header "};\n\n#endif /* NG_TESTS_CORPUS_FILES_H */\n")
 file(CONFIGURE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/corpus_files.h
     CONTENT "${ng_corpus_header}")
 
+ng_add_unit_test(cli_solve LIBS nonogram_cli)
+# The test reads a corpus puzzle and writes a scratch file: absolute paths.
+target_compile_definitions(test_cli_solve PRIVATE
+    NG_SOURCE_DIR="${PROJECT_SOURCE_DIR}" NG_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}")
 ng_add_unit_test(corpus LIBS ng_io)
 target_include_directories(test_corpus PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
@@ -233,6 +237,15 @@ set_tests_properties(cli_solve_output_file PROPERTIES
     LABELS integration
     FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 
+# solve --output reports a write failure (code 3). The partial file is not removed: the path
+# may be a device, such as /dev/full here.
+add_test(NAME cli_solve_output_write_failure
+    COMMAND sh -c [=[err=$($NG_CLI_WRAPPER "$1" solve "$2" --output /dev/full 2>&1 >/dev/null); code=$?; printf '%s\n' "$err"; [ "$code" -eq 3 ] && printf '%s\n' "$err" | grep -q "cannot write '/dev/full'"]=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/l_shape.non
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+set_tests_properties(cli_solve_output_write_failure PROPERTIES
+    LABELS integration
+    FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
+
 # solve --output writes nothing when the puzzle is not solved.
 add_test(NAME cli_solve_output_unsolved
     COMMAND sh -c [=[out="$3/cli_solve_output_unsolved.sol"; rm -f "$out"; $NG_CLI_WRAPPER "$1" solve "$2" --output "$out" > /dev/null; code=$?; [ "$code" -eq 1 ] && [ ! -e "$out" ]]=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/unsolvable/crossed.non ${CMAKE_CURRENT_BINARY_DIR}
@@ -241,9 +254,9 @@ set_tests_properties(cli_solve_output_unsolved PROPERTIES
     LABELS integration
     FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 
-# The JSON output escapes the puzzle path: a name with a quote and a backslash.
+# The JSON output escapes the puzzle path: a name with a quote, a backslash and a tab.
 add_test(NAME cli_solve_json_escapes_the_path
-    COMMAND sh -c [=[dir="$3/json escape"; mkdir -p "$dir"; in="$dir/q\"b\\.non"; cp "$2" "$in"; $NG_CLI_WRAPPER "$1" solve "$in" --format json | grep -F -q 'json escape/q\"b\\.non"']=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/dot.non ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND sh -c [=[dir="$3/json escape"; mkdir -p "$dir"; in="$dir/q\"b\\$(printf '\t')t.non"; cp "$2" "$in"; $NG_CLI_WRAPPER "$1" solve "$in" --format json | grep -F -q 'json escape/q\"b\\\u0009t.non"']=] _ $<TARGET_FILE:nonogram> tests/data/puzzles/tiny/dot.non ${CMAKE_CURRENT_BINARY_DIR}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 set_tests_properties(cli_solve_json_escapes_the_path PROPERTIES
     LABELS integration

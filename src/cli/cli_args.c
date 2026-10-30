@@ -18,13 +18,16 @@ bool cli_parse_count(const char *text, uint64_t max, uint64_t *out)
             return false;
         }
         const uint64_t digit = (uint64_t)(*c - '0');
-        if (value > (max - digit) / decimal_base) {
+        if (digit > max || value > (max - digit) / decimal_base) {
             return false;
         }
         value = (value * decimal_base) + digit;
     }
+    if (value == 0u) {
+        return false;
+    }
     *out = value;
-    return value != 0u;
+    return true;
 }
 
 cli_option_match cli_match_option(int argc, char **argv, int *index, const char *name,

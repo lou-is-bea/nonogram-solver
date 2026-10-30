@@ -134,6 +134,6 @@ Ces formats sont destinés aux grilles massives : 2 bits par case pour `.ngg`, i
 }
 ```
 
-Dans `nonogram-solve/1`, `result` vaut `SOLVED`, `UNSOLVABLE`, `INCOMPLETE` ou `LIMIT_REACHED`. `verified` vaut `true` seulement pour `SOLVED` : la CLI passe alors la grille par le vérificateur (F-32) et sort avec le code 4 si elle n'est pas valide. `grid` liste les rangées (`#` pleine, `.` vide, `?` inconnue) ; il vaut `null` pour `UNSOLVABLE`. `stats` est toujours présent, avec ou sans `--stats`.
+Dans `nonogram-solve/1`, `result` vaut `SOLVED`, `UNSOLVABLE`, `INCOMPLETE` ou `LIMIT_REACHED`. `count_exact` vaut `true` quand `stats.solutions_found` est le nombre exact de solutions : la recherche a conclu (`SOLVED` ou `UNSOLVABLE`) avant d'atteindre le plafond `--count` (1 par défaut). Sinon, c'est une borne inférieure, comme « at least » dans la sortie texte. `verified` vaut `true` seulement pour `SOLVED` : la CLI passe alors la grille par le vérificateur (F-32) et sort avec le code 4 si elle n'est pas valide. `grid` liste les rangées (`#` pleine, `.` vide, `?` inconnue) ; il vaut `null` pour `UNSOLVABLE`. `stats` est toujours présent, avec ou sans `--stats`.
 
 Toute modification incompatible du JSON incrémente le numéro de `schema`.

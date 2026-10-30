@@ -148,3 +148,7 @@ ng_cli_case(list_solvers EXIT 0 ARGS list-solvers)
 ng_cli_case(list_solvers_argument EXIT 2 ARGS list-solvers brute)
 ng_cli_case(solve_limit_count_text EXIT 1
     ARGS solve ${M}/diagonal_n2.non --count 3 --max-nodes 8)
+# --max-time: letter_p (25 cells) needs about 1.6 x 10^7 candidates before its solution, far
+# more than fit in 1 ms on any machine; S0 checks the clock every 4096 nodes.
+ng_cli_case(solve_max_time EXIT 1 ARGS solve ${P}/tiny/letter_p.non --max-time 1)
+ng_cli_case(solve_unsolvable_stats EXIT 1 ARGS solve ${P}/unsolvable/crossed.non --stats)

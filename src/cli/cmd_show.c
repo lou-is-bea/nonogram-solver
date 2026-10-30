@@ -17,7 +17,6 @@
 
 /* nonogram show <puzzle.non> [--solution <grid.sol>] [--unicode] [--max-render <n>] */
 
-static constexpr ng_dim default_max_render = 200; /* ROADMAP.md, M2 */
 /* Decimal value in [1, NG_DIM_MAX]; false for anything else. */
 static bool parse_dim(const char *text, ng_dim *out)
 {
@@ -85,7 +84,7 @@ static int parse_arg(int argc, char **argv, int *index, show_args *args, FILE *e
 
 static int parse_args(int argc, char **argv, show_args *args, FILE *err)
 {
-    *args = (show_args){.max_render = default_max_render};
+    *args = (show_args){.max_render = CLI_DEFAULT_MAX_RENDER};
     /* argv[argc] is the only null entry; the check keeps the static analyser informed. */
     for (int i = 0; i < argc && argv[i] != nullptr; ++i) {
         const int code = parse_arg(argc, argv, &i, args, err);

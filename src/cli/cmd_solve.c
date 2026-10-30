@@ -25,8 +25,6 @@
  * a puzzle the solver cannot take within its limits (NG_ERR_LIMIT); 3 input or output; 4
  * internal. */
 
-static constexpr ng_dim max_render = 200; /* as nonogram show (ROADMAP.md, M2) */
-
 /* The options that take a value, in the order of the help text. */
 enum solve_option : uint8_t {
     OPT_SOLVER,
@@ -186,14 +184,19 @@ typedef struct solve_run {
     ng_solve_outcome outcome;
 } solve_run;
 
-/* The count is exact only when the enumeration ended before the cap (F-35). */
-static void print_solution_count(FILE *out, const solve_run *run)
+/* The count is exact only when the search was conclusive (SOLVED or UNSOLVABLE) and ended
+ * before the cap (F-35); after LIMIT_REACHED or INCOMPLETE it is a lower bound. */
+static bool count_is_exact(const solve_run *run)
 {
     const ng_solve_outcome *o = &run->outcome;
-    const bool lower_bound = o->result == NG_SOLVE_LIMIT_REACHED ||
-                             o->stats.solutions_found == run->args->options.max_solutions;
-    (void)fprintf(out, "solutions: %s%" PRIu32 "\n", lower_bound ? "at least " : "",
-                  o->stats.solutions_found);
+    const bool conclusive = o->result == NG_SOLVE_SOLVED || o->result == NG_SOLVE_UNSOLVABLE;
+    return conclusive && o->stats.solutions_found < run->args->options.max_solutions;
+}
+
+static void print_solution_count(FILE *out, const solve_run *run)
+{
+    (void)fprintf(out, "solutions: %s%" PRIu32 "\n", count_is_exact(run) ? "" : "at least ",
+                  run->outcome.stats.solutions_found);
 }
 
 static void print_stats_text(FILE *out, const solve_run *run)
@@ -215,8 +218,8 @@ static ng_status print_text(FILE *out, const solve_run *run)
     ng_status status = NG_OK;
     if (run->outcome.result != NG_SOLVE_UNSOLVABLE) {
         const ng_writer w = ng_writer_from_file(out);
-        const bool too_large =
-            ng_puzzle_width(run->puzzle) > max_render || ng_puzzle_height(run->puzzle) > max_render;
+        const bool too_large = ng_puzzle_width(run->puzzle) > CLI_DEFAULT_MAX_RENDER ||
+                               ng_puzzle_height(run->puzzle) > CLI_DEFAULT_MAX_RENDER;
         status = too_large ? ng_render_summary(run->puzzle, run->grid, &w)
                            : ng_render_text(run->puzzle, run->grid, nullptr, &w);
     }
@@ -280,9 +283,10 @@ static void print_json(FILE *out, const solve_run *run)
     print_json_string(out, run->args->puzzle_path);
     (void)fputs(",\n  \"solver\": ", out);
     print_json_string(out, run->solver_name);
-    (void)fprintf(out, ",\n  \"result\": \"%s\",\n  \"verified\": %s,\n",
+    (void)fprintf(out, ",\n  \"result\": \"%s\",\n  \"verified\": %s,\n  \"count_exact\": %s,\n",
                   result_json(run->outcome.result),
-                  run->outcome.result == NG_SOLVE_SOLVED ? "true" : "false");
+                  run->outcome.result == NG_SOLVE_SOLVED ? "true" : "false",
+                  count_is_exact(run) ? "true" : "false");
     (void)fprintf(out,
                   "  \"stats\": { \"nodes\": %" PRIu64 ", \"line_solves\": %" PRIu64
                   ", \"elapsed_ns\": %" PRIu64 ", \"workspace_bytes\": %zu"
@@ -398,12 +402,19 @@ static int run_solver(FILE *out, FILE *err, const solve_args *args, const ng_sol
 
 int cli_solve(int argc, char **argv, FILE *out, FILE *err)
 {
+    return cli_solve_with(argc, argv, out, err, nullptr);
+}
+
+int cli_solve_with(int argc, char **argv, FILE *out, FILE *err, const ng_solver_vtable *solver)
+{
     solve_args args;
     int code = parse_args(argc, argv, &args, err);
     if (code != CLI_EXIT_SUCCESS) {
         return code;
     }
-    const ng_solver_vtable *solver = choose_solver(args.values[OPT_SOLVER]);
+    if (solver == nullptr) {
+        solver = choose_solver(args.values[OPT_SOLVER]);
+    }
     if (solver == nullptr) {
         return cli_usage_error(err, "unknown solver", args.values[OPT_SOLVER]);
     }

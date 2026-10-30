@@ -10,6 +10,11 @@
 
 #include "nonogram/grid.h"
 #include "nonogram/puzzle.h"
+#include "nonogram/solver.h"
+#include "nonogram/types.h"
+
+/* Grids wider or taller than this are summarised, not drawn (ROADMAP.md, M2). */
+static constexpr ng_dim CLI_DEFAULT_MAX_RENDER = 200;
 
 /* Stable exit codes (REQUIREMENTS.md F-41). */
 enum cli_exit_code : int {
@@ -48,7 +53,7 @@ cli_option_match cli_match_option(int argc, char **argv, int *index, const char 
 
 /**
  * @brief Parse a decimal count in [1, @p max]: digits only, no sign, no space.
- * @return true with *out set; false for anything else (*out unchanged).
+ * @return true with *out set; false for anything else, including 0 (*out unchanged).
  */
 bool cli_parse_count(const char *text, uint64_t max, uint64_t *out);
 
@@ -78,6 +83,15 @@ int cli_verify(int argc, char **argv, FILE *out, FILE *err);
  * @return An exit code.
  */
 int cli_solve(int argc, char **argv, FILE *out, FILE *err);
+
+/**
+ * @brief Run "nonogram solve" with a given solver instead of the registry's choice.
+ *
+ * Used by cli_solve() with @p solver = nullptr (--solver or the default solver), and by the
+ * tests with a fake solver, to exercise what follows the solve (F-32 check, outputs).
+ * @return An exit code.
+ */
+int cli_solve_with(int argc, char **argv, FILE *out, FILE *err, const ng_solver_vtable *solver);
 
 /**
  * @brief Run "nonogram list-solvers".
