@@ -67,10 +67,11 @@ static int parse_arg(int argc, char **argv, int *index, bench_args *args, FILE *
     return CLI_EXIT_SUCCESS;
 }
 
-/* A count in [0, max]: "0", or what cli_parse_count accepts. */
+/* A count in [0, max]: zeros only ("0", "00"), or what cli_parse_count accepts, so that
+ * leading zeros are treated alike for every value. */
 static bool parse_number(const char *text, uint64_t max, uint64_t *out)
 {
-    if (strcmp(text, "0") == 0) {
+    if (*text != '\0' && strspn(text, "0") == strlen(text)) {
         *out = 0;
         return true;
     }

@@ -167,6 +167,9 @@ ng_cli_case(bench_options_between_puzzles EXIT 0
     ARGS bench --runs 2 ${P}/tiny/dot.non --warmup=0 --solver brute ${P}/tiny/column.non
         --seed=0 --format=text)
 ng_cli_case(bench_max_runs EXIT 0 ARGS bench ${P}/tiny/dot.non --runs 1000 --warmup 1000)
+# Leading zeros are accepted by every numeric option, zero included where it is allowed.
+ng_cli_case(bench_leading_zeros EXIT 0
+    ARGS bench ${P}/tiny/dot.non --runs 01 --warmup 00 --seed 007)
 # bench: usage errors (exit 2)
 ng_cli_case(bench_missing_puzzle EXIT 2 ARGS bench --runs 3)
 ng_cli_case(bench_unknown_solver EXIT 2 ARGS bench ${P}/tiny/dot.non --solver nope)
@@ -182,4 +185,6 @@ ng_cli_case(bench_invalid_format EXIT 2 ARGS bench ${P}/tiny/dot.non --format xm
 ng_cli_case(bench_too_large EXIT 2 ARGS bench ${P}/tiny/dot.non ${P}/small/duck.non)
 # bench: input errors (exit 3), reported before anything is printed
 ng_cli_case(bench_missing_file EXIT 3 ARGS bench ${P}/tiny/dot.non ${P}/tiny/nope.non)
+# The first puzzle fails: the command stops there, the next ones are not measured.
+ng_cli_case(bench_missing_first_file EXIT 3 ARGS bench ${P}/tiny/nope.non ${P}/tiny/dot.non)
 ng_cli_case(bench_malformed_file EXIT 3 ARGS bench ${P}/invalid/zero_width.non)

@@ -47,4 +47,4 @@ Une référence n'est mise à jour qu'en fusionnant une PR qui justifie le chang
 build/release/src/cli/nonogram bench bench/corpus/tiny/*.non --format json > bench/baselines/ryzen-9800x3d-wsl.json
 ```
 
-Deux mesures successives sur cette machine donnent les mêmes compteurs, avec des médianes qui varient jusqu'à environ 10 % sur les puzzles les plus courts (moins de 200 µs) et de quelques pour cent au-delà. Le seuil de régression de G10 devra en tenir compte.
+Deux mesures successives sur cette machine donnent les mêmes compteurs, avec des médianes qui varient jusqu'à environ 11 % sur les puzzles les plus courts (moins de 200 µs) et de quelques pour cent au-delà. Le seuil de régression de G10 devra en tenir compte.

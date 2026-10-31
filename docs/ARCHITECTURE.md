@@ -100,7 +100,7 @@ nonogram-solver/
 | `verify` | `ng_verify` | vérification d'une grille complète | `core` |
 | `solvers` | `ng_solvers` | registre et implémentations | `core` |
 | `cli` | `nonogram_cli` (bibliothèque statique testable) et l'exécutable `nonogram` (`main.c`) | analyse des arguments, orchestration, codes de sortie | tous |
-| `bench` | `ng_bench` | mesures de temps et de mémoire, au travers de l'API publique seulement ; utilisé par `nonogram bench` | `core`, `io`, `verify`, `solvers` |
+| `bench` | `ng_bench` | mesures de temps et de mémoire, au travers de l'API publique seulement ; utilisé par `nonogram bench` | `core`, `verify`, `solvers` |
 
 **Règles :**
 

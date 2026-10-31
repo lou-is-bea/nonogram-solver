@@ -100,17 +100,44 @@ static ng_status wrong_solve(void *workspace, ng_grid *inout, ng_solve_stats *st
     return NG_OK;
 }
 
-/* Visits one more node at each call. A test process runs one test, so the counter starts at 0
- * for the test that uses it. */
-static ng_counter drifting_nodes = 0;
+/* Which output of drifting_solver changes from one run to the next. A test process runs one
+ * test, so these statics start afresh for the test that sets them. */
+typedef enum drift : uint8_t {
+    DRIFT_NONE,
+    DRIFT_RESULT,
+    DRIFT_NODES,
+    DRIFT_LINE_SOLVES,
+    DRIFT_SOLUTIONS,
+    DRIFT_WORKSPACE,
+} drift;
 
+static drift drifting_output = DRIFT_NODES;
+static ng_counter drifting_solve_calls = 0;
+static size_t drifting_workspace_calls = 0;
+
+static ng_status drifting_workspace(const ng_puzzle *puzzle, const ng_solve_options *options,
+                                    size_t *out)
+{
+    (void)puzzle;
+    (void)options;
+    const size_t call = drifting_workspace_calls++;
+    *out = fake_workspace + (drifting_output == DRIFT_WORKSPACE ? call : 0u);
+    return NG_OK;
+}
+
+/* Every output stays the same from run to run, except drifting_output. */
 static ng_status drifting_solve(void *workspace, ng_grid *inout, ng_solve_stats *stats,
                                 ng_solve_result *result)
 {
     (void)workspace;
     (void)inout;
-    stats->nodes = ++drifting_nodes;
-    *result = NG_SOLVE_INCOMPLETE;
+    const ng_counter call = drifting_solve_calls++;
+    stats->nodes = 1u + (drifting_output == DRIFT_NODES ? call : 0u);
+    stats->line_solves = drifting_output == DRIFT_LINE_SOLVES ? call : 0u;
+    stats->solutions_found = drifting_output == DRIFT_SOLUTIONS ? (uint32_t)call : 0u;
+    const bool odd_call = call % 2u != 0u;
+    *result =
+        drifting_output == DRIFT_RESULT && odd_call ? NG_SOLVE_LIMIT_REACHED : NG_SOLVE_INCOMPLETE;
     return NG_OK;
 }
 
@@ -124,7 +151,14 @@ static ng_status drifting_solve(void *workspace, ng_grid *inout, ng_solve_stats 
 
 static const ng_solver_vtable giving_up_solver = FAKE_SOLVER(give_up);
 static const ng_solver_vtable wrong_solver = FAKE_SOLVER(wrong_solve);
-static const ng_solver_vtable drifting_solver = FAKE_SOLVER(drifting_solve);
+static const ng_solver_vtable drifting_solver = {
+    .name = "drifting",
+    .summary = "fake",
+    .complete = false,
+    .workspace_size = drifting_workspace,
+    .init = nothing_to_prepare,
+    .solve = drifting_solve,
+};
 
 /* --- Fake clock: run k lasts durations[k]; 1000 ns pass between two runs ----------------- */
 
@@ -299,7 +333,10 @@ Test(bench_measure, null_options_use_the_defaults)
     ng_puzzle_destroy(puzzle);
 }
 
-Test(bench_measure, a_null_clock_selects_the_monotonic_clock)
+/* Which clock is read is not observable from outside: ngi_bench_measure takes the clock of
+ * ngi_bench_options_default(), checked by default_options_follow_testing_4_8. This test only
+ * checks that a real clock is read. */
+Test(bench_measure, a_null_clock_still_measures_time)
 {
     ng_puzzle *puzzle = puzzle_of(l_rows, l_height);
     ngi_bench_options options = quick_options();
@@ -412,8 +449,10 @@ Test(bench_measure, invalid_solved_grid_is_an_internal_error)
     ng_puzzle_destroy(puzzle);
 }
 
-Test(bench_measure, runs_that_differ_are_an_internal_error)
+/* Measures drifting_solver with @p output changing between runs: the second run differs. */
+static void assert_drift_is_detected(drift output)
 {
+    drifting_output = output;
     ng_puzzle *puzzle = puzzle_of(l_rows, l_height);
     ngi_bench_result result = {};
 
@@ -422,7 +461,45 @@ Test(bench_measure, runs_that_differ_are_an_internal_error)
         NG_ERR_INTERNAL);
 
     cr_assert_eq(result.defect, NGI_BENCH_NOT_DETERMINISTIC);
-    cr_assert_eq(drifting_nodes, 2u, "detected at the second run");
+    cr_assert_eq(drifting_solve_calls, 2u, "detected at the second run");
+    ng_puzzle_destroy(puzzle);
+}
+
+Test(bench_measure, runs_that_differ_in_result_are_an_internal_error)
+{
+    assert_drift_is_detected(DRIFT_RESULT);
+}
+
+Test(bench_measure, runs_that_differ_in_nodes_are_an_internal_error)
+{
+    assert_drift_is_detected(DRIFT_NODES);
+}
+
+Test(bench_measure, runs_that_differ_in_line_solves_are_an_internal_error)
+{
+    assert_drift_is_detected(DRIFT_LINE_SOLVES);
+}
+
+Test(bench_measure, runs_that_differ_in_solutions_are_an_internal_error)
+{
+    assert_drift_is_detected(DRIFT_SOLUTIONS);
+}
+
+Test(bench_measure, runs_that_differ_in_workspace_are_an_internal_error)
+{
+    assert_drift_is_detected(DRIFT_WORKSPACE);
+}
+
+Test(bench_measure, drifting_solver_is_deterministic_when_nothing_drifts)
+{
+    /* Control for the five tests above: without a drift, the fake solver passes. */
+    drifting_output = DRIFT_NONE;
+    ng_puzzle *puzzle = puzzle_of(l_rows, l_height);
+    ngi_bench_result result = {};
+
+    cr_assert_eq(
+        ngi_bench_measure(&ng_test_heap()->base, &drifting_solver, puzzle, nullptr, &result),
+        NG_OK);
     ng_puzzle_destroy(puzzle);
 }
 

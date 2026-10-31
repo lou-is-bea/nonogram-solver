@@ -11,6 +11,8 @@
 
 static constexpr uint64_t ns_per_s = 1'000'000'000;
 
+/* Same conversion as ngi_clock_ns_from_timespec() of src/solvers/solve.c, which is internal
+ * to the solvers module: the harness uses the public API only (TESTING.md §4.8). */
 uint64_t ngi_bench_ns_from_timespec(bool valid, const struct timespec *now)
 {
     if (!valid || now->tv_sec < 0 || now->tv_nsec < 0) {
@@ -24,9 +26,8 @@ uint64_t ngi_bench_ns_from_timespec(bool valid, const struct timespec *now)
     return ns;
 }
 
-static uint64_t monotonic_now_ns(void *ctx)
+static uint64_t monotonic_now_ns([[maybe_unused]] void *ctx)
 {
-    (void)ctx;
     struct timespec now = {};
     const bool valid = clock_gettime(CLOCK_MONOTONIC, &now) == 0;
     return ngi_bench_ns_from_timespec(valid, &now);

@@ -170,7 +170,7 @@ ng_status ngi_bench_measure(const ng_allocator *allocator, const ng_solver_vtabl
     }
     ng_solve_options solve = o->solve;
     if (solve.clock == nullptr) {
-        solve.clock = ngi_bench_clock();
+        solve.clock = defaults.solve.clock; /* the clock of the defaults, tested there */
     }
     counting_allocator counter = {
         .base = {.alloc = counting_alloc, .free = counting_free, .ctx = nullptr},
