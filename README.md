@@ -68,7 +68,7 @@ nonogram list-solvers
 
 Les options à valeur s'écrivent `--option valeur` ou `--option=valeur` ; une valeur qui commence par `--` doit utiliser la seconde forme.
 
-Options de `solve` : `--solver <nom>`, `--count <n>` (compter jusqu'à `n` solutions ; « at least » quand le compte est une borne inférieure), `--max-nodes <n>`, `--max-time <ms>`, `--max-memory <octets>`, `--output <grille.sol>` (écrite seulement si le puzzle est résolu), `--stats` et `--format text|json` ([FILE_FORMATS.md §4](docs/FILE_FORMATS.md#4-sorties-de-la-cli)).
+Options de `solve` : `--solver <nom>`, `--count <n>` (compter jusqu'à `n` solutions ; « at least » quand le compte est une borne inférieure), `--max-nodes <n>`, `--max-time <ms>`, `--max-memory <octets>`, `--output <grille.sol>` (écrite seulement si le puzzle est résolu ; en cas d'échec d'écriture, code 3 et fichier non fiable), `--stats` et `--format text|json` ([FILE_FORMATS.md §4](docs/FILE_FORMATS.md#4-sorties-de-la-cli)).
 
 Codes de sortie de `nonogram` (exigence F-41) : `0` succès (pour `solve` : résolu), `1` puzzle insoluble, solution invalide ou incomplète (pour `solve` : insoluble, solver bloqué ou limite atteinte), `2` usage incorrect (pour `solve`, y compris un puzzle que le solver ne peut pas prendre dans ses limites : taille, `--max-memory`), `3` erreur d'entrée-sortie (fichier illisible ou mal formé, grille de mauvaise taille, sortie impossible à écrire), `4` erreur interne (y compris le manque de mémoire).
 

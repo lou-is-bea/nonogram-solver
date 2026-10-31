@@ -1,5 +1,6 @@
 #include <criterion/criterion.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -157,4 +158,45 @@ Test(cli_solve, incomplete_result_has_an_inexact_count_in_json)
     cr_assert_eq(r.code, CLI_EXIT_FAILURE);
     cr_assert_not_null(strstr(r.out, "\"result\": \"INCOMPLETE\""), "%s", r.out);
     cr_assert_not_null(strstr(r.out, "\"count_exact\": false"), "%s", r.out);
+}
+
+/* cli_parse_count, shared by solve and show: [1, max], digits only, *out untouched on failure. */
+TestSuite(cli_parse_count, .init = ng_test_setup, .fini = ng_test_teardown, .timeout = 10);
+
+static constexpr uint64_t untouched = 77;
+
+Test(cli_parse_count, values_within_the_range_are_accepted)
+{
+    uint64_t value = untouched;
+
+    cr_assert(cli_parse_count("1", UINT64_MAX, &value));
+    cr_assert_eq(value, 1u);
+    cr_assert(cli_parse_count("250", 250, &value));
+    cr_assert_eq(value, 250u);
+    cr_assert(cli_parse_count("0042", 100, &value));
+    cr_assert_eq(value, 42u);
+    cr_assert(cli_parse_count("18446744073709551615", UINT64_MAX, &value));
+    cr_assert_eq(value, UINT64_MAX);
+}
+
+Test(cli_parse_count, invalid_text_is_rejected_and_out_is_unchanged)
+{
+    static const char *const rejected[] = {"", "0", "000", "-1", "+1", " 1", "1 ", "1x", "1.5"};
+    for (size_t i = 0; i < sizeof rejected / sizeof rejected[0]; ++i) {
+        uint64_t value = untouched;
+
+        cr_assert_not(cli_parse_count(rejected[i], UINT64_MAX, &value), "'%s'", rejected[i]);
+        cr_assert_eq(value, untouched, "'%s'", rejected[i]);
+    }
+}
+
+Test(cli_parse_count, values_beyond_the_maximum_are_rejected_and_out_is_unchanged)
+{
+    uint64_t value = untouched;
+
+    cr_assert_not(cli_parse_count("251", 250, &value));
+    cr_assert_not(cli_parse_count("9", 8, &value));
+    cr_assert_not(cli_parse_count("18446744073709551616", UINT64_MAX, &value));
+    cr_assert_not(cli_parse_count("99999999999999999999999", UINT64_MAX, &value));
+    cr_assert_eq(value, untouched);
 }

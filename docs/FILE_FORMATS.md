@@ -116,7 +116,7 @@ Ces formats sont destinés aux grilles massives : 2 bits par case pour `.ngg`, i
 
 - **Texte** (par défaut) : le rendu décrit dans [ROADMAP.md, M2](ROADMAP.md#m2--affichage). Pour `nonogram solve`, dans l'ordre :
   - une ligne de résultat : `solved`, `unsolvable`, `incomplete` ou `limit reached` ;
-  - avec `--count`, une ligne `solutions: <n>`, ou `solutions: at least <n>` quand le compte est une borne inférieure (plafond atteint, ou limite atteinte) ;
+  - avec `--count`, une ligne `solutions: <n>`, ou `solutions: at least <n>` quand le compte est une borne inférieure (plafond `--count` atteint, recherche `incomplete`, ou limite atteinte) ;
   - sauf pour `unsolvable`, la grille (complète ou partielle, les cases inconnues en `?`) avec ses indices, ou le résumé au-delà de 200 × 200 ;
   - avec `--stats`, les lignes `solver`, `nodes`, `line solves`, `solutions found`, `workspace` (octets) et `elapsed` (ns).
 - **`nonogram list-solvers`** : une ligne par solver du registre, dans son ordre : nom, `complete` ou `incomplete`, résumé, en colonnes séparées par deux espaces.
@@ -129,11 +129,14 @@ Ces formats sont destinés aux grilles massives : 2 bits par case pour `.ngg`, i
   "solver": "dpsearch",
   "result": "SOLVED",
   "verified": true,
+  "count_exact": false,
   "stats": { "nodes": 42, "line_solves": 318, "elapsed_ns": 120400, "workspace_bytes": 18432, "solutions_found": 1 },
   "grid": ["###..", "#.#..", "###..", "#....", "#...."]
 }
 ```
 
 Dans `nonogram-solve/1`, `result` vaut `SOLVED`, `UNSOLVABLE`, `INCOMPLETE` ou `LIMIT_REACHED`. `count_exact` vaut `true` quand `stats.solutions_found` est le nombre exact de solutions : la recherche a conclu (`SOLVED` ou `UNSOLVABLE`) avant d'atteindre le plafond `--count` (1 par défaut). Sinon, c'est une borne inférieure, comme « at least » dans la sortie texte. `verified` vaut `true` seulement pour `SOLVED` : la CLI passe alors la grille par le vérificateur (F-32) et sort avec le code 4 si elle n'est pas valide. `grid` liste les rangées (`#` pleine, `.` vide, `?` inconnue) ; il vaut `null` pour `UNSOLVABLE`. `stats` est toujours présent, avec ou sans `--stats`.
+
+Avec `--output`, le fichier `.sol` n'est ouvert qu'une fois le puzzle résolu et la grille validée (F-32) : rien n'est créé ni écrasé sinon. Si l'écriture échoue en cours de route (disque plein, par exemple), la CLI sort avec le code 3 et laisse le fichier tel quel, éventuellement tronqué : elle ne le supprime pas, car le chemin peut désigner un périphérique ou un fichier préexistant. Un code de sortie non nul signifie donc que le contenu du fichier n'est pas fiable.
 
 Toute modification incompatible du JSON incrémente le numéro de `schema`.

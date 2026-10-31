@@ -98,7 +98,7 @@ nonogram-solver/
 | `render` | `ng_render` | affichage texte du puzzle et de la grille | `core` |
 | `verify` | `ng_verify` | vérification d'une grille complète | `core` |
 | `solvers` | `ng_solvers` | registre et implémentations | `core` |
-| `cli` | `nonogram` | analyse des arguments, orchestration, codes de sortie | tous |
+| `cli` | `nonogram_cli` (bibliothèque statique testable) et l'exécutable `nonogram` (`main.c`) | analyse des arguments, orchestration, codes de sortie | tous |
 | `bench` | `ng_bench` | mesures de temps et de mémoire | `core`, `io`, `verify`, `solvers` |
 
 **Règles :**
