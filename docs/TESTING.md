@@ -138,7 +138,7 @@ Le générateur `ng_test_rng` (`tests/support/test_rng.h`, xoshiro256** initiali
 ### 4.5 Tests d'intégration (CLI)
 
 - Chaque cas est un triplet (commande, fichier d'entrée, sortie attendue avec le code de sortie) décrit dans `tests/integration/cases.cmake`.
-- Chaque cas est enregistré par `ng_cli_case(<cas> EXIT <code> ARGS ...)`. Le script `tests/integration/run_case.cmake` lance la commande depuis la racine du dépôt et compare octet par octet le code de sortie, la sortie standard (`<cas>.out`) et la sortie d'erreur (`<cas>.err`). Seule exception : les durées de `nonogram solve` (`elapsed: … ns` et `"elapsed_ns": …`), qui changent d'une exécution à l'autre, sont remplacées par `<ns>` avant la comparaison et dans les fichiers de référence.
+- Chaque cas est enregistré par `ng_cli_case(<cas> EXIT <code> ARGS ...)`. Le script `tests/integration/run_case.cmake` lance la commande depuis la racine du dépôt et compare octet par octet le code de sortie, la sortie standard (`<cas>.out`) et la sortie d'erreur (`<cas>.err`). Seule exception : les durées de `nonogram solve` (`elapsed: … ns` et `"elapsed_ns": …`) et de `nonogram bench` (`median … ns (min …, max …)` et `"median_ns"`, `"min_ns"`, `"max_ns"`), qui changent d'une exécution à l'autre, sont remplacées par `<ns>` avant la comparaison et dans les fichiers de référence.
 - Les sorties de référence (`tests/data/expected/`) sont **relues par un humain** lors de leur création. Une mise à jour en masse (`scripts/update_golden.sh`) se justifie dans la PR, et chaque modification se relit au diff.
 
 ### 4.6 Grilles massives
@@ -157,8 +157,9 @@ Le générateur `ng_test_rng` (`tests/support/test_rng.h`, xoshiro256** initiali
 
 ### 4.8 Benchmarks
 
-- Le corpus `bench/corpus/{small,medium,large,hard}` contient des puzzles figés et versionnés. Le corpus `bench/corpus/massive.json` ne contient que les paramètres de génération et l'empreinte attendue des fichiers.
-- Pour chaque couple (solver, puzzle), le harnais fait 2 exécutions de chauffe, puis N = 11 exécutions mesurées (N = 3 pour le corpus massif). Il retient le temps **médian** (horloge monotone) et le pic mémoire (allocateur compteur), et écrit les résultats au format JSON.
+- Le harnais est la bibliothèque `ng_bench` (`src/bench/`), lancée par `nonogram bench` ([bench/README.md](../bench/README.md)). Il n'utilise que l'API publique, compte chaque allocation par un allocateur compteur qui enveloppe celui de l'appelant, et mesure le temps avec l'horloge monotone POSIX (`clock_gettime(CLOCK_MONOTONIC)`, isolée dans `src/bench/clock.c`).
+- Le corpus `bench/corpus/{tiny,small,medium,large,hard}` contient des puzzles figés et versionnés ; `tiny` (au plus 25 cases, pour S0) existe depuis M4. Le corpus `bench/corpus/massive.json` ne contient que les paramètres de génération et l'empreinte attendue des fichiers.
+- Pour chaque couple (solver, puzzle), le harnais fait 2 exécutions de chauffe, puis N = 11 exécutions mesurées (N = 3 pour le corpus massif). Il retient le temps **médian** (horloge monotone) et le pic mémoire (allocateur compteur), et écrit les résultats au format JSON (`nonogram-bench/1`, [FILE_FORMATS.md §4](FILE_FORMATS.md#4-sorties-de-la-cli)). Chaque grille `SOLVED` passe par `ng_verify`, et toutes les exécutions doivent donner le même résultat et les mêmes compteurs (NF-12) : sinon, c'est une erreur interne.
 - `bench/baselines/<machine>.json` sert de référence. Elle n'est mise à jour qu'en fusionnant une PR qui justifie le changement.
 - Les mesures de la CI sont bruitées : elles servent à repérer les tendances. Une régression signalée se confirme en local avant toute décision.
 
@@ -194,7 +195,7 @@ GitHub Actions, fichier `.github/workflows/ci.yml`. Toutes les tâches s'exécut
 |---|---|---|
 | `verify` | ≥ 95 % | ≥ 90 % |
 | `core`, `io` | ≥ 90 % | ≥ 80 % |
-| `render`, `solvers` | ≥ 85 % | ≥ 75 % |
+| `render`, `solvers`, `bench` | ≥ 85 % | ≥ 75 % |
 | `cli` | ≥ 75 % | — |
 
 Le code ajouté par une PR ne doit pas faire baisser la couverture du module concerné. La couverture reste un indicateur : un test sans assertion significative est refusé en revue, même s'il fait monter le chiffre.

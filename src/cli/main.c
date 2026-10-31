@@ -34,6 +34,9 @@ int main(int argc, char *argv[])
     if (strcmp(command, "solve") == 0) {
         return cli_solve(argc - 2, argv + 2, stdout, stderr);
     }
+    if (strcmp(command, "bench") == 0) {
+        return cli_bench(argc - 2, argv + 2, stdout, stderr);
+    }
     if (strcmp(command, "list-solvers") == 0) {
         return cli_list_solvers(argc - 2, argv + 2, stdout, stderr);
     }

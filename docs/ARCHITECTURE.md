@@ -10,7 +10,7 @@ Le projet est une **bibliothèque C23 organisée en couches** (`libnonogram`), a
 
 ```mermaid
 flowchart TD
-    cli["cli<br/>(exécutable nonogram)"]
+    cli["cli<br/>(bibliothèque nonogram_cli, exécutable nonogram)"]
     bench["bench<br/>(harnais de benchmark)"]
     io["io<br/>formats .non / .sol (puis .ngp / .ngg)"]
     render["render<br/>affichage texte"]
@@ -18,8 +18,8 @@ flowchart TD
     solvers["solvers<br/>registre + S0..Sn"]
     core["core<br/>types, status, allocator, reader/writer, puzzle, grid"]
 
-    cli --> io & render & verify & solvers
-    bench --> io & verify & solvers
+    cli --> io & render & verify & solvers & bench
+    bench --> verify & solvers
     io --> core
     render --> core
     verify --> core
@@ -73,7 +73,8 @@ nonogram-solver/
 │   │   ├── s1_backtrack/
 │   │   ├── s2_lineprop/
 │   │   └── s3_dp_search/
-│   └── cli/                # main.c, et la bibliothèque nonogram_cli (testable) : cli.h cli_args.c cli_load.c cli_usage.c cmd_list_solvers.c cmd_show.c cmd_solve.c cmd_verify.c
+│   ├── bench/              # harnais de benchmark ng_bench (bench.h, interne : ngi_bench_*) : bench.c clock.c (horloge monotone POSIX)
+│   └── cli/                # main.c, et la bibliothèque nonogram_cli (testable) : cli.h cli_args.c cli_load.c cli_output.c cli_usage.c cmd_bench.c cmd_list_solvers.c cmd_show.c cmd_solve.c cmd_verify.c
 ├── tests/
 │   ├── support/            # allocateurs de test, générateur aléatoire, helpers Criterion
 │   ├── unit/               # test_<module>.c (Criterion)
@@ -83,7 +84,7 @@ nonogram-solver/
 │   ├── fuzz/               # cibles libFuzzer
 │   ├── valgrind/           # criterion.supp (suppressions internes à Criterion uniquement)
 │   └── data/               # puzzles, solutions, sorties attendues (voir data/README.md)
-├── bench/                  # harnais, corpus, paramètres des grilles massives, références
+├── bench/                  # corpus figés, paramètres des grilles massives, références (voir bench/README.md)
 ├── scripts/                # setup-wsl.sh check.sh format.sh bench_compare.py update_golden.sh
 ├── docs/
 └── .github/workflows/ci.yml
@@ -99,7 +100,7 @@ nonogram-solver/
 | `verify` | `ng_verify` | vérification d'une grille complète | `core` |
 | `solvers` | `ng_solvers` | registre et implémentations | `core` |
 | `cli` | `nonogram_cli` (bibliothèque statique testable) et l'exécutable `nonogram` (`main.c`) | analyse des arguments, orchestration, codes de sortie | tous |
-| `bench` | `ng_bench` | mesures de temps et de mémoire | `core`, `io`, `verify`, `solvers` |
+| `bench` | `ng_bench` | mesures de temps et de mémoire, au travers de l'API publique seulement ; utilisé par `nonogram bench` | `core`, `verify`, `solvers` |
 
 **Règles :**
 

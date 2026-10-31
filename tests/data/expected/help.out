@@ -11,6 +11,10 @@ commands:
       solved (exit 0); unsolvable, incomplete or limit reached (exit 1).
   verify <puzzle.non> <grid.sol>
       Check the grid against the clues: valid (exit 0), incomplete or invalid (exit 1).
+  bench <puzzle.non>... [--solver <name>] [--runs <n>] [--warmup <n>] [--seed <n>]
+        [--format text|json]
+      Measure the solver on each puzzle: median time over <n> runs (default 11)
+      after the warmup runs (default 2), peak memory, counters (exit 0).
   list-solvers
       List the solvers: name, complete or not, summary.
 

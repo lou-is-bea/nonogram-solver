@@ -1,0 +1,2 @@
+solver: brute, measured runs: 1, warmup runs: 0, seed: 7
+tests/data/puzzles/tiny/dot.non: solved, nodes 2, median <ns> ns (min <ns>, max <ns>), peak 114 bytes

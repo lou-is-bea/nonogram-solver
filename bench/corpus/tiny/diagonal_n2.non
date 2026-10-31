@@ -1,0 +1,13 @@
+title "Diagonal"
+author "nonogram-solver"
+license "same as the project"
+width 2
+height 2
+
+rows
+1
+1
+
+columns
+1
+1

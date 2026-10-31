@@ -130,51 +130,6 @@ static int parse_args(int argc, char **argv, solve_args *args, FILE *err)
     return convert_values(args, err);
 }
 
-/* The solver named on the command line, or the first complete solver of the registry. */
-static const ng_solver_vtable *choose_solver(const char *name)
-{
-    if (name != nullptr) {
-        return ng_solver_find(name);
-    }
-    for (size_t i = 0; i < ng_solver_count(); ++i) {
-        const ng_solver_vtable *solver = ng_solver_at(i);
-        if (solver->complete) {
-            return solver;
-        }
-    }
-    return nullptr;
-}
-
-static const char *result_text(ng_solve_result result)
-{
-    switch (result) {
-    case NG_SOLVE_SOLVED:
-        return "solved";
-    case NG_SOLVE_UNSOLVABLE:
-        return "unsolvable";
-    case NG_SOLVE_INCOMPLETE:
-        return "incomplete";
-    case NG_SOLVE_LIMIT_REACHED:
-        return "limit reached";
-    }
-    return "unknown";
-}
-
-static const char *result_json(ng_solve_result result)
-{
-    switch (result) {
-    case NG_SOLVE_SOLVED:
-        return "SOLVED";
-    case NG_SOLVE_UNSOLVABLE:
-        return "UNSOLVABLE";
-    case NG_SOLVE_INCOMPLETE:
-        return "INCOMPLETE";
-    case NG_SOLVE_LIMIT_REACHED:
-        return "LIMIT_REACHED";
-    }
-    return "UNKNOWN";
-}
-
 /* What the run produced, for the outputs. */
 typedef struct solve_run {
     const solve_args *args;
@@ -211,7 +166,7 @@ static void print_stats_text(FILE *out, const solve_run *run)
 
 static ng_status print_text(FILE *out, const solve_run *run)
 {
-    (void)fprintf(out, "%s\n", result_text(run->outcome.result));
+    (void)fprintf(out, "%s\n", cli_result_text(run->outcome.result));
     if (run->args->values[OPT_COUNT] != nullptr) {
         print_solution_count(out, run);
     }
@@ -227,22 +182,6 @@ static ng_status print_text(FILE *out, const solve_run *run)
         print_stats_text(out, run);
     }
     return status;
-}
-
-/* A JSON string: quotes, backslashes and control characters escaped. */
-static void print_json_string(FILE *out, const char *text)
-{
-    (void)fputc('"', out);
-    for (const unsigned char *c = (const unsigned char *)text; *c != '\0'; ++c) {
-        if (*c == '"' || *c == '\\') {
-            (void)fprintf(out, "\\%c", *c);
-        } else if (*c < (unsigned char)' ') {
-            (void)fprintf(out, "\\u%04x", (unsigned)*c);
-        } else {
-            (void)fputc(*c, out);
-        }
-    }
-    (void)fputc('"', out);
 }
 
 static char cell_char(ng_cell cell)
@@ -280,11 +219,11 @@ static void print_json(FILE *out, const solve_run *run)
 {
     const ng_solve_stats *s = &run->outcome.stats;
     (void)fputs("{\n  \"schema\": \"nonogram-solve/1\",\n  \"puzzle\": ", out);
-    print_json_string(out, run->args->puzzle_path);
+    cli_print_json_string(out, run->args->puzzle_path);
     (void)fputs(",\n  \"solver\": ", out);
-    print_json_string(out, run->solver_name);
+    cli_print_json_string(out, run->solver_name);
     (void)fprintf(out, ",\n  \"result\": \"%s\",\n  \"verified\": %s,\n  \"count_exact\": %s,\n",
-                  result_json(run->outcome.result),
+                  cli_result_json(run->outcome.result),
                   run->outcome.result == NG_SOLVE_SOLVED ? "true" : "false",
                   count_is_exact(run) ? "true" : "false");
     (void)fprintf(out,
@@ -413,7 +352,7 @@ int cli_solve_with(int argc, char **argv, FILE *out, FILE *err, const ng_solver_
         return code;
     }
     if (solver == nullptr) {
-        solver = choose_solver(args.values[OPT_SOLVER]);
+        solver = cli_choose_solver(args.values[OPT_SOLVER]);
     }
     if (solver == nullptr) {
         return cli_usage_error(err, "unknown solver", args.values[OPT_SOLVER]);

@@ -152,3 +152,39 @@ ng_cli_case(solve_limit_count_text EXIT 1
 # more than fit in 1 ms on any machine; S0 checks the clock every 4096 nodes.
 ng_cli_case(solve_max_time EXIT 1 ARGS solve ${P}/tiny/letter_p.non --max-time 1)
 ng_cli_case(solve_unsolvable_stats EXIT 1 ARGS solve ${P}/unsolvable/crossed.non --stats)
+
+# --- bench: measurements; times are normalised to <ns>, the counters are exact
+set(B bench/corpus/tiny)
+# The whole frozen corpus, one run each (fast enough for Valgrind): reproducible counters.
+ng_cli_case(bench_corpus_tiny EXIT 0
+    ARGS bench ${B}/arrow.non ${B}/checker_n2.non ${B}/column.non ${B}/crossed.non
+        ${B}/diagonal_n2.non ${B}/dot.non ${B}/frame.non ${B}/l_shape.non
+        ${B}/permutation_n24.non ${B}/steps_n6.non --runs 1 --warmup 0)
+ng_cli_case(bench_defaults EXIT 0 ARGS bench ${P}/tiny/dot.non ${P}/tiny/column.non)
+ng_cli_case(bench_json EXIT 0
+    ARGS bench ${P}/tiny/l_shape.non ${P}/unsolvable/crossed.non --runs 3 --seed 42 --format json)
+ng_cli_case(bench_options_between_puzzles EXIT 0
+    ARGS bench --runs 2 ${P}/tiny/dot.non --warmup=0 --solver brute ${P}/tiny/column.non
+        --seed=0 --format=text)
+ng_cli_case(bench_max_runs EXIT 0 ARGS bench ${P}/tiny/dot.non --runs 1000 --warmup 1000)
+# Leading zeros are accepted by every numeric option, zero included where it is allowed.
+ng_cli_case(bench_leading_zeros EXIT 0
+    ARGS bench ${P}/tiny/dot.non --runs 01 --warmup 00 --seed 007)
+# bench: usage errors (exit 2)
+ng_cli_case(bench_missing_puzzle EXIT 2 ARGS bench --runs 3)
+ng_cli_case(bench_unknown_solver EXIT 2 ARGS bench ${P}/tiny/dot.non --solver nope)
+ng_cli_case(bench_unknown_option EXIT 2 ARGS bench ${P}/tiny/dot.non --count 2)
+ng_cli_case(bench_missing_value EXIT 2 ARGS bench ${P}/tiny/dot.non --runs)
+ng_cli_case(bench_repeated_option EXIT 2 ARGS bench ${P}/tiny/dot.non --seed 1 --seed=2)
+ng_cli_case(bench_zero_runs EXIT 2 ARGS bench ${P}/tiny/dot.non --runs 0)
+ng_cli_case(bench_too_many_runs EXIT 2 ARGS bench ${P}/tiny/dot.non --runs 1001)
+ng_cli_case(bench_too_many_warmups EXIT 2 ARGS bench ${P}/tiny/dot.non --warmup 1001)
+ng_cli_case(bench_invalid_warmup EXIT 2 ARGS bench ${P}/tiny/dot.non --warmup=-1)
+ng_cli_case(bench_invalid_seed EXIT 2 ARGS bench ${P}/tiny/dot.non --seed 18446744073709551616)
+ng_cli_case(bench_invalid_format EXIT 2 ARGS bench ${P}/tiny/dot.non --format xml)
+ng_cli_case(bench_too_large EXIT 2 ARGS bench ${P}/tiny/dot.non ${P}/small/duck.non)
+# bench: input errors (exit 3), reported before anything is printed
+ng_cli_case(bench_missing_file EXIT 3 ARGS bench ${P}/tiny/dot.non ${P}/tiny/nope.non)
+# The first puzzle fails: the command stops there, the next ones are not measured.
+ng_cli_case(bench_missing_first_file EXIT 3 ARGS bench ${P}/tiny/nope.non ${P}/tiny/dot.non)
+ng_cli_case(bench_malformed_file EXIT 3 ARGS bench ${P}/invalid/zero_width.non)

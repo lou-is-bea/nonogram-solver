@@ -1,0 +1,20 @@
+{
+  "schema": "nonogram-bench/1",
+  "solver": "brute",
+  "clock": "monotonic",
+  "seed": 0,
+  "warmup_runs": 2,
+  "measured_runs": 11,
+  "results": [
+    { "puzzle": "bench/corpus/tiny/arrow.non", "result": "SOLVED", "nodes": 4684933, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 450, "peak_bytes": 450, "median_ns": 37842132, "min_ns": 37122791, "max_ns": 45205017 },
+    { "puzzle": "bench/corpus/tiny/checker_n2.non", "result": "SOLVED", "nodes": 23131, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 368, "peak_bytes": 368, "median_ns": 134262, "min_ns": 133598, "max_ns": 153611 },
+    { "puzzle": "bench/corpus/tiny/column.non", "result": "SOLVED", "nodes": 28, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 202, "peak_bytes": 202, "median_ns": 185, "min_ns": 184, "max_ns": 283 },
+    { "puzzle": "bench/corpus/tiny/crossed.non", "result": "UNSOLVABLE", "nodes": 512, "line_solves": 0, "solutions_found": 0, "workspace_bytes": 242, "peak_bytes": 242, "median_ns": 2425, "min_ns": 2403, "max_ns": 3002 },
+    { "puzzle": "bench/corpus/tiny/diagonal_n2.non", "result": "SOLVED", "nodes": 7, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 168, "peak_bytes": 168, "median_ns": 87, "min_ns": 87, "max_ns": 109 },
+    { "puzzle": "bench/corpus/tiny/dot.non", "result": "SOLVED", "nodes": 2, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 114, "peak_bytes": 114, "median_ns": 44, "min_ns": 43, "max_ns": 55 },
+    { "puzzle": "bench/corpus/tiny/frame.non", "result": "SOLVED", "nodes": 63904, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 352, "peak_bytes": 352, "median_ns": 293987, "min_ns": 276877, "max_ns": 343236 },
+    { "puzzle": "bench/corpus/tiny/l_shape.non", "result": "SOLVED", "nodes": 2344, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 284, "peak_bytes": 284, "median_ns": 17761, "min_ns": 17435, "max_ns": 20698 },
+    { "puzzle": "bench/corpus/tiny/permutation_n24.non", "result": "SOLVED", "nodes": 4681, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 336, "peak_bytes": 336, "median_ns": 30846, "min_ns": 30748, "max_ns": 49424 },
+    { "puzzle": "bench/corpus/tiny/steps_n6.non", "result": "SOLVED", "nodes": 983857, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 448, "peak_bytes": 448, "median_ns": 7383496, "min_ns": 7123064, "max_ns": 8227930 }
+  ]
+}

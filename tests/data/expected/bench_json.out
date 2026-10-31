@@ -1,0 +1,12 @@
+{
+  "schema": "nonogram-bench/1",
+  "solver": "brute",
+  "clock": "monotonic",
+  "seed": 42,
+  "warmup_runs": 2,
+  "measured_runs": 3,
+  "results": [
+    { "puzzle": "tests/data/puzzles/tiny/l_shape.non", "result": "SOLVED", "nodes": 2344, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 284, "peak_bytes": 284, "median_ns": <ns>, "min_ns": <ns>, "max_ns": <ns> },
+    { "puzzle": "tests/data/puzzles/unsolvable/crossed.non", "result": "UNSOLVABLE", "nodes": 512, "line_solves": 0, "solutions_found": 0, "workspace_bytes": 242, "peak_bytes": 242, "median_ns": <ns>, "min_ns": <ns>, "max_ns": <ns> }
+  ]
+}

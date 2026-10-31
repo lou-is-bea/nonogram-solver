@@ -128,10 +128,14 @@ string(APPEND ng_corpus_header "};\n\n#endif /* NG_TESTS_CORPUS_FILES_H */\n")
 file(CONFIGURE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/generated/corpus_files.h
     CONTENT "${ng_corpus_header}")
 
+ng_add_unit_test(cli_bench LIBS nonogram_cli)
+target_compile_definitions(test_cli_bench PRIVATE NG_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 ng_add_unit_test(cli_solve LIBS nonogram_cli)
 # The test reads a corpus puzzle and writes a scratch file: absolute paths.
 target_compile_definitions(test_cli_solve PRIVATE
     NG_SOURCE_DIR="${PROJECT_SOURCE_DIR}" NG_BINARY_DIR="${CMAKE_CURRENT_BINARY_DIR}")
+ng_add_unit_test(bench LIBS ng_bench ng_io)
+target_compile_definitions(test_bench PRIVATE NG_SOURCE_DIR="${PROJECT_SOURCE_DIR}")
 ng_add_unit_test(corpus LIBS ng_io)
 target_include_directories(test_corpus PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
@@ -215,8 +219,9 @@ foreach(output_case IN ITEMS "small:tests/data/puzzles/tiny/dot.non"
         FAIL_REGULAR_EXPRESSION "${NG_TEST_FAILURE_REGEX}")
 endforeach()
 
-# solve and list-solvers report their write failures the same way (code 3).
-foreach(command IN ITEMS "solve|tests/data/puzzles/tiny/dot.non" "list-solvers|")
+# solve, bench and list-solvers report their write failures the same way (code 3).
+foreach(command IN ITEMS "solve|tests/data/puzzles/tiny/dot.non"
+        "bench|tests/data/puzzles/tiny/dot.non" "list-solvers|")
     string(REPLACE "|" ";" parts "${command}")
     list(GET parts 0 name)
     list(GET parts 1 input)

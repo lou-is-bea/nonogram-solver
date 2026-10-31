@@ -1,0 +1,15 @@
+title "Column"
+author "nonogram-solver"
+license "same as the project"
+width 1
+height 5
+
+rows
+1
+1
+0
+1
+1
+
+columns
+2,2
