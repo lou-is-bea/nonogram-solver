@@ -2,12 +2,12 @@
 # Run the quality gates of docs/TESTING.md §3, in order, stopping at the first failure.
 #
 # Usage:
-#   scripts/check.sh               # G0..G9 (mandatory before asking for a review)
+#   scripts/check.sh               # G0..G10 (mandatory before asking for a review)
 #   scripts/check.sh --quick       # G0..G3 only, for fast iteration
 #   scripts/check.sh --only G0,G2  # selected gates (used by the CI jobs)
 #
-# Gates that are not active yet at the current roadmap step are reported as SKIP, never as
-# passed.
+# Gates that are not active yet at the current roadmap step, or that lack a prerequisite (G10
+# without a baseline for this machine), are reported as SKIP, never as passed.
 set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -18,7 +18,7 @@ CPPCHECK="${CPPCHECK:-cppcheck}"
 GCOV="${GCOV:-gcov-14}"
 JOBS="${JOBS:-$(nproc)}"
 
-ALL_GATES=(G0 G1 G2 G3 G4 G5 G6 G7 G8 G9)
+ALL_GATES=(G0 G1 G2 G3 G4 G5 G6 G7 G8 G9 G10)
 QUICK_GATES=(G0 G1 G2 G3)
 
 usage() {
@@ -349,6 +349,35 @@ gate_G9() {
         -artifact_prefix="$artifacts" -print_final_stats=1 2>&1 | tail -n 20
 }
 
+# --- G10: benchmarks --------------------------------------------------------------------------------
+# Measures the frozen corpus and compares it with bench/baselines/$NG_BENCH_MACHINE.json, measured
+# on the same machine with the same preset (bench/README.md), through scripts/bench_gate.sh. Times of another machine mean
+# nothing: without a baseline for this one, the gate is reported as SKIP, never as passed.
+BENCH_CORPUS=bench/corpus/tiny
+
+gate_G10() {
+    say "G10 benchmarks (preset release, corpus $BENCH_CORPUS, scripts/bench_compare.py)"
+    local machine="${NG_BENCH_MACHINE:-}"
+    if [[ -z "$machine" ]]; then
+        skip "G10: NG_BENCH_MACHINE is not set (the name of a file of bench/baselines/)"
+        return 0
+    fi
+    if [[ ! "$machine" =~ ^[A-Za-z0-9._-]+$ ]]; then
+        fail "G10: NG_BENCH_MACHINE must be a file name of bench/baselines/, got '$machine'"
+    fi
+    local baseline="bench/baselines/$machine.json"
+    if [[ ! -f "$baseline" ]]; then
+        skip "G10: no baseline $baseline for this machine"
+        return 0
+    fi
+    preset release
+    local current=build/release/bench/current.json
+    mkdir -p "$(dirname "$current")"
+    # Measure and compare, confirming a regression over BENCH_ATTEMPTS measurements.
+    scripts/bench_gate.sh build/release/src/cli/nonogram "$baseline" "$current" \
+        "$BENCH_CORPUS"/*.non
+}
+
 for gate in "${selected[@]}"; do
     if ! declare -F "gate_$gate" > /dev/null; then
         fail "unknown gate '$gate' (expected one of: ${ALL_GATES[*]})"
@@ -373,7 +402,7 @@ done
 current_gate=""
 
 if ((${#SKIPPED[@]} > 0)); then
-    say "No gate failed. NOT RUN (inactive at this roadmap step): ${SKIPPED[*]}"
+    say "No gate failed. NOT RUN (inactive at this roadmap step, or missing prerequisite): ${SKIPPED[*]}"
 else
     say "All selected gates passed: ${selected[*]}"
 fi

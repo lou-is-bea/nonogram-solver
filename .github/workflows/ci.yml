@@ -103,7 +103,7 @@ jobs:
       - name: G6 ASan + LSan, UBSan + integer
         run: ./scripts/check.sh --only G6
 
-  # The whole of scripts/check.sh (G0 to G9) in the reference container, as a developer runs it
+  # The whole of scripts/check.sh (G0 to G10) in the reference container, as a developer runs it
   # before a review: this is where the gates without a dedicated job (Valgrind, coverage, quick
   # fuzzing) run in CI.
   full-check:
@@ -117,5 +117,51 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v4
-      - name: check.sh (G0 to G9)
+      - name: check.sh (G0 to G10; G10 is a SKIP here, the bench job replaces it)
         run: ./scripts/check.sh
+
+  # G10 in CI (TESTING.md §5): a shared runner is not the machine of any baseline, so the job
+  # measures the base of the PR and the PR on the same runner, with the corpus of the PR. A peak
+  # memory regression above 10 % fails the job (the peak is deterministic); time regressions and
+  # changed counters only go to the job summary (runner noise, TESTING.md §4.8). Decision of the
+  # project owner, 2026-10-31.
+  bench:
+    if: github.event_name == 'pull_request'
+    needs: image
+    runs-on: ubuntu-24.04
+    container:
+      image: ${{ needs.image.outputs.name }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build the PR and its base (preset release)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git worktree add --detach ../base "$BASE_SHA"
+          cmake --preset release > /dev/null
+          cmake --build --preset release --target nonogram
+          cmake -S ../base --preset release > /dev/null
+          cmake --build ../base/build/release --target nonogram
+      - name: G10 compare the PR with its base
+        run: |
+          ../base/build/release/src/cli/nonogram bench bench/corpus/tiny/*.non --format json \
+            > bench-base.json
+          build/release/src/cli/nonogram bench bench/corpus/tiny/*.non --format json \
+            > bench-pr.json
+          code=0
+          python3 scripts/bench_compare.py bench-base.json bench-pr.json --time-mode report \
+            > bench-compare.txt || code=$?
+          cat bench-compare.txt
+          {
+            echo '### G10: benchmarks of the PR against its base (same runner)'
+            echo '```'
+            cat bench-compare.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
