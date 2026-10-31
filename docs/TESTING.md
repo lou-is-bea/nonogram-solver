@@ -41,11 +41,13 @@ Une porte **bloquante** qui échoue empêche la fusion.
 | G7 | Valgrind memcheck | chaque exécutable de `tests/unit/` et `tests/property/` (preset `dev` ; les tests `exhaustive` en sont exclus par leur dossier) sous Valgrind avec `--trace-children=yes`, journaux analysés (§4.9), et chaque cas d'intégration de la CLI via `NG_CLI_WRAPPER` | oui | M1 |
 | G8 | Couverture | preset `coverage` et `gcovr`, avec les seuils du §6 | oui | M1 |
 | G9 | Fuzzing rapide | 60 s par cible (preset `fuzz`, durée réglable par `FUZZ_SECONDS`) | oui | M1 |
-| G10 | Benchmarks | `bench_compare.py` comparé à la référence de `main` | oui si plus de 10 %, sinon simple rapport | M4 |
+| G10 | Benchmarks | `scripts/bench_compare.py` : en local, mesure du corpus `bench/corpus/tiny` (preset `release`) comparée à `bench/baselines/$NG_BENCH_MACHINE.json` ; en CI, la PR comparée à sa base sur la même machine (§5) | oui au-delà de 10 % (pic mémoire ; temps médian si la référence dépasse 1 ms), sinon simple rapport | M4 |
 | G11 | Fuzzing long | 1 h par cible | non (nocturne) | M1 |
 | G12 | Tests massifs | `ctest --preset massive` (Release, label `massive`, exclu des autres presets) | non (nocturne, machine dédiée) | M1 |
 
-`./scripts/check.sh` exécute G0 à G9 en local, dans cet ordre, et s'arrête à la première porte qui échoue. `./scripts/check.sh --quick` n'exécute que G0 à G3, pour itérer plus vite, et `./scripts/check.sh --only G0,G2` n'exécute que les portes demandées (c'est ce qu'utilise la CI). Avant une PR, c'est la version complète qui fait foi. Une porte qui n'est pas encore active à l'étape en cours est signalée `SKIP` et rappelée en fin d'exécution : elle n'est jamais présentée comme réussie.
+`./scripts/check.sh` exécute G0 à G10 en local, dans cet ordre, et s'arrête à la première porte qui échoue. `./scripts/check.sh --quick` n'exécute que G0 à G3, pour itérer plus vite, et `./scripts/check.sh --only G0,G2` n'exécute que les portes demandées (c'est ce qu'utilise la CI). Avant une PR, c'est la version complète qui fait foi. Une porte qui n'est pas encore active à l'étape en cours, ou à qui il manque un prérequis, est signalée `SKIP` et rappelée en fin d'exécution : elle n'est jamais présentée comme réussie. C'est le cas de G10 quand `NG_BENCH_MACHINE` n'est pas défini ou que la machine n'a pas de fichier de référence ([bench/README.md](../bench/README.md#références)) : des temps mesurés sur une autre machine ne veulent rien dire.
+
+**Seuils de G10** (décisions du responsable du projet, 2026-10-31) : une hausse du pic mémoire de plus de 10 % bloque toujours, car le pic est déterministe. Une hausse du temps médian de plus de 10 % ne bloque que si la médiane de référence atteint 1 ms : en dessous, deux mesures successives varient déjà d'environ 10 %, et la hausse est seulement signalée. Les changements de compteurs (résultat, nœuds, résolutions de lignes, solutions, espace de travail) et les gains sont signalés. En local, une régression bloquante est confirmée avant de faire échouer la porte : `check.sh` remesure jusqu'à 3 fois (`BENCH_ATTEMPTS`) et n'échoue que si chaque mesure la retrouve, car juste après G9 une première mesure peut être ralentie de plus de 10 % (constaté le 2026-10-31 sur `arrow`). Les tests du script (`tests/scripts/test_bench_compare.py`, module `unittest` de la bibliothèque standard) portent le label `unit`.
 
 ## 4. Détail par niveau
 
@@ -171,7 +173,7 @@ Le générateur `ng_test_rng` (`tests/support/test_rng.h`, xoshiro256** initiali
 
 ## 5. Intégration continue
 
-> **État actuel** : la CI tourne sur chaque PR depuis le 2026-10-25 (voir [ROADMAP.md, M0](ROADMAP.md#m0--fondations)) avec les tâches `image`, `lint`, `build-test`, `sanitizers` et `full-check`. `full-check` exécute `./scripts/check.sh` en entier dans le conteneur : c'est là que G7, G8 et G9 tournent en CI, en attendant les tâches dédiées `valgrind`, `coverage` et `fuzz-smoke` décrites ci-dessous ; `bench`, `nightly` et `massive` ne sont pas encore en place.
+> **État actuel** : la CI tourne sur chaque PR depuis le 2026-10-25 (voir [ROADMAP.md, M0](ROADMAP.md#m0--fondations)) avec les tâches `image`, `lint`, `build-test`, `sanitizers`, `full-check` et, depuis M4, `bench`. `full-check` exécute `./scripts/check.sh` en entier dans le conteneur : c'est là que G7, G8 et G9 tournent en CI, en attendant les tâches dédiées `valgrind`, `coverage` et `fuzz-smoke` décrites ci-dessous ; G10 y est signalée `SKIP`, faute de référence pour la machine de CI, et c'est la tâche `bench` qui la remplace. `nightly` et `massive` ne sont pas encore en place.
 
 GitHub Actions, fichier `.github/workflows/ci.yml`. Toutes les tâches s'exécutent dans le **conteneur de référence** construit depuis `tools/docker/Dockerfile` (Ubuntu 24.04 LTS : GCC 14, Clang 20, Criterion, CMake, Ninja, Valgrind, outils d'analyse aux versions figées). C'est le même environnement que celui de WSL.
 
@@ -183,7 +185,7 @@ GitHub Actions, fichier `.github/workflows/ci.yml`. Toutes les tâches s'exécut
 | `valgrind` | GCC | G7 |
 | `coverage` | GCC | G8 (le rapport est publié comme artefact) |
 | `fuzz-smoke` | Clang | G9 |
-| `bench` | GCC, Release, sur chaque PR à partir de M4 | G10 |
+| `bench` | GCC, Release, sur chaque PR à partir de M4 | G10 : la base de la PR et la PR sont mesurées sur la même machine, avec le corpus de la PR. Une hausse du pic mémoire de plus de 10 % fait échouer la tâche ; les hausses de temps et les changements de compteurs ne vont qu'au résumé de la tâche (`--time-mode report`), car les machines partagées sont bruitées (décision du 2026-10-31) |
 | `nightly` | planifiée, branche `main` | G5 sur 100 000 cas, G11, benchmarks complets |
 | `massive` | machine dédiée (exécuteur auto-hébergé), planifiée | G12 |
 
@@ -222,5 +224,5 @@ tests/data/
 ## 8. Environnement de référence
 
 - Le développement se fait sous **Ubuntu dans WSL2**, avec les mêmes paquets que l'image `tools/docker/Dockerfile` (liste dans [CONTRIBUTING.md §2](../CONTRIBUTING.md#2-mise-en-place-de-lenvironnement)).
-- Toutes les portes G0 à G9 s'exécutent en local, dans WSL. Aucune ne dépend de Windows.
+- Toutes les portes G0 à G10 s'exécutent en local, dans WSL. Aucune ne dépend de Windows.
 - En cas de doute sur un écart entre la CI et le poste local, on rejoue la vérification dans le conteneur : `docker run --rm -v "$PWD:/src" -w /src nonogram-dev ./scripts/check.sh`.

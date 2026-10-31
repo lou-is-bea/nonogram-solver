@@ -81,6 +81,7 @@ nonogram-solver/
 │   ├── property/           # tests de propriétés et différentiels
 │   ├── integration/        # tests CLI comparés à des fichiers de référence
 │   ├── massive/            # tests sur grilles massives (label `massive`, nocturne)
+│   ├── scripts/            # tests des scripts Python (test_bench_compare.py, unittest)
 │   ├── fuzz/               # cibles libFuzzer
 │   ├── valgrind/           # criterion.supp (suppressions internes à Criterion uniquement)
 │   └── data/               # puzzles, solutions, sorties attendues (voir data/README.md)

@@ -35,16 +35,22 @@ Les puzzles ont été choisis pour couvrir plusieurs ordres de grandeur de temps
 
 ## Références
 
-`baselines/<machine>.json` est une sortie JSON du harnais, avec les options par défaut, sur tout le corpus. Elle sert de référence à `bench_compare.py` et à la porte G10 (ticket #14).
+`baselines/<machine>.json` est une sortie JSON du harnais, avec les options par défaut, sur tout le corpus. Elle sert de référence à la porte G10 en local ([TESTING.md §3](../docs/TESTING.md#3-portes-de-qualité)) :
+
+```sh
+NG_BENCH_MACHINE=ryzen-9800x3d-wsl ./scripts/check.sh --only G10
+```
+
+La porte mesure le corpus avec le preset `release` et compare le résultat à `baselines/$NG_BENCH_MACHINE.json` avec `scripts/bench_compare.py`. Sans `NG_BENCH_MACHINE`, ou sans fichier pour cette machine, elle est signalée `SKIP`. Une régression bloquante n'échoue la porte que si elle se retrouve dans chacune des 3 mesures (`BENCH_ATTEMPTS`). Le script se lance aussi seul : `scripts/bench_compare.py <référence.json> <mesure.json>` (options `--time-threshold`, `--memory-threshold`, `--time-floor-ns` et `--time-mode block|report`). Il sort avec le code 1 pour une régression bloquante et 2 pour une entrée illisible ou incomparable. En CI, la tâche `bench` compare la PR à sa base sur la même machine, sans fichier de référence.
 
 | Fichier | Machine | Mesurée le |
 |---|---|---|
 | `baselines/ryzen-9800x3d-wsl.json` | AMD Ryzen 7 9800X3D (8 cœurs), Ubuntu 24.04 sous WSL2, GCC 14, preset `release` | 2026-10-31 |
 
-Une référence n'est mise à jour qu'en fusionnant une PR qui justifie le changement. Pour la régénérer :
+Une référence n'est mise à jour qu'en fusionnant une PR qui justifie le changement. Pour en ajouter une, ou la régénérer :
 
 ```sh
 build/release/src/cli/nonogram bench bench/corpus/tiny/*.non --format json > bench/baselines/ryzen-9800x3d-wsl.json
 ```
 
-Deux mesures successives sur cette machine donnent les mêmes compteurs, avec des médianes qui varient jusqu'à environ 11 % sur les puzzles les plus courts (moins de 200 µs) et de quelques pour cent au-delà. Le seuil de régression de G10 devra en tenir compte.
+Deux mesures successives sur cette machine donnent les mêmes compteurs, avec des médianes qui varient jusqu'à environ 11 % sur les puzzles les plus courts (moins de 200 µs) et de quelques pour cent au-delà. C'est pourquoi une hausse de temps ne bloque que si la médiane de référence atteint 1 ms. Lors d'une autre paire de mesures du même code sur cette machine (2026-10-31), l'écart a même dépassé 30 % sur deux de ces puzzles.
