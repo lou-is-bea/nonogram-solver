@@ -21,6 +21,11 @@ execute_process(
 string(REGEX REPLACE "\"elapsed_ns\": [0-9]+" "\"elapsed_ns\": <ns>" actual_stdout
     "${actual_stdout}")
 string(REGEX REPLACE "elapsed: [0-9]+ ns" "elapsed: <ns> ns" actual_stdout "${actual_stdout}")
+# Same for the times measured by nonogram bench.
+string(REGEX REPLACE "\"(median|min|max)_ns\": [0-9]+" "\"\\1_ns\": <ns>" actual_stdout
+    "${actual_stdout}")
+string(REGEX REPLACE "median [0-9]+ ns \\(min [0-9]+, max [0-9]+\\)"
+    "median <ns> ns (min <ns>, max <ns>)" actual_stdout "${actual_stdout}")
 
 set(stdout_file ${EXPECTED_DIR}/${CASE}.out)
 set(stderr_file ${EXPECTED_DIR}/${CASE}.err)

@@ -62,6 +62,7 @@ add_subdirectory(src/io)
 add_subdirectory(src/render)
 add_subdirectory(src/verify)
 add_subdirectory(src/solvers)
+add_subdirectory(src/bench)
 add_subdirectory(src/cli)
 
 if(NG_BUILD_TESTS)

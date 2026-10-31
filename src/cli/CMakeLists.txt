@@ -2,7 +2,9 @@
 add_library(nonogram_cli STATIC
     cli_args.c
     cli_load.c
+    cli_output.c
     cli_usage.c
+    cmd_bench.c
     cmd_list_solvers.c
     cmd_show.c
     cmd_solve.c
@@ -14,6 +16,7 @@ target_link_libraries(nonogram_cli
         ng_render
         ng_verify
         ng_solvers
+        ng_bench
     PRIVATE ng_project_options)
 
 add_executable(nonogram main.c)

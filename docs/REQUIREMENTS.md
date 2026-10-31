@@ -72,7 +72,7 @@ Les nonogrammes en couleur pourront être ajoutés plus tard. L'architecture ne 
 
 | ID | Exigence |
 |---|---|
-| F-40 | La commande `nonogram` DOIT proposer les sous-commandes `show`, `solve`, `verify` et `list-solvers`. Une sous-commande `bench` sera ajoutée à partir de M4. |
+| F-40 | La commande `nonogram` DOIT proposer les sous-commandes `show`, `solve`, `verify`, `list-solvers` et, depuis M4, `bench`, qui s'appuie sur le harnais `ng_bench` (décision du 2026-10-31). |
 | F-41 | Les codes de sortie DOIVENT être stables et documentés : `0` succès ou solution valide, `1` puzzle insoluble, solution invalide ou incomplète, `2` usage incorrect, `3` erreur d'entrée, `4` erreur interne. |
 | F-42 | `solve --stats` DEVRAIT afficher les statistiques au format texte ou JSON (`--format=json`). |
 

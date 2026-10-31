@@ -57,6 +57,19 @@ cli_option_match cli_match_option(int argc, char **argv, int *index, const char 
  */
 bool cli_parse_count(const char *text, uint64_t max, uint64_t *out);
 
+/** @brief The solver named @p name, or the first complete solver of the registry when
+ *         @p name is nullptr; nullptr when there is none. */
+const ng_solver_vtable *cli_choose_solver(const char *name);
+
+/** @brief Result in the text outputs: "solved", "unsolvable", "incomplete", "limit reached". */
+const char *cli_result_text(ng_solve_result result);
+
+/** @brief Result in the JSON outputs: "SOLVED", "UNSOLVABLE", "INCOMPLETE", "LIMIT_REACHED". */
+const char *cli_result_json(ng_solve_result result);
+
+/** @brief Print @p text as a JSON string: quotes, backslashes and control characters escaped. */
+void cli_print_json_string(FILE *out, const char *text);
+
 /**
  * @brief Read a .non file, reporting any failure on @p err.
  * @return CLI_EXIT_SUCCESS with *puzzle set, or the exit code of the failure.
@@ -92,6 +105,22 @@ int cli_solve(int argc, char **argv, FILE *out, FILE *err);
  * @return An exit code.
  */
 int cli_solve_with(int argc, char **argv, FILE *out, FILE *err, const ng_solver_vtable *solver);
+
+/**
+ * @brief Run "nonogram bench".
+ * @param argc, argv Arguments after "bench".
+ * @return An exit code.
+ */
+int cli_bench(int argc, char **argv, FILE *out, FILE *err);
+
+/**
+ * @brief Run "nonogram bench" with a given solver instead of the registry's choice.
+ *
+ * Used by cli_bench() with @p solver = nullptr, and by the tests with a fake solver, to
+ * exercise the reports of a solver that breaks its contract.
+ * @return An exit code.
+ */
+int cli_bench_with(int argc, char **argv, FILE *out, FILE *err, const ng_solver_vtable *solver);
 
 /**
  * @brief Run "nonogram list-solvers".

@@ -119,8 +119,9 @@ Ces formats sont destinés aux grilles massives : 2 bits par case pour `.ngg`, i
   - avec `--count`, une ligne `solutions: <n>`, ou `solutions: at least <n>` quand le compte est une borne inférieure (plafond `--count` atteint, recherche `incomplete`, ou limite atteinte) ;
   - sauf pour `unsolvable`, la grille (complète ou partielle, les cases inconnues en `?`) avec ses indices, ou le résumé au-delà de 200 × 200 ;
   - avec `--stats`, les lignes `solver`, `nodes`, `line solves`, `solutions found`, `workspace` (octets) et `elapsed` (ns).
+- **`nonogram bench`** (texte) : une ligne d'en-tête `solver: <nom>, measured runs: <n>, warmup runs: <n>, seed: <n>`, puis une ligne par puzzle, dans l'ordre des arguments : `<chemin>: <résultat>, nodes <n>, median <t> ns (min <t>, max <t>), peak <octets> bytes`.
 - **`nonogram list-solvers`** : une ligne par solver du registre, dans son ordre : nom, `complete` ou `incomplete`, résumé, en colonnes séparées par deux espaces.
-- **JSON** (`--format=json`, pour `solve` et `bench`), avec un schéma versionné :
+- **JSON** (`--format=json`, pour `solve` et `bench`), avec un schéma versionné. Pour `solve` :
 
 ```json
 {
@@ -138,5 +139,23 @@ Ces formats sont destinés aux grilles massives : 2 bits par case pour `.ngg`, i
 Dans `nonogram-solve/1`, `result` vaut `SOLVED`, `UNSOLVABLE`, `INCOMPLETE` ou `LIMIT_REACHED`. `count_exact` vaut `true` quand `stats.solutions_found` est le nombre exact de solutions : la recherche a conclu (`SOLVED` ou `UNSOLVABLE`) avant d'atteindre le plafond `--count` (1 par défaut). Sinon, c'est une borne inférieure, comme « at least » dans la sortie texte. `verified` vaut `true` seulement pour `SOLVED` : la CLI passe alors la grille par le vérificateur (F-32) et sort avec le code 4 si elle n'est pas valide. `grid` liste les rangées (`#` pleine, `.` vide, `?` inconnue) ; il vaut `null` pour `UNSOLVABLE`. `stats` est toujours présent, avec ou sans `--stats`.
 
 Avec `--output`, le fichier `.sol` n'est ouvert qu'une fois le puzzle résolu et la grille validée (F-32) : rien n'est créé ni écrasé sinon. Si l'écriture échoue en cours de route (disque plein, par exemple), la CLI sort avec le code 3 et laisse le fichier tel quel, éventuellement tronqué : elle ne le supprime pas, car le chemin peut désigner un périphérique ou un fichier préexistant. Un code de sortie non nul signifie donc que le contenu du fichier n'est pas fiable.
+
+Pour `bench`, le schéma `nonogram-bench/1` :
+
+```json
+{
+  "schema": "nonogram-bench/1",
+  "solver": "brute",
+  "clock": "monotonic",
+  "seed": 0,
+  "warmup_runs": 2,
+  "measured_runs": 11,
+  "results": [
+    { "puzzle": "bench/corpus/tiny/l_shape.non", "result": "SOLVED", "nodes": 2344, "line_solves": 0, "solutions_found": 1, "workspace_bytes": 284, "peak_bytes": 284, "median_ns": 17761, "min_ns": 17435, "max_ns": 20698 }
+  ]
+}
+```
+
+Dans `nonogram-bench/1`, `results` suit l'ordre des puzzles sur la ligne de commande. `result` prend les valeurs de `nonogram-solve/1`. Les compteurs (`nodes`, `line_solves`, `solutions_found`, `workspace_bytes`) sont ceux de chaque exécution : le harnais vérifie qu'ils sont identiques d'une exécution à l'autre. `median_ns`, `min_ns` et `max_ns` portent sur les `measured_runs` exécutions mesurées (horloge monotone ; pour un nombre pair d'exécutions, la médiane est la moyenne des deux valeurs centrales). `peak_bytes` est le plus haut niveau de mémoire allouée pendant une exécution mesurée, au-delà de ce qui l'était avant (grille, tableau des temps). Une grille `SOLVED` est toujours vérifiée (F-32) : si elle ne l'est pas, ou si deux exécutions diffèrent, la commande sort avec le code 4 sans rien écrire sur la sortie standard. Tous les puzzles sont mesurés avant que la sortie soit écrite : une erreur sur l'un d'eux arrête la commande sans sortie partielle.
 
 Toute modification incompatible du JSON incrémente le numéro de `schema`.

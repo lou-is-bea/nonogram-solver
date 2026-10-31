@@ -297,6 +297,7 @@ COVERAGE_THRESHOLDS=(
     "render 85 75"
     "solvers 85 75"
     "cli 75 0"
+    "bench 85 75"
 )
 
 gate_G8() {

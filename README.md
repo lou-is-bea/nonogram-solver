@@ -35,7 +35,7 @@ Le détail et les critères de sortie de chaque étape sont dans [docs/ROADMAP.m
 
 ## Démarrage rapide (cible)
 
-> Les commandes de build, de test et `check.sh` sont disponibles, ainsi que `nonogram show`, `nonogram solve`, `nonogram verify` et `nonogram list-solvers`.
+> Les commandes de build, de test et `check.sh` sont disponibles, ainsi que `nonogram show`, `nonogram solve`, `nonogram verify`, `nonogram list-solvers` et `nonogram bench`.
 >
 > Solvers de la bibliothèque : `brute` (S0, force brute sur les cases inconnues, au plus 25 cases ; oracle de référence, [spécification](docs/solvers/s0_brute.md)).
 
@@ -64,13 +64,18 @@ nonogram verify tests/data/puzzles/small/duck.non tests/data/solutions/duck.sol
 
 # Lister les solvers disponibles
 nonogram list-solvers
+
+# Mesurer un solver sur le corpus de benchmark (temps médian, pic mémoire), sortie JSON
+nonogram bench bench/corpus/tiny/*.non --solver brute --format json
 ```
 
 Les options à valeur s'écrivent `--option valeur` ou `--option=valeur` ; une valeur qui commence par `--` doit utiliser la seconde forme.
 
 Options de `solve` : `--solver <nom>`, `--count <n>` (compter jusqu'à `n` solutions ; « at least » quand le compte est une borne inférieure), `--max-nodes <n>`, `--max-time <ms>`, `--max-memory <octets>`, `--output <grille.sol>` (écrite seulement si le puzzle est résolu ; en cas d'échec d'écriture, code 3 et fichier non fiable), `--stats` et `--format text|json` ([FILE_FORMATS.md §4](docs/FILE_FORMATS.md#4-sorties-de-la-cli)).
 
-Codes de sortie de `nonogram` (exigence F-41) : `0` succès (pour `solve` : résolu), `1` puzzle insoluble, solution invalide ou incomplète (pour `solve` : insoluble, solver bloqué ou limite atteinte), `2` usage incorrect (pour `solve`, y compris un puzzle que le solver ne peut pas prendre dans ses limites : taille, `--max-memory`), `3` erreur d'entrée-sortie (fichier illisible ou mal formé, grille de mauvaise taille, sortie impossible à écrire), `4` erreur interne (y compris le manque de mémoire).
+Options de `bench` : `--solver <nom>`, `--runs <n>` (exécutions mesurées, 11 par défaut, au plus 1000), `--warmup <n>` (exécutions de chauffe, 2 par défaut), `--seed <n>` et `--format text|json` ; le harnais est décrit dans [bench/README.md](bench/README.md).
+
+Codes de sortie de `nonogram` (exigence F-41) : `0` succès (pour `solve` : résolu), `1` puzzle insoluble, solution invalide ou incomplète (pour `solve` : insoluble, solver bloqué ou limite atteinte), `2` usage incorrect (pour `solve` et `bench`, y compris un puzzle que le solver ne peut pas prendre dans ses limites : taille, `--max-memory`), `3` erreur d'entrée-sortie (fichier illisible ou mal formé, grille de mauvaise taille, sortie impossible à écrire), `4` erreur interne (y compris le manque de mémoire, et pour `bench` un solver qui rompt son contrat). Pour `bench`, le résultat des puzzles ne change pas le code : `0` dès que tout est mesuré.
 
 ### Prérequis
 
@@ -93,7 +98,7 @@ src/verify/         vérificateur indépendant
 src/solvers/        un sous-dossier par solver et le registre
 src/cli/            l'exécutable `nonogram`
 tests/              tests unitaires, d'intégration, de propriétés, fuzzing, données
-bench/              benchmarks et références de performance
+bench/              corpus de benchmark et références de performance
 docs/               documentation (humains et agents)
 ```
 

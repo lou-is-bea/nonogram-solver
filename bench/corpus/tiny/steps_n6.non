@@ -1,0 +1,19 @@
+title "Steps"
+author "nonogram-solver"
+license "same as the project"
+width 6
+height 4
+
+rows
+2
+2
+2
+2
+
+columns
+1,1
+1,1
+1
+1
+1
+1

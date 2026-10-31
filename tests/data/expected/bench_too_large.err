@@ -1,0 +1,1 @@
+nonogram: solver 'brute' cannot take 'tests/data/puzzles/small/duck.non' within its limits
