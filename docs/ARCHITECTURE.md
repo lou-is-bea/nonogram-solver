@@ -81,12 +81,12 @@ nonogram-solver/
 │   ├── property/           # tests de propriétés et différentiels
 │   ├── integration/        # tests CLI comparés à des fichiers de référence
 │   ├── massive/            # tests sur grilles massives (label `massive`, nocturne)
-│   ├── scripts/            # tests des scripts Python (test_bench_compare.py, unittest)
+│   ├── scripts/            # tests des scripts de G10 (test_bench_compare.py, test_bench_gate.py ; unittest)
 │   ├── fuzz/               # cibles libFuzzer
 │   ├── valgrind/           # criterion.supp (suppressions internes à Criterion uniquement)
 │   └── data/               # puzzles, solutions, sorties attendues (voir data/README.md)
 ├── bench/                  # corpus figés, paramètres des grilles massives, références (voir bench/README.md)
-├── scripts/                # setup-wsl.sh check.sh format.sh bench_compare.py update_golden.sh
+├── scripts/                # setup-wsl.sh check.sh format.sh bench_compare.py bench_gate.sh update_golden.sh
 ├── docs/
 └── .github/workflows/ci.yml
 ```

@@ -351,10 +351,9 @@ gate_G9() {
 
 # --- G10: benchmarks --------------------------------------------------------------------------------
 # Measures the frozen corpus and compares it with bench/baselines/$NG_BENCH_MACHINE.json, measured
-# on the same machine with the same preset (bench/README.md). Times of another machine mean
+# on the same machine with the same preset (bench/README.md), through scripts/bench_gate.sh. Times of another machine mean
 # nothing: without a baseline for this one, the gate is reported as SKIP, never as passed.
 BENCH_CORPUS=bench/corpus/tiny
-BENCH_ATTEMPTS="${BENCH_ATTEMPTS:-3}"
 
 gate_G10() {
     say "G10 benchmarks (preset release, corpus $BENCH_CORPUS, scripts/bench_compare.py)"
@@ -374,22 +373,9 @@ gate_G10() {
     preset release
     local current=build/release/bench/current.json
     mkdir -p "$(dirname "$current")"
-    # A regression is confirmed before it blocks (TESTING.md §4.8): right after the CPU-bound
-    # gates (G9 fuzzing), a first measurement can be several per cent slow. Only a regression
-    # found by every attempt fails the gate.
-    local attempt rc
-    for attempt in $(seq 1 "$BENCH_ATTEMPTS"); do
-        build/release/src/cli/nonogram bench "$BENCH_CORPUS"/*.non --format json > "$current"
-        rc=0
-        python3 scripts/bench_compare.py "$baseline" "$current" || rc=$?
-        if ((rc != 1)); then
-            return "$rc"
-        fi
-        if ((attempt < BENCH_ATTEMPTS)); then
-            echo "G10: blocking regression in attempt $attempt of $BENCH_ATTEMPTS, measuring again"
-        fi
-    done
-    fail "G10: blocking regression confirmed by $BENCH_ATTEMPTS measurements"
+    # Measure and compare, confirming a regression over BENCH_ATTEMPTS measurements.
+    scripts/bench_gate.sh build/release/src/cli/nonogram "$baseline" "$current" \
+        "$BENCH_CORPUS"/*.non
 }
 
 for gate in "${selected[@]}"; do

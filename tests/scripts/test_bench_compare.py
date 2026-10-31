@@ -147,6 +147,14 @@ class BenchCompareTest(unittest.TestCase):
         self.assertIn("fast.non: time regression +100.0 % (20000 -> 40000 ns) "
                       "[reported: baseline below the 1000000 ns floor]", completed.stdout)
 
+    def test_floor_is_inclusive(self):
+        at_floor = self.changed(fast={"median_ns": MS})
+        below_floor = self.changed(fast={"median_ns": MS - 1})
+        slower = self.changed(fast={"median_ns": 2 * MS})
+
+        self.assertEqual(self.run_compare(slower, at_floor).returncode, 1)
+        self.assertEqual(self.run_compare(slower, below_floor).returncode, 0)
+
     def test_time_regression_is_only_reported_in_report_mode(self):
         completed = self.run_compare(self.changed(slow={"median_ns": 80 * MS}), BASELINE,
                                      "--time-mode", "report")
@@ -173,6 +181,24 @@ class BenchCompareTest(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout)
         self.assertIn("slow.non: nodes changed (1000 -> 999)", completed.stdout)
         self.assertIn("slow.non: result changed (SOLVED -> INCOMPLETE)", completed.stdout)
+
+    def test_every_changed_counter_is_reported(self):
+        for counter in ("nodes", "line_solves", "solutions_found", "workspace_bytes"):
+            with self.subTest(counter=counter):
+                current = self.changed(slow={counter: 7})
+
+                completed = self.run_compare(current)
+
+                self.assertEqual(completed.returncode, 0, completed.stdout)
+                self.assertIn(f"slow.non: {counter} changed (", completed.stdout)
+
+    def test_baseline_median_of_zero_is_not_compared(self):
+        baseline = self.changed(fast={"median_ns": 0})
+
+        completed = self.run_compare(BASELINE, baseline)
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
+        self.assertNotIn("fast.non", completed.stdout)
 
     def test_new_puzzle_is_reported(self):
         current = copy.deepcopy(BASELINE)
@@ -212,6 +238,52 @@ class BenchCompareTest(unittest.TestCase):
 
         self.assert_error(self.run_compare(BASELINE, baseline), "missing or invalid 'peak_bytes'")
 
+    def test_every_numeric_field_is_checked(self):
+        for field in ("nodes", "line_solves", "solutions_found", "workspace_bytes", "peak_bytes",
+                      "median_ns", "min_ns", "max_ns"):
+            with self.subTest(field=field):
+                baseline = copy.deepcopy(BASELINE)
+                del baseline["results"][1][field]
+
+                self.assert_error(self.run_compare(BASELINE, baseline),
+                                  f"fast.non: missing or invalid '{field}'")
+
+    def test_invalid_result_value_is_an_error(self):
+        current = self.changed(slow={"result": "DONE"})
+
+        self.assert_error(self.run_compare(current), "slow.non: missing or invalid 'result'")
+
+    def test_result_without_a_puzzle_name_is_an_error(self):
+        for entry in ({"result": "SOLVED"}, ["slow.non"], {"puzzle": 3}):
+            with self.subTest(entry=entry):
+                current = copy.deepcopy(BASELINE)
+                current["results"][0] = entry
+
+                self.assert_error(self.run_compare(current), "every result needs a 'puzzle'")
+
+    def test_root_that_is_not_an_object_is_an_error(self):
+        self.assert_error(self.run_compare(BASELINE, "[1, 2]"), "not a JSON object")
+
+    def test_invalid_solver_or_results_is_an_error(self):
+        for field, value in (("solver", 3), ("results", {"slow.non": {}}), ("results", None)):
+            with self.subTest(field=field, value=value):
+                current = copy.deepcopy(BASELINE)
+                current[field] = value
+
+                self.assert_error(self.run_compare(current),
+                                  "missing or invalid 'solver' or 'results'")
+
+    def test_file_that_is_not_utf8_is_an_error(self):
+        path = os.path.join(self.directory.name, "latin1.json")
+        with open(path, "wb") as file:
+            file.write(b'{"schema": "caf\xe9"}')  # Latin-1, not UTF-8
+
+        self.assert_error(self.run_compare(BASELINE, path), "not UTF-8 text")
+
+    def test_deeply_nested_json_is_an_error(self):
+        self.assert_error(self.run_compare(BASELINE, "[" * 100_000 + "]" * 100_000),
+                          "nested too deeply")
+
     def test_negative_or_non_integer_field_is_an_error(self):
         for value in (-1, 1.5, "12", True):
             with self.subTest(value=value):
@@ -238,8 +310,10 @@ class BenchCompareTest(unittest.TestCase):
         self.assert_error(self.run_compare(current), "solver 'line', baseline solver 'brute'")
 
     def test_invalid_options_are_errors(self):
-        for options in (["--time-threshold", "-1"], ["--time-mode", "maybe"],
-                        ["--time-floor-ns", "x"]):
+        for options in (["--time-threshold", "-1"], ["--time-threshold", "nan"],
+                        ["--memory-threshold", "inf"], ["--time-mode", "maybe"],
+                        ["--time-floor-ns", "x"], ["--time-floor-ns", "\u00b2"],
+                        ["--time-floor-ns", "-1"], ["--time-floor-ns", "1.5"]):
             with self.subTest(options=options):
                 completed = self.run_compare(BASELINE, BASELINE, *options)
 

@@ -140,12 +140,17 @@ ng_add_unit_test(corpus LIBS ng_io)
 target_include_directories(test_corpus PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 # --- Tests of the scripts ----------------------------------------------------------------------
-# scripts/bench_compare.py (gate G10), tested with the standard unittest module: label "unit", so
+# scripts/bench_compare.py and scripts/bench_gate.sh (gate G10), tested with the standard unittest module: label "unit", so
 # G3 runs them; they are not Criterion binaries, so G7 does not run them under Valgrind.
 find_program(NG_PYTHON3 python3 REQUIRED)
 add_test(NAME test_bench_compare
     COMMAND ${NG_PYTHON3} -I ${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_bench_compare.py)
 set_tests_properties(test_bench_compare PROPERTIES LABELS unit)
+# Gate G10: scripts/bench_gate.sh with a stub executable, and the checks of check.sh made before
+# any build (so the test never builds the release preset itself).
+add_test(NAME test_bench_gate
+    COMMAND ${NG_PYTHON3} -I ${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_bench_gate.py)
+set_tests_properties(test_bench_gate PROPERTIES LABELS unit)
 
 # --- Exhaustive tests (docs/solvers/s0_brute.md §6) --------------------------------------------
 # Full enumerations of the corpus, up to 2^25 candidates per puzzle: label "exhaustive", built

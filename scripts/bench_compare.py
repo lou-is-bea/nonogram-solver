@@ -22,6 +22,8 @@ unreadable, malformed or incomparable input. Only the standard library is used.
 
 import argparse
 import json
+import math
+import re
 import sys
 
 SCHEMA = "nonogram-bench/1"
@@ -40,13 +42,14 @@ def non_negative(text):
         value = float(text)
     except ValueError:
         raise argparse.ArgumentTypeError(f"not a number: {text!r}") from None
-    if value < 0:
-        raise argparse.ArgumentTypeError(f"must not be negative: {text!r}")
+    if not math.isfinite(value) or value < 0:
+        raise argparse.ArgumentTypeError(f"must be a finite, non-negative number: {text!r}")
     return value
 
 
 def non_negative_integer(text):
-    if not text.isdigit():
+    # str.isdigit() also accepts digits such as "²" that int() rejects: ASCII only.
+    if re.fullmatch(r"[0-9]+", text) is None:
         raise argparse.ArgumentTypeError(f"not a non-negative integer: {text!r}")
     return int(text)
 
@@ -90,10 +93,14 @@ def load(path):
             text = file.read()
     except OSError as error:
         raise InputError(f"cannot read {path}: {error.strerror}") from None
+    except UnicodeDecodeError:
+        raise InputError(f"{path}: not UTF-8 text") from None
     try:
         data = json.loads(text)
     except json.JSONDecodeError as error:
         raise InputError(f"{path}: not valid JSON ({error})") from None
+    except RecursionError:
+        raise InputError(f"{path}: JSON nested too deeply") from None
     if not isinstance(data, dict):
         raise InputError(f"{path}: not a JSON object")
     if data.get("schema") != SCHEMA:
@@ -176,6 +183,10 @@ def main(argv):
         lines, blocking = compare(baseline, current, args)
     except InputError as error:
         print(f"bench_compare: {error}", file=sys.stderr)
+        return 2
+    except Exception as error:
+        # Exit code 1 means "blocking regression": a bug of this script must not look like one.
+        print(f"bench_compare: internal error: {error!r}", file=sys.stderr)
         return 2
     print(f"bench_compare: {args.current} against {args.baseline} (solver "
           f"{baseline['solver']}, {len(baseline['results'])} puzzles; time > "
