@@ -73,7 +73,7 @@ nonogram-solver/
 │   │   ├── s1_backtrack/
 │   │   ├── s2_lineprop/
 │   │   └── s3_dp_search/
-│   └── cli/                # main.c cli.h cli_load.c cmd_show.c cmd_verify.c (puis cmd_solve.c)
+│   └── cli/                # main.c, et la bibliothèque nonogram_cli (testable) : cli.h cli_args.c cli_load.c cli_usage.c cmd_list_solvers.c cmd_show.c cmd_solve.c cmd_verify.c
 ├── tests/
 │   ├── support/            # allocateurs de test, générateur aléatoire, helpers Criterion
 │   ├── unit/               # test_<module>.c (Criterion)
@@ -98,7 +98,7 @@ nonogram-solver/
 | `render` | `ng_render` | affichage texte du puzzle et de la grille | `core` |
 | `verify` | `ng_verify` | vérification d'une grille complète | `core` |
 | `solvers` | `ng_solvers` | registre et implémentations | `core` |
-| `cli` | `nonogram` | analyse des arguments, orchestration, codes de sortie | tous |
+| `cli` | `nonogram_cli` (bibliothèque statique testable) et l'exécutable `nonogram` (`main.c`) | analyse des arguments, orchestration, codes de sortie | tous |
 | `bench` | `ng_bench` | mesures de temps et de mémoire | `core`, `io`, `verify`, `solvers` |
 
 **Règles :**

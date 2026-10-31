@@ -1,0 +1,21 @@
+nonogram: solve: missing puzzle file
+
+usage: nonogram <command> [arguments]
+
+commands:
+  show <puzzle.non> [--solution <grid.sol>] [--unicode] [--max-render <n>]
+      Print the puzzle with its clues, and a solution or partial grid if given.
+      Grids wider or taller than <n> cells (default 200) are summarised.
+  solve <puzzle.non> [--solver <name>] [--count <n>] [--max-nodes <n>]
+        [--max-time <ms>] [--max-memory <bytes>] [--output <grid.sol>] [--stats]
+        [--format text|json]
+      Solve the puzzle (default solver: the first complete one of list-solvers):
+      solved (exit 0); unsolvable, incomplete or limit reached (exit 1).
+  verify <puzzle.non> <grid.sol>
+      Check the grid against the clues: valid (exit 0), incomplete or invalid (exit 1).
+  list-solvers
+      List the solvers: name, complete or not, summary.
+
+options:
+  --help       print this help
+  --version    print the version

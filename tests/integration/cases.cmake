@@ -105,3 +105,50 @@ ng_cli_case(show_repeated_solution EXIT 2
 ng_cli_case(show_option_instead_of_value EXIT 2
     ARGS show ${P}/tiny/dot.non --solution --unicode)
 ng_cli_case(show_non_numeric_max_render EXIT 2 ARGS show ${P}/tiny/dot.non --max-render=big)
+
+# --- solve and list-solvers (M4). Puzzles of at most 16 cells: every case also runs under
+# Valgrind (G7), where S0 examines about 3 x 10^6 candidates per second.
+set(M ${P}/multi)
+ng_cli_case(solve_solved EXIT 0 ARGS solve ${P}/tiny/l_shape.non)
+ng_cli_case(solve_named_solver EXIT 0 ARGS solve ${P}/tiny/dot.non --solver brute)
+ng_cli_case(solve_stats EXIT 0 ARGS solve ${P}/tiny/l_shape.non --stats)
+ng_cli_case(solve_json EXIT 0 ARGS solve ${P}/tiny/l_shape.non --format=json)
+ng_cli_case(solve_json_unsolvable EXIT 1
+    ARGS solve ${P}/unsolvable/crossed.non --format json --stats)
+ng_cli_case(solve_text_format EXIT 0 ARGS solve ${P}/tiny/dot.non --format text)
+ng_cli_case(solve_unsolvable EXIT 1 ARGS solve ${P}/unsolvable/crossed.non)
+ng_cli_case(solve_count_exact EXIT 0 ARGS solve ${M}/checker_n2.non --count 5)
+ng_cli_case(solve_count_at_least EXIT 0 ARGS solve ${M}/permutation_n24.non --count=3)
+ng_cli_case(solve_count_unsolvable EXIT 1 ARGS solve ${P}/unsolvable/crossed.non --count 2)
+ng_cli_case(solve_limit_reached EXIT 1 ARGS solve ${M}/permutation_n24.non --max-nodes 10)
+ng_cli_case(solve_limit_keeps_solution EXIT 1
+    ARGS solve ${M}/diagonal_n2.non --count 3 --max-nodes=8 --format json)
+ng_cli_case(solve_too_large EXIT 2 ARGS solve ${P}/small/duck.non)
+ng_cli_case(solve_memory_too_small EXIT 2 ARGS solve ${P}/tiny/dot.non --max-memory 1)
+ng_cli_case(solve_large_limits EXIT 0
+    ARGS solve ${P}/tiny/dot.non --max-memory 18446744073709551615 --max-time 60000)
+ng_cli_case(solve_unknown_solver EXIT 2 ARGS solve ${P}/tiny/dot.non --solver nope)
+ng_cli_case(solve_missing_puzzle EXIT 2 ARGS solve --stats)
+ng_cli_case(solve_two_puzzles EXIT 2 ARGS solve ${P}/tiny/dot.non ${P}/tiny/dot.non)
+ng_cli_case(solve_unknown_option EXIT 2 ARGS solve ${P}/tiny/dot.non --fast)
+ng_cli_case(solve_missing_value EXIT 2 ARGS solve ${P}/tiny/dot.non --solver)
+ng_cli_case(solve_option_instead_of_value EXIT 2 ARGS solve ${P}/tiny/dot.non --count --stats)
+ng_cli_case(solve_zero_count EXIT 2 ARGS solve ${P}/tiny/dot.non --count 0)
+ng_cli_case(solve_count_above_limit EXIT 2 ARGS solve ${P}/tiny/dot.non --count 4294967296)
+ng_cli_case(solve_non_numeric_max_nodes EXIT 2 ARGS solve ${P}/tiny/dot.non --max-nodes=ten)
+ng_cli_case(solve_zero_max_time EXIT 2 ARGS solve ${P}/tiny/dot.non --max-time 0)
+ng_cli_case(solve_invalid_format EXIT 2 ARGS solve ${P}/tiny/dot.non --format xml)
+ng_cli_case(solve_repeated_stats EXIT 2 ARGS solve ${P}/tiny/dot.non --stats --stats)
+ng_cli_case(solve_repeated_count EXIT 2 ARGS solve ${P}/tiny/dot.non --count 2 --count=3)
+ng_cli_case(solve_missing_file EXIT 3 ARGS solve ${P}/tiny/no_such.non)
+ng_cli_case(solve_invalid_puzzle EXIT 3 ARGS solve ${P}/invalid/bad_clue.non)
+ng_cli_case(solve_unwritable_output EXIT 3
+    ARGS solve ${P}/tiny/dot.non --output tests/data/no_such_dir/dot.sol)
+ng_cli_case(list_solvers EXIT 0 ARGS list-solvers)
+ng_cli_case(list_solvers_argument EXIT 2 ARGS list-solvers brute)
+ng_cli_case(solve_limit_count_text EXIT 1
+    ARGS solve ${M}/diagonal_n2.non --count 3 --max-nodes 8)
+# --max-time: letter_p (25 cells) needs about 1.6 x 10^7 candidates before its solution, far
+# more than fit in 1 ms on any machine; S0 checks the clock every 4096 nodes.
+ng_cli_case(solve_max_time EXIT 1 ARGS solve ${P}/tiny/letter_p.non --max-time 1)
+ng_cli_case(solve_unsolvable_stats EXIT 1 ARGS solve ${P}/unsolvable/crossed.non --stats)

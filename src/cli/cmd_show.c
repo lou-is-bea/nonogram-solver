@@ -17,8 +17,16 @@
 
 /* nonogram show <puzzle.non> [--solution <grid.sol>] [--unicode] [--max-render <n>] */
 
-static constexpr ng_dim default_max_render = 200; /* ROADMAP.md, M2 */
-static constexpr uint64_t decimal_base = 10;
+/* Decimal value in [1, NG_DIM_MAX]; false for anything else. */
+static bool parse_dim(const char *text, ng_dim *out)
+{
+    uint64_t value = 0;
+    if (!cli_parse_count(text, NG_DIM_MAX, &value)) {
+        return false;
+    }
+    *out = (ng_dim)value;
+    return true;
+}
 
 typedef struct show_args {
     const char *puzzle_path;
@@ -28,61 +36,6 @@ typedef struct show_args {
     ng_dim max_render;
 } show_args;
 
-/* Decimal value in [1, NG_DIM_MAX]; false for anything else. */
-static bool parse_dim(const char *text, ng_dim *out)
-{
-    uint64_t value = 0;
-    if (*text == '\0') {
-        return false;
-    }
-    for (const char *c = text; *c != '\0'; ++c) {
-        if (*c < '0' || *c > '9') {
-            return false;
-        }
-        value = (value * decimal_base) + (uint64_t)(*c - '0');
-        if (value > NG_DIM_MAX) {
-            return false;
-        }
-    }
-    *out = (ng_dim)value;
-    return value != 0u;
-}
-
-static int usage_error(FILE *err, const char *message, const char *argument)
-{
-    cli_report_usage_error(err, message, argument);
-    return CLI_EXIT_USAGE;
-}
-
-typedef enum option_match : uint8_t {
-    OPTION_ABSENT,  /* the argument is not this option */
-    OPTION_PRESENT, /* *value is set */
-    OPTION_MISSING, /* the option ends the command line without its value */
-} option_match;
-
-/* Matches "--name value" or "--name=value" at argv[*index], advancing *index past a separate
- * value. */
-static option_match match_option(int argc, char **argv, int *index, const char *name,
-                                 const char **value)
-{
-    const char *arg = argv[*index];
-    const size_t length = strlen(name);
-    if (strncmp(arg, name, length) != 0 || (arg[length] != '=' && arg[length] != '\0')) {
-        return OPTION_ABSENT;
-    }
-    if (arg[length] == '=') {
-        *value = arg + length + 1;
-        return OPTION_PRESENT;
-    }
-    /* "--solution --unicode": an option where a value is expected means the value is missing. */
-    if (*index + 1 >= argc || argv[*index + 1] == nullptr ||
-        strncmp(argv[*index + 1], "--", 2) == 0) {
-        return OPTION_MISSING;
-    }
-    *value = argv[++*index];
-    return OPTION_PRESENT;
-}
-
 /* Handles one argument; returns CLI_EXIT_SUCCESS or a usage error. */
 static int parse_arg(int argc, char **argv, int *index, show_args *args, FILE *err)
 {
@@ -90,40 +43,40 @@ static int parse_arg(int argc, char **argv, int *index, show_args *args, FILE *e
     const char *value = nullptr;
     if (strcmp(arg, "--unicode") == 0) {
         if (args->unicode) {
-            return usage_error(err, "repeated option", arg);
+            return cli_usage_error(err, "repeated option", arg);
         }
         args->unicode = true;
         return CLI_EXIT_SUCCESS;
     }
-    option_match match = match_option(argc, argv, index, "--solution", &value);
-    if (match == OPTION_PRESENT) {
+    cli_option_match match = cli_match_option(argc, argv, index, "--solution", &value);
+    if (match == CLI_OPTION_PRESENT) {
         if (args->solution_path != nullptr) {
-            return usage_error(err, "repeated option", "--solution");
+            return cli_usage_error(err, "repeated option", "--solution");
         }
         args->solution_path = value;
         return CLI_EXIT_SUCCESS;
     }
-    if (match == OPTION_ABSENT) {
-        match = match_option(argc, argv, index, "--max-render", &value);
-        if (match == OPTION_PRESENT) {
+    if (match == CLI_OPTION_ABSENT) {
+        match = cli_match_option(argc, argv, index, "--max-render", &value);
+        if (match == CLI_OPTION_PRESENT) {
             if (args->has_max_render) {
-                return usage_error(err, "repeated option", "--max-render");
+                return cli_usage_error(err, "repeated option", "--max-render");
             }
             args->has_max_render = true;
             if (parse_dim(value, &args->max_render)) {
                 return CLI_EXIT_SUCCESS;
             }
-            return usage_error(err, "invalid --max-render value", value);
+            return cli_usage_error(err, "invalid --max-render value", value);
         }
     }
-    if (match == OPTION_MISSING) {
-        return usage_error(err, "missing value for", arg);
+    if (match == CLI_OPTION_MISSING) {
+        return cli_usage_error(err, "missing value for", arg);
     }
     if (arg[0] == '-') {
-        return usage_error(err, "unknown option", arg);
+        return cli_usage_error(err, "unknown option", arg);
     }
     if (args->puzzle_path != nullptr) {
-        return usage_error(err, "unexpected argument", arg);
+        return cli_usage_error(err, "unexpected argument", arg);
     }
     args->puzzle_path = arg;
     return CLI_EXIT_SUCCESS;
@@ -131,7 +84,7 @@ static int parse_arg(int argc, char **argv, int *index, show_args *args, FILE *e
 
 static int parse_args(int argc, char **argv, show_args *args, FILE *err)
 {
-    *args = (show_args){.max_render = default_max_render};
+    *args = (show_args){.max_render = CLI_DEFAULT_MAX_RENDER};
     /* argv[argc] is the only null entry; the check keeps the static analyser informed. */
     for (int i = 0; i < argc && argv[i] != nullptr; ++i) {
         const int code = parse_arg(argc, argv, &i, args, err);
@@ -140,7 +93,7 @@ static int parse_args(int argc, char **argv, show_args *args, FILE *err)
         }
     }
     if (args->puzzle_path == nullptr) {
-        return usage_error(err, "show: missing puzzle file", nullptr);
+        return cli_usage_error(err, "show: missing puzzle file", nullptr);
     }
     return CLI_EXIT_SUCCESS;
 }

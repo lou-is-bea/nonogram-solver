@@ -1,0 +1,1 @@
+nonogram: solver 'brute' cannot take this puzzle within its limits (puzzle size or --max-memory)

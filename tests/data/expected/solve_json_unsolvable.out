@@ -1,0 +1,10 @@
+{
+  "schema": "nonogram-solve/1",
+  "puzzle": "tests/data/puzzles/unsolvable/crossed.non",
+  "solver": "brute",
+  "result": "UNSOLVABLE",
+  "verified": false,
+  "count_exact": true,
+  "stats": { "nodes": 512, "line_solves": 0, "elapsed_ns": <ns>, "workspace_bytes": 242, "solutions_found": 0 },
+  "grid": null
+}

@@ -35,7 +35,7 @@ Le détail et les critères de sortie de chaque étape sont dans [docs/ROADMAP.m
 
 ## Démarrage rapide (cible)
 
-> Les commandes de build, de test et `check.sh` sont disponibles, ainsi que `nonogram show` et `nonogram verify`. `solve` et `list-solvers` arrivent avec M4.
+> Les commandes de build, de test et `check.sh` sont disponibles, ainsi que `nonogram show`, `nonogram solve`, `nonogram verify` et `nonogram list-solvers`.
 >
 > Solvers de la bibliothèque : `brute` (S0, force brute sur les cases inconnues, au plus 25 cases ; oracle de référence, [spécification](docs/solvers/s0_brute.md)).
 
@@ -53,8 +53,11 @@ ctest --preset dev
 # Afficher une grille (disponible), avec une solution, en Unicode
 nonogram show tests/data/puzzles/small/duck.non --solution tests/data/solutions/duck.sol --unicode
 
-# Résoudre avec un solver donné et afficher les statistiques
-nonogram solve tests/data/puzzles/small/duck.non --solver=line --stats
+# Résoudre (solver par défaut : le premier solver complet de list-solvers) et afficher les statistiques
+nonogram solve tests/data/puzzles/tiny/letter_p.non --stats
+
+# Choisir le solver, compter jusqu'à 10 solutions, écrire la solution, sortie JSON
+nonogram solve tests/data/puzzles/multi/checker_n2.non --solver brute --count 10 --output checker.sol --format json
 
 # Vérifier une solution
 nonogram verify tests/data/puzzles/small/duck.non tests/data/solutions/duck.sol
@@ -65,7 +68,9 @@ nonogram list-solvers
 
 Les options à valeur s'écrivent `--option valeur` ou `--option=valeur` ; une valeur qui commence par `--` doit utiliser la seconde forme.
 
-Codes de sortie de `nonogram` (exigence F-41) : `0` succès, `1` puzzle insoluble ou solution invalide ou incomplète, `2` usage incorrect, `3` erreur d'entrée-sortie (fichier illisible ou mal formé, grille de mauvaise taille, sortie impossible à écrire), `4` erreur interne (y compris le manque de mémoire).
+Options de `solve` : `--solver <nom>`, `--count <n>` (compter jusqu'à `n` solutions ; « at least » quand le compte est une borne inférieure), `--max-nodes <n>`, `--max-time <ms>`, `--max-memory <octets>`, `--output <grille.sol>` (écrite seulement si le puzzle est résolu ; en cas d'échec d'écriture, code 3 et fichier non fiable), `--stats` et `--format text|json` ([FILE_FORMATS.md §4](docs/FILE_FORMATS.md#4-sorties-de-la-cli)).
+
+Codes de sortie de `nonogram` (exigence F-41) : `0` succès (pour `solve` : résolu), `1` puzzle insoluble, solution invalide ou incomplète (pour `solve` : insoluble, solver bloqué ou limite atteinte), `2` usage incorrect (pour `solve`, y compris un puzzle que le solver ne peut pas prendre dans ses limites : taille, `--max-memory`), `3` erreur d'entrée-sortie (fichier illisible ou mal formé, grille de mauvaise taille, sortie impossible à écrire), `4` erreur interne (y compris le manque de mémoire).
 
 ### Prérequis
 

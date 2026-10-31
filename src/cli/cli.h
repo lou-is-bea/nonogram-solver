@@ -5,10 +5,16 @@
 #ifndef NG_CLI_CLI_H
 #define NG_CLI_CLI_H
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include "nonogram/grid.h"
 #include "nonogram/puzzle.h"
+#include "nonogram/solver.h"
+#include "nonogram/types.h"
+
+/* Grids wider or taller than this are summarised, not drawn (ROADMAP.md, M2). */
+static constexpr ng_dim CLI_DEFAULT_MAX_RENDER = 200;
 
 /* Stable exit codes (REQUIREMENTS.md F-41). */
 enum cli_exit_code : int {
@@ -27,6 +33,29 @@ bool cli_print_usage(FILE *out);
  *        nullptr), then the help text. The caller exits with CLI_EXIT_USAGE.
  */
 void cli_report_usage_error(FILE *err, const char *message, const char *argument);
+
+/** @brief Report a usage error (cli_report_usage_error) and return CLI_EXIT_USAGE. */
+int cli_usage_error(FILE *err, const char *message, const char *argument);
+
+/** @brief Outcome of matching an option that takes a value. */
+typedef enum cli_option_match : uint8_t {
+    CLI_OPTION_ABSENT,  /* the argument is not this option */
+    CLI_OPTION_PRESENT, /* *value is set */
+    CLI_OPTION_MISSING, /* the option ends the command line without its value */
+} cli_option_match;
+
+/**
+ * @brief Match "--name value" or "--name=value" at argv[*index], advancing *index past a
+ *        separate value. A value that starts with "--" counts as missing.
+ */
+cli_option_match cli_match_option(int argc, char **argv, int *index, const char *name,
+                                  const char **value);
+
+/**
+ * @brief Parse a decimal count in [1, @p max]: digits only, no sign, no space.
+ * @return true with *out set; false for anything else, including 0 (*out unchanged).
+ */
+bool cli_parse_count(const char *text, uint64_t max, uint64_t *out);
 
 /**
  * @brief Read a .non file, reporting any failure on @p err.
@@ -47,6 +76,29 @@ int cli_load_grid(FILE *err, const char *path, const ng_puzzle *puzzle, ng_grid 
  * @return An exit code.
  */
 int cli_verify(int argc, char **argv, FILE *out, FILE *err);
+
+/**
+ * @brief Run "nonogram solve".
+ * @param argc, argv Arguments after "solve".
+ * @return An exit code.
+ */
+int cli_solve(int argc, char **argv, FILE *out, FILE *err);
+
+/**
+ * @brief Run "nonogram solve" with a given solver instead of the registry's choice.
+ *
+ * Used by cli_solve() with @p solver = nullptr (--solver or the default solver), and by the
+ * tests with a fake solver, to exercise what follows the solve (F-32 check, outputs).
+ * @return An exit code.
+ */
+int cli_solve_with(int argc, char **argv, FILE *out, FILE *err, const ng_solver_vtable *solver);
+
+/**
+ * @brief Run "nonogram list-solvers".
+ * @param argc, argv Arguments after "list-solvers" (none is accepted).
+ * @return An exit code.
+ */
+int cli_list_solvers(int argc, char **argv, FILE *out, FILE *err);
 
 /**
  * @brief Run "nonogram show".

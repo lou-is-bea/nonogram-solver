@@ -1,0 +1,10 @@
+{
+  "schema": "nonogram-solve/1",
+  "puzzle": "tests/data/puzzles/multi/diagonal_n2.non",
+  "solver": "brute",
+  "result": "LIMIT_REACHED",
+  "verified": false,
+  "count_exact": false,
+  "stats": { "nodes": 8, "line_solves": 0, "elapsed_ns": <ns>, "workspace_bytes": 168, "solutions_found": 1 },
+  "grid": [".#", "#."]
+}
