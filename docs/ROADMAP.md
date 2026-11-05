@@ -1,6 +1,6 @@
 # Feuille de route
 
-> Dernière revue : 2026-10-25.
+> Dernière revue : 2026-11-05.
 
 Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre fermé, des livrables et des **critères de sortie**. On ne démarre pas une étape tant que la précédente ne les a pas tous remplis. Une étape peut se découper en plusieurs PR.
 
@@ -10,7 +10,7 @@ Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre ferm
 | M1 | Modèle de données (types pour grilles massives) et lecture `.non` en flux | — | terminé |
 | M2 | Affichage | — | terminé |
 | M3 | Vérificateur | 0.1.0 | terminé |
-| M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | en cours |
+| M4 | S0 : force brute, et harnais de benchmark | 0.2.0 | terminé |
 | M5 | S1 : backtracking par placements de lignes | 0.3.0 | à faire |
 | M6 | S2 : propagation par lignes | 0.4.0 | à faire |
 | M7 | S3 : ligne exacte (programmation dynamique), propagation et recherche | 0.5.0 | à faire |
@@ -132,6 +132,13 @@ Exemple de rendu attendu (ASCII) :
 - `bench/` : le harnais (temps médian sur N exécutions, pic mémoire via l'allocateur compteur, sortie JSON), le script `bench_compare.py` et un premier fichier de référence.
 
 **Critères de sortie** : S0 résout tout le corpus `tiny` et le vérificateur valide chaque solution. Le comptage de solutions est correct sur les puzzles à solutions multiples du corpus d'au plus 25 cases, la limite de S0 (décision 4 de la [spécification](solvers/s0_brute.md#10-décisions-à-approuver), approuvée le 2026-10-28).
+
+*Bilan du 2026-11-05* :
+- ✅ Corpus `tiny` : `tests/exhaustive/test_exhaustive_brute.c` résout depuis une grille vide les 12 puzzles de `tests/data/puzzles/tiny/`, avec un comptage plafonné à 2. Chacun a une solution unique, égale à sa solution de référence et validée par `ng_verify`. Le test échoue si un puzzle `tiny` est sauté.
+- ✅ Comptage de solutions : les 5 puzzles de `multi` d'au plus 25 cases (`checker_n2`, `diagonal_n2`, `steps_n6`, `two_checkers_n8`, `permutation_n24`) donnent exactement le nombre de solutions inscrit dans leur nom, établi indépendamment de S0 (`tests/data/README.md`), et chaque solution renvoyée est validée par `ng_verify`. `crossed` est `UNSOLVABLE`. Le test échoue si l'un de ces 5 puzzles est sauté.
+- ✅ Les deux tests passent en `dev` et en `release` sur `main` (523dd49) : 1,27 s en Release pour tout le test exhaustif (médiane de 5, un test à la fois, WSL2, 16 cœurs). G3 les lance en `dev` et en `release`, G6 sous sanitizers et G8 sous couverture.
+- ✅ Livrables : spécification `docs/solvers/s0_brute.md` (PR #16), infrastructure des solvers (PR #17), solver S0 (PR #18), `solve` et `list-solvers` (PR #19), harnais `bench/` et première référence (PR #20), `bench_compare.py`, porte G10 et tâche CI `bench` (PR #21).
+- ✅ Version 0.2.0 : `project(VERSION 0.2.0)` et section `[0.2.0] - 2026-11-05` du CHANGELOG ; le tag `v0.2.0` et la release GitHub suivent la fusion, à la demande du responsable du projet.
 
 ## M5 — S1 : backtracking par placements de lignes
 
