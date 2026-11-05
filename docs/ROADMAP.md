@@ -1,6 +1,6 @@
 # Feuille de route
 
-> Dernière revue : 2026-10-25.
+> Dernière revue : 2026-11-05.
 
 Le projet avance par **étapes** (M0 à M9). Chaque étape a un périmètre fermé, des livrables et des **critères de sortie**. On ne démarre pas une étape tant que la précédente ne les a pas tous remplis. Une étape peut se découper en plusieurs PR.
 
