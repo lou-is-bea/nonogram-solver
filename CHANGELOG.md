@@ -6,6 +6,10 @@ Le format suit [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) et le pr
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-05
+
+Premier solver et outil de mesure : infrastructure des solvers (`solver.h`, registre, `ng_solve`), solver S0 par force brute, commandes `nonogram solve`, `nonogram list-solvers` et `nonogram bench`, harnais de benchmark, comparaison à une référence (`scripts/bench_compare.py`, porte G10, tâche CI `bench`). Fin de l'étape M4.
+
 ### Ajouté
 - M4 : porte G10, `scripts/bench_compare.py` (comparaison d'une mesure `nonogram-bench/1` à une référence : hausse du pic mémoire de plus de 10 % bloquante, hausse du temps médian de plus de 10 % bloquante au-dessus de 1 ms de référence et signalée en dessous, compteurs et gains signalés ; tests `unittest` sous le label `unit`) ; `scripts/bench_gate.sh` (mesure et comparaison répétées de G10, testé avec un exécutable factice) ; `check.sh` exécute G0 à G10, G10 comparant le corpus `bench/corpus/tiny` à `bench/baselines/$NG_BENCH_MACHINE.json` et étant signalée `SKIP` sans référence pour la machine, la porte n'échouant que si chacune de 3 mesures trouve une régression bloquante ; tâche CI `bench` qui compare chaque PR à sa base sur la même machine (pic mémoire bloquant, temps signalé dans le résumé).
 - M4 : harnais de benchmark, bibliothèque `ng_bench` (`src/bench/`) et sous-commande `nonogram bench` : exécutions de chauffe puis mesurées (2 et 11 par défaut), temps médian, minimum et maximum sur l'horloge monotone POSIX, pic mémoire par un allocateur compteur, grilles `SOLVED` vérifiées et exécutions contrôlées identiques ; sortie texte ou JSON `nonogram-bench/1` ; corpus figé `bench/corpus/tiny` (10 puzzles) et première référence `bench/baselines/ryzen-9800x3d-wsl.json` ; aides de sortie partagées entre `solve` et `bench` (`src/cli/cli_output.c`) ; F-40 inclut `bench`.
